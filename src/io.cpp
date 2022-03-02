@@ -124,8 +124,8 @@ std::string zfill(const std::string &str, int width) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-void DumpTrees(vector<Tree> &trees, const char *path) {
-    ofstream outfile;
+void DumpTrees(std::vector<Tree> &trees, const char *path) {
+    std::ofstream outfile;
     outfile.open(path);
     size_t t = 0;
     for (auto &tree : trees) {
@@ -134,7 +134,7 @@ void DumpTrees(vector<Tree> &trees, const char *path) {
             auto v = it.second;
             outfile << "\t" << it.first << "," << v.parent << "," << v.left << "," << v.right << ","
                     << v.column << ",";
-            outfile << scientific << setprecision(PRECISION) << v.threshold << endl;
+            outfile << std::scientific << std::setprecision(PRECISION) << v.threshold << std::endl;
         }
 
         for (auto &it : tree.leaf) {
@@ -142,9 +142,9 @@ void DumpTrees(vector<Tree> &trees, const char *path) {
             outfile << "\t\t" << it.first << ",";
             for (int i = 0; i < v.values.size(); i++) {
                 if (i < v.values.size() - 1) {
-                    outfile << scientific << setprecision(PRECISION) << v.values[i] << ",";
+                    outfile << std::scientific << std::setprecision(PRECISION) << v.values[i] << ",";
                 } else {
-                    outfile << scientific << setprecision(PRECISION) << v.values[i] << endl;
+                    outfile << std::scientific << std::setprecision(PRECISION) << v.values[i] << std::endl;
                 }
             }
         }
@@ -153,10 +153,10 @@ void DumpTrees(vector<Tree> &trees, const char *path) {
     outfile.close();
 }
 
-void LoadTrees(vector<Tree> &trees, const char *path) {
-    ifstream infile(path);
-    string line;
-    vector<string> contents;
+void LoadTrees(std::vector<Tree> &trees, const char *path) {
+    std::ifstream infile(path);
+    std::string line;
+    std::vector<std::string> contents;
     Tree tree_(false);
     int t = 0, num;
     while (getline(infile, line)) {
@@ -171,21 +171,21 @@ void LoadTrees(vector<Tree> &trees, const char *path) {
             contents.resize(0);
             line = lstrip(line, "\t");
             split(line, contents, ",");
-            num = stoi(contents[0]);
+            num = std::stoi(contents[0]);
             if (num < 0) {
                 //nonleaf
                 NonLeafNode node;
-                node.parent = stoi(contents[1]);
-                node.left = stoi(contents[2]);
-                node.right = stoi(contents[3]);
-                node.column = stoi(contents[4]);
-                node.threshold = stod(contents[5]);
+                node.parent = std::stoi(contents[1]);
+                node.left = std::stoi(contents[2]);
+                node.right = std::stoi(contents[3]);
+                node.column = std::stoi(contents[4]);
+                node.threshold = std::stod(contents[5]);
                 tree_.nonleaf.emplace(num, node);
             } else {
                 //leaf
                 LeafNode node;
                 node.values.resize(contents.size() - 1);
-                for (int i = 1; i < contents.size(); ++i) { node.values[i - 1] = stod(contents[i]); }
+                for (int i = 1; i < contents.size(); ++i) { node.values[i - 1] = std::stod(contents[i]); }
                 tree_.leaf.emplace(num, node);
             }
         }

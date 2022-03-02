@@ -1,8 +1,6 @@
 #include <iostream>
 #include "booster.h"
 
-using namespace std;
-
 void test(int inp_dim, int out_dim, int N, const char *mode) {
     double data[N * inp_dim];
     double preds[N * out_dim];

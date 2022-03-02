@@ -1,0 +1,8 @@
+# yapf style guide
+
+[style]
+based_on_style = pep8
+column_limit = 120
+blank_line_before_nested_class_or_def = false
+coalesce_brackets = true
+# blank_lines_around_top_level_definition = 1

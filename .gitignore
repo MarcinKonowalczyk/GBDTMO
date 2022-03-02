@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# Python stuff
+__pycache__
+
+# Misc
+.DS_Store
+.vscode
+build

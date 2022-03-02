@@ -1,14 +1,12 @@
-#ifndef MGBDT_MATH_H
-#define MGBDT_MATH_H
+#ifndef GBDTMO_MATH_H
+#define GBDTMO_MATH_H
 
 #include <vector>
 #include <math.h>
 #include <unordered_set>
 
-using namespace std;
-
 template<typename T>
-inline static T Sum(vector<T> x) {
+inline static T Sum(std::vector<T> x) {
     T s = 0;
     for (auto &i : x) { s += i; }
     return s;
@@ -28,7 +26,7 @@ inline static double CalWeight(double g_sum, double h_sum, double reg_l1, double
     else { return -ThresholdL1(g_sum, reg_l1) / (h_sum + reg_l2); }
 }
 
-inline static void CalWeight(vector<double> &value, double *g_sum, double *h_sum, double reg_l1, double reg_l2) {
+inline static void CalWeight(std::vector<double> &value, double *g_sum, double *h_sum, double reg_l1, double reg_l2) {
     if (reg_l1 == 0) {
         for (int i = 0; i < value.size(); ++i) { value[i] = -g_sum[i] / (h_sum[i] + reg_l2); }
     } else {
@@ -41,7 +39,7 @@ inline static double CalScore(double g_sum, double h_sum, double reg_l1, double 
     return Sqr(ThresholdL1(g_sum, reg_l1)) / (h_sum + reg_l2);
 }
 
-inline static void CalScore(vector<double> &value, double *g_sum, double *h_sum, double reg_l1, double reg_l2) {
+inline static void CalScore(std::vector<double> &value, double *g_sum, double *h_sum, double reg_l1, double reg_l2) {
     if (reg_l1 == 0) {
         for (int i = 0; i < value.size(); ++i) { value[i] = Sqr(g_sum[i]) / (h_sum[i] + reg_l2); }
     } else {
@@ -49,7 +47,7 @@ inline static void CalScore(vector<double> &value, double *g_sum, double *h_sum,
     }
 }
 
-inline static void Softmax(vector<double> &rec) {
+inline static void Softmax(std::vector<double> &rec) {
     double wmax = rec[0];
     for (size_t i = 1; i < rec.size(); ++i) {
         wmax = std::max(rec[i], wmax);
@@ -64,7 +62,7 @@ inline static void Softmax(vector<double> &rec) {
     }
 }
 
-inline static double Log_sum_exp(vector<double> &rec) {
+inline static double Log_sum_exp(std::vector<double> &rec) {
     double wmax = rec[0];
     for (size_t i = 1; i < rec.size(); ++i) {
         wmax = std::max(rec[i], wmax);
@@ -76,4 +74,4 @@ inline static double Log_sum_exp(vector<double> &rec) {
     return log(wsum) + wmax;
 }
 
-#endif //MGBDT_MATH_H
+#endif /* GBDTMO_MATH_H */

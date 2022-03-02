@@ -37,7 +37,6 @@ exclude_patterns = []
 
 # -- Options for HTML output ----------------------------------------------
 
-
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
@@ -91,7 +90,6 @@ exclude_patterns = []
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -111,12 +109,11 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 if os.environ.get('READTHEDOCS', '') != '':
-  css_files = [
-    '//media.readthedocs.org/css/sphinx_rtd_theme.css',
-    '//media.readthedocs.org/css/readthedocs-doc-embed.css'
-  ]
+    css_files = [
+        '//media.readthedocs.org/css/sphinx_rtd_theme.css', '//media.readthedocs.org/css/readthedocs-doc-embed.css'
+    ]
 else:
-  css_files = []
+    css_files = []
 
 html_context = {'css_files': css_files + ['_static/extra.css']}
 
@@ -129,7 +126,6 @@ html_context = {'css_files': css_files + ['_static/extra.css']}
 # 'searchbox.html']``.
 #
 # html_sidebars = {}
-
 
 # -- Extension configuration -------------------------------------------------
 

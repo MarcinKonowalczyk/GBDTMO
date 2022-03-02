@@ -1,39 +1,93 @@
 import argparse
 import numpy as np
-from gbdtmo import GBDTMulti, load_lib
+
+import os, sys
+
+sys.path.append(os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
+
+from gbdtmo import GBDTMulti, load_lib, GBDTSingle
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-lr", default=0.2, type=float)
-parser.add_argument("-depth", default=5, type=int)
+parser.add_argument("-lr", default=0.1, type=float)
+parser.add_argument("-depth", default=2, type=int)
 args = parser.parse_args()
 
-LIB = load_lib("../build/gbdtmo.so")
+LIB = load_lib("../build/gbdtmo.so" if os.path.exists("../build/gbdtmo.so") else "./build/gbdtmo.so")
+
+from contextlib import contextmanager
+
+@contextmanager
+def seed_rng(random_state):
+    """Temporarilly seed the state of the random number generator"""
+    if random_state:
+        old_state = np.random.get_state()
+        np.random.seed(random_state)
+    try:
+        yield
+    finally:
+        if random_state:
+            np.random.set_state(old_state)
+
+def f(X, out_dim, seed = None):
+    """Function to approximate by the GBDT"""
+    inp_dim = X.shape[1]
+    with seed_rng(seed):
+        M = np.random.rand(5*inp_dim, out_dim)
+    return np.c_[X,X**2,X**(1/2),X**3,X**(1/3)] @ M
 
 
-def regression():
-    inp_dim, out_dim = 10, 5
-    params = {"max_depth": args.depth, "lr": args.lr, 'loss': b"mse"}
-    booster = GBDTMulti(LIB, out_dim=out_dim, params=params)
-    x_train, y_train = np.random.rand(10000, inp_dim), np.random.rand(10000, out_dim)
-    x_valid, y_valid = np.random.rand(10000, inp_dim), np.random.rand(10000, out_dim)
-    booster.set_data((x_train, y_train), (x_valid, y_valid))
-    booster.train(20)
-    booster.dump(b"regression.txt")
+# def regression():
+#     inp_dim, out_dim = 10, 5
+#     booster = GBDTMulti(LIB, out_dim=out_dim, params=dict(max_depth=args.depth, lr=args.lr, loss="mse"))
+#     seed = 42
+#     X_train, X_test = np.random.rand(10000, inp_dim), np.random.rand(100, inp_dim)
+#     y_train, y_test = f(X_train, out_dim, seed), f(X_test, out_dim, seed)
 
+#     booster.set_data((X_train, y_train), (X_test, y_test))
+#     booster.train(1000)
+#     # booster.dump(b"regression.txt")
+#     yp = booster.predict(X_test)
 
-def classification():
-    inp_dim, out_dim = 10, 5
-    params = {"max_depth": args.depth, "lr": args.lr, 'loss': b"ce"}
-    booster = GBDTMulti(LIB, out_dim=out_dim, params=params)
-    x_train = np.random.rand(10000, inp_dim)
-    y_train = np.random.randint(0, out_dim, size=(10000, )).astype("int32")
-    x_valid = np.random.rand(10000, inp_dim)
-    y_valid = np.random.randint(0, out_dim, size=(10000, )).astype("int32")
-    booster.set_data((x_train, y_train), (x_valid, y_valid))
-    booster.train(20)
-    booster.dump(b"classification.txt")
+# def classification():
+#     inp_dim, out_dim = 10, 5
+#     params = dict(max_depth=args.depth, lr=args.lr, loss="ce")
+#     booster = GBDTMulti(LIB, out_dim=out_dim, params=params)
+#     X_train = np.random.rand(10000, inp_dim)
+#     y_train = np.random.randint(0, out_dim, size=(10000, )).astype("int32")
+#     X_valid = np.random.rand(10000, inp_dim)
+#     y_valid = np.random.randint(0, out_dim, size=(10000, )).astype("int32")
+#     booster.set_data((X_train, y_train), (X_valid, y_valid))
+#     booster.train(20)
+#     booster.dump(b"classification.txt")
 
 
 if __name__ == '__main__':
-    regression()
-    # classification()
+    # inp_dim, out_dim = 10, 5
+    # params = params=dict(max_depth=args.depth, lr=args.lr, loss="mse")
+    
+    # seed = 42
+    # X_train, X_test = np.random.rand(10000, inp_dim), np.random.rand(100, inp_dim)
+    # y_train, y_test = f(X_train, out_dim, seed), f(X_test, out_dim, seed)
+
+    # booster_mutli = GBDTMulti(LIB, out_dim=out_dim, params=params)
+    # booster_mutli.set_data((X_train, y_train), (X_test, y_test))
+    # booster_mutli.train(100)
+    # booster.dump(b"regression.txt")
+    # yp_multi = booster_mutli.predict(X_test)
+
+    inp_dim, out_dim = 10, 2
+    params = params=dict(max_depth=args.depth, lr=args.lr, loss="mse")
+    
+    seed = 42
+    X_train, X_test = np.random.rand(10000, inp_dim), np.random.rand(100, inp_dim)
+    y_train, y_test = f(X_train, out_dim, seed), f(X_test, out_dim, seed)
+
+    booster_single = GBDTSingle(LIB, out_dim=out_dim, params=params)
+    booster_single.set_data((X_train, y_train), (X_test, y_test))
+    booster_single.train(100)
+    yp_single = booster_single.predict(X_test)
+
+    # print(f"Multi mse: {np.sqrt(np.mean((y_test-yp_multi).ravel()**2))}")
+    # print(f"Single mse: {np.sqrt(np.mean((y_test-yp_single).ravel()**2))}")
+
+

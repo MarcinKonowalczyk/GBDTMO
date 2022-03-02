@@ -1,12 +1,11 @@
-#ifndef MGBDT_TREE_H
-#define MGBDT_TREE_H
+#ifndef GBDTMO_TREE_H
+#define GBDTMO_TREE_H
 
 #include "mathFunc.h"
 #include "dataStruct.h"
 #include <vector>
 #include <map>
 #include <iomanip>
-#include <omp.h>
 
 struct SplitInfo {
     double gain = -1e8;
@@ -39,19 +38,19 @@ struct NonLeafNode {
 struct LeafNode {
     LeafNode(int n = 1) : values(n, 0) {};
     int parent;
-    vector<double> values;
+    std::vector<double> values;
 
     inline void Update(int parent_, double value_) {
         parent = parent_;
         values[0] = value_;
     }
 
-    inline void Update(int parent_, vector<double> &values_) {
+    inline void Update(int parent_, std::vector<double> &values_) {
         parent = parent_;
         values.assign(values_.begin(), values_.end());
     }
 
-    inline void Update(int parent_, vector<pair<double, int>> &values_) {
+    inline void Update(int parent_, std::vector<std::pair<double, int>> &values_) {
         parent = parent_;
         for (auto &it : values_) {
             values[it.second] = it.first;
@@ -64,8 +63,8 @@ struct Tree {
     Tree(bool is_sparse = false) : sparse(is_sparse) {};
     bool sparse;
     int leaf_num = 0, nonleaf_num = 0;
-    map<int, LeafNode> leaf;
-    map<int, NonLeafNode> nonleaf;
+    std::map<int, LeafNode> leaf;
+    std::map<int, NonLeafNode> nonleaf;
 
     inline void clear() {
         leaf_num = 0;
@@ -95,7 +94,6 @@ struct Tree {
     }
 
     inline void shrinkage(double lr) {
-#pragma omp parallel for schedule(static) if (leaf.size() >= 256)
         for (int i = 1; i < leaf.size() + 1; ++i) {
             for (auto &p : leaf[i].values) { p *= lr; }
         }
@@ -119,4 +117,4 @@ struct Tree {
 
 };
 
-#endif //MGBDT_TREE_H
+#endif /* GBDTMO_TREE_H */

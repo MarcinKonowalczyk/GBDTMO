@@ -51,7 +51,6 @@ def create_graph(file_name, tree_index=0, value_list=[]):
             if info[parent][2] == node:
                 # right child
                 graph.edge("NL-{}".format(parent), "L-{}".format(node), label=">")
-                
+
     add(-1, -1)
     return graph
-

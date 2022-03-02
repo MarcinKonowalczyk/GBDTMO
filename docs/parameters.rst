@@ -14,9 +14,6 @@ Meta
 - ``seed``: default = 0, type = int.
     - Random seed. **No effect currently**.
 
-- ``num_threads``: default = 2, type = int.
-    - Number of threads for training.
-
 - ``hist_cache``: default = 16, type = int.
     - Maximum number of histogram cache
 

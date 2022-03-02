@@ -41,40 +41,15 @@ void Tree::pred_value_multi_(double *features, double *preds, HyperParameter &hp
 }
 
 void Tree::pred_value_single(double *features, double *preds, HyperParameter &hp, int n) {
-    if (hp.num_threads == 1 || n < 256) {
-        pred_value_single_(features, preds, hp, n);
-    } else {
-#pragma omp parallel
-        {
-            int id = omp_get_thread_num();
-            int start = n / hp.num_threads * id;
-            int samples;
-            if (id == hp.num_threads - 1) { samples = n - start; }
-            else { samples = n / hp.num_threads; }
-            pred_value_single_(features + start * hp.inp_dim, preds + start, hp, samples);
-        };
-    }
+    pred_value_single_(features, preds, hp, n);
 }
 
 void Tree::pred_value_multi(double *features, double *preds, HyperParameter &hp, int n) {
-    if (hp.num_threads == 1 || n < 256) {
-        pred_value_multi_(features, preds, hp, n);
-    } else {
-#pragma omp parallel
-        {
-            int id = omp_get_thread_num();
-            int start = n / hp.num_threads * id;
-            int samples;
-            if (id == hp.num_threads - 1) { samples = n - start; }
-            else { samples = n / hp.num_threads; }
-            pred_value_multi_(features + start * hp.inp_dim, preds + start * hp.out_dim, hp, samples);
-        };
-    }
+    pred_value_multi_(features, preds, hp, n);
 }
 
 // predict by histogram maps
 void Tree::pred_value_single(uint16_t *features, double *preds, HyperParameter &hp, int n) {
-#pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i) {
         int node = -1;
         while (node < 0) {
@@ -89,7 +64,6 @@ void Tree::pred_value_single(uint16_t *features, double *preds, HyperParameter &
 }
 
 void Tree::pred_value_multi(uint16_t *features, double *preds, HyperParameter &hp, int n) {
-#pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i) {
         int node = -1;
         int t_out = i * hp.out_dim;
