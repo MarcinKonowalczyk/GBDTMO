@@ -32,8 +32,10 @@ def f(X, out_dim, seed = None):
     """Function to approximate by the GBDT"""
     inp_dim = X.shape[1]
     with seed_rng(seed):
-        M = np.random.rand(5*inp_dim, out_dim)
-    return np.c_[X,X**2,X**(1/2),X**3,X**(1/3)] @ M
+        M = np.random.randn(5*inp_dim, out_dim)
+    y = np.c_[X,X**2,X**(1/2),X**3,X**(1/3)] @ M
+    y = y - np.mean(y, axis=0)
+    return y
 
 
 # def regression():
@@ -62,19 +64,6 @@ def f(X, out_dim, seed = None):
 
 
 if __name__ == '__main__':
-    # inp_dim, out_dim = 10, 5
-    # params = params=dict(max_depth=args.depth, lr=args.lr, loss="mse")
-    
-    # seed = 42
-    # X_train, X_test = np.random.rand(10000, inp_dim), np.random.rand(100, inp_dim)
-    # y_train, y_test = f(X_train, out_dim, seed), f(X_test, out_dim, seed)
-
-    # booster_mutli = GBDTMulti(LIB, out_dim=out_dim, params=params)
-    # booster_mutli.set_data((X_train, y_train), (X_test, y_test))
-    # booster_mutli.train(100)
-    # booster.dump(b"regression.txt")
-    # yp_multi = booster_mutli.predict(X_test)
-
     inp_dim, out_dim = 10, 2
     params = params=dict(max_depth=args.depth, lr=args.lr, loss="mse")
     
@@ -84,10 +73,21 @@ if __name__ == '__main__':
 
     booster_single = GBDTSingle(LIB, out_dim=out_dim, params=params)
     booster_single.set_data((X_train, y_train), (X_test, y_test))
-    booster_single.train(100)
-    yp_single = booster_single.predict(X_test)
+    booster_single.train(31)
+    yp = booster_single.predict(X_test)
+    y = y_test
 
-    # print(f"Multi mse: {np.sqrt(np.mean((y_test-yp_multi).ravel()**2))}")
-    # print(f"Single mse: {np.sqrt(np.mean((y_test-yp_single).ravel()**2))}")
+    cla(); plot(y[:,0]); plot(yp[:,0]);
+# if __name__ == '__main__':
+#     inp_dim, out_dim = 10, 5
+#     params = params=dict(max_depth=args.depth, lr=args.lr, loss="mse")
+    
+#     seed = 42
+#     X_train, X_test = np.random.rand(10000, inp_dim), np.random.rand(100, inp_dim)
+#     y_train, y_test = f(X_train, out_dim, seed), f(X_test, out_dim, seed)
 
-
+#     booster_mutli = GBDTMulti(LIB, out_dim=out_dim, params=params)
+#     booster_mutli.set_data((X_train, y_train), (X_test, y_test))
+#     booster_mutli.train(100)
+#     yp = booster_mutli.predict(X_test)
+#     y = y_test

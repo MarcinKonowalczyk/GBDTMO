@@ -15,11 +15,11 @@ struct SplitInfo {
 
     inline void reset() { gain = -1e8, column = -1; }
 
-    inline void update(double gain_, int column_, int bin_, double threshold_) {
-        gain = gain_;
-        column = column_;
-        bin = bin_;
-        threshold = threshold_;
+    inline void update(double gain, int column, int bin, double threshold) {
+        this->gain = gain;
+        this->column = column;
+        this->bin = bin;
+        this->threshold = threshold;
     }
 };
 
@@ -40,20 +40,20 @@ struct LeafNode {
     int parent;
     std::vector<double> values;
 
-    inline void Update(int parent_, double value_) {
-        parent = parent_;
-        values[0] = value_;
+    inline void Update(int parent, double value) {
+        this->parent = parent;
+        this->values[0] = value;
     }
 
-    inline void Update(int parent_, std::vector<double> &values_) {
-        parent = parent_;
-        values.assign(values_.begin(), values_.end());
+    inline void Update(int parent, std::vector<double>& values) {
+        this->parent = parent;
+        this->values.assign(values.begin(), values.end());
     }
 
-    inline void Update(int parent_, std::vector<std::pair<double, int>> &values_) {
-        parent = parent_;
-        for (auto &it : values_) {
-            values[it.second] = it.first;
+    inline void Update(int parent, std::vector<std::pair<double, int>>& values) {
+        this->parent = parent;
+        for (auto &it : values) {
+            this->values[it.second] = it.first;
         }
     }
 };
@@ -73,7 +73,7 @@ struct Tree {
         nonleaf.clear();
     }
 
-    inline void add_leaf(const LeafNode &node, bool left) {
+    inline void add_leaf(const LeafNode& node, bool left) {
         ++leaf_num;
         leaf.emplace(leaf_num, node);
         if (left) {
@@ -83,7 +83,7 @@ struct Tree {
         }
     }
 
-    inline void add_nonleaf(const NonLeafNode &node, bool left) {
+    inline void add_nonleaf(const NonLeafNode& node, bool left) {
         --nonleaf_num;
         nonleaf.emplace(nonleaf_num, node);
         if (left) {
@@ -100,20 +100,12 @@ struct Tree {
     }
 
     // predict by original features
-    // predict for each group (used for multi-core computation)
-    void pred_value_single_(double *, double *, HyperParameter &, int);
-
-    void pred_value_multi_(double *, double *, HyperParameter &, int);
-
-    // predict all groups
-    void pred_value_single(double *, double *, HyperParameter &, int);
-
-    void pred_value_multi(double *, double *, HyperParameter &, int);
+    void pred_value_single(const double* features, double* preds, const HyperParameter& hp, const int n);
+    void pred_value_multi(const double* features, double* preds, const HyperParameter& hp, const int n);
 
     // predict by bin maps
-    void pred_value_single(uint16_t *, double *, HyperParameter &, int);
-
-    void pred_value_multi(uint16_t *, double *, HyperParameter &, int);
+    void pred_value_single(const uint16_t* features, double* preds, const HyperParameter& hp, const int n);
+    void pred_value_multi(const uint16_t* features, double* preds, const HyperParameter& hp, const int n);
 
 };
 

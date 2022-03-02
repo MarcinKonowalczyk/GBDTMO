@@ -76,7 +76,7 @@ public:
 
     TopkDeque(int n = 8) : max_size(n) {};
 
-    // binary search
+    //binary search
     inline int search(T const &x) {
         int l = 0, r = data.size();
         while (l < r) {

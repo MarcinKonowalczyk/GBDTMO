@@ -15,7 +15,7 @@ struct CacheInfo {
     std::vector<int32_t> order;
     std::vector<Histogram> hist;
 
-    CacheInfo(int n, int d, SplitInfo &x, std::vector<int32_t> &y, std::vector<Histogram> &z) :
+    CacheInfo(int n, int d, SplitInfo& x, std::vector<int32_t>& y, std::vector<Histogram>& z) :
             node(n), depth(d), split(x), order(y), hist(z) {};
 
     bool operator>(const CacheInfo &x) const { return split.gain > x.split.gain; }
@@ -34,23 +34,30 @@ struct CacheInfo {
 
 class BoosterUtils {
 public:
-    void set_bin(uint16_t *, double *);
-    void set_gh(double *, double *);
+    void set_bin(uint16_t* , double* );
+    void set_gh(double* , double* );
     void set_train_data(uint16_t* maps, double* features, double* preds, int n);
     void set_eval_data(uint16_t* maps, double* features, double* preds, int n);
-    void set_label(double *, bool);
+    void set_label(double* , bool);
     void set_label(int32_t *, bool);
-    void rebuild_order(std::vector<int32_t> &, std::vector<int32_t> &, std::vector<int32_t> &, uint16_t *, uint16_t);
-    void showloss(double, double, int);
-    void showloss(double, int);
-    void showbest(double, int);
-    void showbest(std::pair<double, int>);
+    void rebuild_order(std::vector<int32_t>& , std::vector<int32_t>& , std::vector<int32_t>& , uint16_t* , uint16_t);
+
+    double* calloc_G(int elements);
+    double* calloc_H(int elements, bool constHessian, double constValue);
+
+    // Print helpers
+    inline void showloss(double score, double metric, int i) const { std::cout << "[" << i << "] train->" << std::setprecision(5) << std::fixed << score << "\teval->" << std::setprecision(5) << std::fixed << metric << std::endl; }
+    inline void showloss(double metric, int i) const { std::cout << "[" << i << "] score->" << std::setprecision(5) << std::fixed << metric << std::endl; }
+    inline void showbest(std::pair<double, int> info) const { showbest(std::get<0>(info), std::get<1>(info)); }
+    inline void showbest(double score, int round) const { std::cout << "Best score " << score << " at round " << round << std::endl; }
+
     void load(const char *path) { LoadTrees(trees, path); }
     void dump(const char *path) { DumpTrees(trees, path); }
+
     virtual void update() = 0;
     virtual void growth() = 0;
     virtual void train(int) = 0;
-    virtual void predict(double *, double *, int, int) = 0;
+    virtual void predict(const double*, double*, const size_t, int) = 0;
 
 protected:
     Tree tree;
@@ -60,8 +67,8 @@ protected:
     SplitInfo meta;
     Dataset Train;
     Dataset Eval;
-    double *G;
-    double *H;
+    double* G;
+    double* H;
     HyperParameter hp;
     TopkDeque<CacheInfo> cache;
     Objective obj;
@@ -79,18 +86,17 @@ protected:
 
 class BoosterSingle : public BoosterUtils {
 public:
-    BoosterSingle(int, const char*,
+    BoosterSingle(int, int, const char*,
                   int, int, int, int,
                   double, double, double, double, double,
                   int, bool, int);
     void update() override;
     void growth() override;
     void train(int) override;
-    void predict(double *, double *, int, int) override;
+    void predict(const double* features, double* preds, const size_t n, int num_trees) override;
     void reset();
-    void train_multi(int, int);
-    void predict_multi(double *, double *, int, int, int);
-    void predict2(double *, double *, int, int, int);
+    void train_multi(int);
+    void predict_multi(const double* features, double* preds, const size_t n, const int out_dim, int num_trees);
 
 private:
     double Score_sum, Opt;
@@ -120,7 +126,7 @@ public:
     void update() override;
     void growth() override;
     void train(int) override;
-    void predict(double *, double *, int, int) override;
+    void predict(const double* features, double* preds, const size_t n, int num_trees) override;
 
 private:
     double Score_sum;

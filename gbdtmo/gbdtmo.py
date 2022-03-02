@@ -80,7 +80,7 @@ class GBDTSingle(BoostUtils):
 
     def set_booster(self, inp_dim):
         print(f"inp_dim = {inp_dim}")
-        self._boostnode = self.lib.SingleNew(inp_dim, self.params['loss'], self.params['max_depth'],
+        self._boostnode = self.lib.SingleNew(inp_dim, self.out_dim, self.params['loss'], self.params['max_depth'],
                                              self.params['max_leaves'], self.params['seed'], self.params['min_samples'],
                                              self.params['lr'], self.params['reg_l1'], self.params['reg_l2'],
                                              self.params['gamma'], self.params['base_score'], self.params['early_stop'],
@@ -92,11 +92,14 @@ class GBDTSingle(BoostUtils):
             self.data, self.label = train_set
             self.set_booster(self.data.shape[-1])
             self.bins, self.maps = get_bins_maps(self.data, self.max_bins)
+            print(f"len maps = {len(self.maps)}")
             self._set_bin(self.bins)
             self.maps = np.ascontiguousarray(self.maps.transpose())
             self.preds_train = np.full(len(self.data) * self.out_dim, self.base_score, dtype=np.float64)
+
             set_Nth_argtype(self.lib.SetTrainData, 3, array_1d_double)
             self.lib.SetTrainData(self._boostnode, self.maps, self.data, self.preds_train, len(self.data))
+
             if self.label is not None:
                 self._set_label(self.label, True)
 
@@ -113,7 +116,7 @@ class GBDTSingle(BoostUtils):
         if self.out_dim == 1:
             self.lib.Train(self._boostnode, num)
         else:
-            self.lib.TrainMulti(self._boostnode, num, self.out_dim)
+            self.lib.TrainMulti(self._boostnode, num)
 
     def predict(self, X, num_trees=0):
 
@@ -129,10 +132,9 @@ class GBDTSingle(BoostUtils):
             print(f"N = {N}")
             print(f"self.out_dim = {self.out_dim}")
             print(f"num_trees = {num_trees}")
-            print('about to call lib.Predict2 ...')
-            # self.lib.PredictMulti(self._boostnode, X, preds, N, self.out_dim, num_trees)
-            self.lib.Predict2(self._boostnode, X, preds, N, self.out_dim, num_trees)
-            print('out of the lib.Predict2')
+            print("about to call lib.PredictMulti")
+            self.lib.PredictMulti(self._boostnode, X, preds, N, self.out_dim, num_trees)
+            print("out of lib.PredictMulti")
             preds = np.transpose(np.reshape(preds, (self.out_dim, N)))
 
         return preds

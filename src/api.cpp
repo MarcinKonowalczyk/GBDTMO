@@ -2,57 +2,44 @@
 
 extern "C" {
 
-void SetBin(BoosterUtils *foo, uint16_t *bins, double *values) {
+void SetBin(BoosterUtils* foo, uint16_t* bins, double* values) {
     foo->set_bin(bins, values);
 }
-void SetGH(BoosterUtils *foo, double *x, double *y) {
+void SetGH(BoosterUtils* foo, double* x, double* y) {
     foo->set_gh(x, y);
 }
-void Boost(BoosterUtils *foo) {
+void Boost(BoosterUtils* foo) {
     foo->growth(); foo->update();
 }
-void Train(BoosterUtils *foo, int n) {
+void Train(BoosterUtils* foo, int n) {
     foo->train(n);
 }
-void Dump(BoosterUtils *foo, const char *path) {
+void Dump(BoosterUtils* foo, const char* path) {
     foo->dump(path);
 }
-void Load(BoosterUtils *foo, const char *path) {
+void Load(BoosterUtils* foo, const char* path) {
     foo->load(path);
 }
 
 //////
 
-void SetTrainData(BoosterUtils *foo, uint16_t *maps, double *features, double *preds, int n) {
+void SetTrainData(BoosterUtils* foo, uint16_t* maps, double* features, double* preds, int n) {
     foo->set_train_data(maps, features, preds, n);
 }
-void SetEvalData(BoosterUtils *foo, uint16_t *maps, double *features, double *preds, int n) {
+void SetEvalData(BoosterUtils* foo, uint16_t* maps, double* features, double* preds, int n) {
     foo->set_eval_data(maps, features, preds, n);
 }
 
-void SetLabelDouble(BoosterUtils *foo, double *x, bool is_train) {
+void SetLabelDouble(BoosterUtils* foo, double* x, bool is_train) {
     foo->set_label(x, is_train);
 }
-void SetLabelInt(BoosterUtils *foo, int32_t *x, bool is_train) {
+void SetLabelInt(BoosterUtils* foo, int32_t *x, bool is_train) {
     foo->set_label(x, is_train);
 }
-void Predict(BoosterUtils *foo, double *features, double *preds, int n, int num_trees) {
+void Predict(BoosterUtils* foo, double* features, double* preds, int n, int num_trees) {
     foo->predict(features, preds, n, num_trees);
 }
-void Predict2(BoosterSingle *foo, double *features, double *preds, int n, int out_dim, int num_trees) {
-    std::cout << "hellos from API::Predict2" << std::endl;
-    std::cout << "features = " << features << std::endl;
-    std::cout << "preds = " << preds << std::endl;
-    std::cout << "*features = " << *features << std::endl;
-    std::cout << "*preds = " << *preds << std::endl;
-    std::cout << "n = " << n << std::endl;
-    std::cout << "out_dim = " << out_dim << std::endl;
-    std::cout << "num_trees = " << num_trees << std::endl;
-    foo->predict2(features, preds, n, out_dim, num_trees);
-    // foo->predict_multi(features, preds, n, out_dim, num_trees);
-}
-void PredictMulti(BoosterSingle *foo, double *features, double *preds, int n, int out_dim, int num_trees) {
-    printf("hello from PredictMulti");
+void PredictMulti(BoosterSingle* foo, double* features, double* preds, int n, int out_dim, int num_trees) {
     foo->predict_multi(features, preds, n, out_dim, num_trees);
 }
 
@@ -61,7 +48,7 @@ void PredictMulti(BoosterSingle *foo, double *features, double *preds, int n, in
 BoosterMulti* MultiNew(
         int inp_dim, int out_dim,
         int topk = 0,
-        const char *name = "mse",
+        const char* name = "mse",
         int max_depth = 5,
         int max_leaves = 32,
         int seed = 0,
@@ -80,9 +67,10 @@ BoosterMulti* MultiNew(
                             early_stop, one_side, verbose, hist_cache);
 }
 
-BoosterSingle *SingleNew(
+BoosterSingle* SingleNew(
         int inp_dim,
-        const char *name = "mse",
+        int out_dim,
+        const char* name = "mse",
         int max_depth = 5,
         int max_leaves = 32,
         int seed = 0,
@@ -95,17 +83,17 @@ BoosterSingle *SingleNew(
         int early_stop = 0,
         bool verbose = true,
         int hist_cache = 16) {
-    return new BoosterSingle(inp_dim, name, max_depth, max_leaves,
+    return new BoosterSingle(inp_dim, out_dim, name, max_depth, max_leaves,
                              seed, min_samples, lr, reg_l1,
                              reg_l2, gamma, base_score,
                              early_stop, verbose, hist_cache);
 }
 
 
-void TrainMulti(BoosterSingle *foo, int num_rounds, int out_dim) {
-    foo->train_multi(num_rounds, out_dim);
+void TrainMulti(BoosterSingle* foo, int num_rounds) {
+    foo->train_multi(num_rounds);
 }
-void Reset(BoosterSingle *foo) {
+void Reset(BoosterSingle* foo) {
     foo->reset();
 }
 

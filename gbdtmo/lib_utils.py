@@ -38,8 +38,6 @@ def load_lib(path):
     lib.SetLabelInt.restype = None
     lib.Predict.argtypes = [c_void_p, array_2d_double, array_1d_double, c_int, c_int]
     lib.Predict.restype = None
-    lib.Predict2.argtypes = [c_void_p, array_2d_double, array_1d_double, c_int, c_int, c_int]
-    lib.Predict2.restype = None
     lib.PredictMulti.argtypes = [c_void_p, array_2d_double, array_1d_double, c_int, c_int, c_int]
     # lib.PredictMulti.argtypes = [c_void_p, array_2d_double, array_2d_double, c_int, c_int, c_int]
     lib.PredictMulti.restype = None
@@ -47,7 +45,7 @@ def load_lib(path):
     # lib.Predict.argtypes = [c_void_p, array_2d_double, array_2d_double, c_int, c_int]
 
     lib.SingleNew.argtypes = [
-        c_int, c_char_p, c_int, c_int, c_int, c_int, c_double, c_double, c_double, c_double, c_double, c_int, c_bool,
+        c_int, c_int, c_char_p, c_int, c_int, c_int, c_int, c_double, c_double, c_double, c_double, c_double, c_int, c_bool,
         c_int
     ]
     lib.SingleNew.restype = c_void_p
@@ -58,7 +56,7 @@ def load_lib(path):
     ]
     lib.MultiNew.restype = c_void_p
 
-    lib.TrainMulti.argtypes = [c_void_p, c_int, c_int]
+    lib.TrainMulti.argtypes = [c_void_p, c_int]
     lib.TrainMulti.restype = None
     lib.Reset.argtypes = [c_void_p]
     lib.Reset.restype = None
