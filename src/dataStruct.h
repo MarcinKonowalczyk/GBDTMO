@@ -61,7 +61,7 @@ struct HyperParameter {
     unsigned int seed = 0;
     double base_score = 0.0f;
     int topk = 0;
-    int Max_caches = 16;
+    int max_caches = 16;
     int early_stop = 0;
 };
 

@@ -14,18 +14,33 @@ from .lib_utils import *
 
 
 class BoostUtils:
-    def __init__(self, lib):
-        self.lib = lib
-        self._boostnode = None
 
-    def _set_gh(self, g, h):
-        self.lib.SetGH(self._boostnode, g, h)
+    _default_params = None
+    _lib_init = None
+
+    def __init__(self, lib, shape, params={}, max_bins=32):
+
+        # Make sure the required parameters are set in the children classes
+        for required_attr in ('_default_params', '_lib_init'):
+            if getattr(self, required_attr) is None:
+                raise NotImplementedError(f"Attribute '{required_attr}' not set")
+
+        self.lib = lib
+        self.inp_dim, self.out_dim = shape
+        self.max_bins = max_bins
+
+        self.params = self._default_params
+        # Make sure loss is a bytes string, to make the api a bit more user-friendly
+        params['loss'] = params['loss'].encode() if isinstance(params['loss'], str) else params['loss']
+        self.params.update(params)
+        # self.__dict__.update(self.params)
+
+        # NOTE: The values in DEFAULT_PARAMS are in the correct order for the library call
+        lib_init = getattr(self.lib, self._lib_init)
+        self._boostnode = lib_init(self.inp_dim, self.out_dim, *self.params.values())
 
     def _set_bin(self, bins):
-        num, value = [], []
-        for i, _ in enumerate(bins):
-            num.append(len(_))
-        num = np.array(num, np.uint16)
+        num = np.fromiter((len(b) for b in bins), dtype=np.uint16)
         value = np.concatenate(bins, axis=0)
         self.lib.SetBin(self._boostnode, num, value)
 
@@ -56,6 +71,9 @@ class BoostUtils:
     def train(self, num):
         self.lib.Train(self._boostnode, num)
 
+    def reset(self):
+        self.lib.Reset(self._boostnode)
+
 
 #================================================================================
 #
@@ -69,33 +87,19 @@ class BoostUtils:
 
 
 class GBDTSingle(BoostUtils):
-    def __init__(self, lib, out_dim=1, params={}):
-        super().__init__(lib)
-        self.out_dim = out_dim
-        self.params = default_params()
-        # Make sure loss is a bytes string, to make the api a bit more user-friendly
-        params['loss'] = params['loss'].encode() if isinstance(params['loss'], str) else params['loss']
-        self.params.update(params)
-        self.__dict__.update(self.params)
 
-    def set_booster(self, inp_dim):
-        print(f"inp_dim = {inp_dim}")
-        self._boostnode = self.lib.SingleNew(inp_dim, self.out_dim, self.params['loss'], self.params['max_depth'],
-                                             self.params['max_leaves'], self.params['seed'], self.params['min_samples'],
-                                             self.params['lr'], self.params['reg_l1'], self.params['reg_l2'],
-                                             self.params['gamma'], self.params['base_score'], self.params['early_stop'],
-                                             self.params['verbose'], self.params['hist_cache'])
+    _default_params = DEFAULT_SINGLE_PARAMS
+    _lib_init = "SingleNew"
 
     def set_data(self, train_set: tuple = None, eval_set: tuple = None):
 
         if train_set is not None:
             self.data = np.ascontiguousarray(train_set[0])
             self.label = np.ascontiguousarray(train_set[1].transpose())
-            self.set_booster(self.data.shape[-1])
             self.bins, self.maps = get_bins_maps(self.data, self.max_bins)
             self._set_bin(self.bins)
             self.maps = np.ascontiguousarray(self.maps.transpose())
-            self.preds_train = np.full(len(self.data) * self.out_dim, self.base_score, dtype=np.float64)
+            self.preds_train = np.full(len(self.data) * self.out_dim, self.params['base_score'], dtype=np.float64)
             set_Nth_argtype(self.lib.SetTrainData, 3, array_1d_double)
             self.lib.SetTrainData(self._boostnode, self.maps, self.data, self.preds_train, len(self.data))
             if self.label is not None:
@@ -104,27 +108,19 @@ class GBDTSingle(BoostUtils):
         if eval_set is not None:
             self.data_eval = np.ascontiguousarray(eval_set[0])
             self.label_eval = np.ascontiguousarray(eval_set[1].transpose())
-            # self.data_eval, self.label_eval = map(np.ascontiguousarray, eval_set)
-            self.preds_eval = np.full(len(self.data_eval) * self.out_dim, self.base_score, dtype=np.float64)
+            self.preds_eval = np.full(len(self.data_eval) * self.out_dim, self.params['base_score'], dtype=np.float64)
             maps = np.zeros((1, 1), dtype=np.uint16)
             set_Nth_argtype(self.lib.SetEvalData, 3, array_1d_double)
             self.lib.SetEvalData(self._boostnode, maps, self.data_eval, self.preds_eval, len(self.data_eval))
             if self.label_eval is not None:
                 self._set_label(self.label_eval, False)
 
-    def train(self, num):
-        self.lib.TrainMulti(self._boostnode, num)
-
     def predict(self, X, num_trees=0):
         N = X.shape[0]
-        preds = np.full(N * self.out_dim, self.base_score, dtype=np.float64)
-        self.lib.PredictMulti(self._boostnode, X, preds, N, self.out_dim, num_trees)
-        preds = np.transpose(np.reshape(preds, (self.out_dim, N)))
-
-        return preds
-
-    def reset(self):
-        self.lib.Reset(self._boostnode)
+        preds = np.full(N * self.out_dim, self.params['base_score'], dtype=np.float64)
+        set_Nth_argtype(self.lib.Predict, 2, array_1d_double)
+        self.lib.Predict(self._boostnode, X, preds, N, num_trees)
+        return np.transpose(np.reshape(preds, (self.out_dim, N)))
 
 
 #===========================================================================
@@ -139,33 +135,18 @@ class GBDTSingle(BoostUtils):
 
 
 class GBDTMulti(BoostUtils):
-    def __init__(self, lib, out_dim=1, params={}):
-        super().__init__(lib)
-        self.out_dim = out_dim
-        self.params = default_params()
-        # Make sure loss is a bytes string, to make the api a bit more user-friendly
-        params['loss'] = params['loss'].encode() if isinstance(params['loss'], str) else params['loss']
-        self.params.update(params)
-        self.__dict__.update(self.params)
 
-    def set_booster(self, inp_dim):
-        ret = self.lib.MultiNew(inp_dim, self.out_dim, self.params['topk'], self.params['loss'],
-                                self.params['max_depth'], self.params['max_leaves'], self.params['seed'],
-                                self.params['min_samples'], self.params['lr'], self.params['reg_l1'],
-                                self.params['reg_l2'], self.params['gamma'], self.params['base_score'],
-                                self.params['early_stop'], self.params['one_side'], self.params['verbose'],
-                                self.params['hist_cache'])
-        self._boostnode = ret
+    _default_params = DEFAULT_MULTI_PARAMS
+    _lib_init = "MultiNew"
 
     def set_data(self, train_set: tuple = None, eval_set: tuple = None):
 
         if train_set is not None:
             self.data, self.label = map(np.ascontiguousarray, train_set)
-            self.set_booster(self.data.shape[-1])
             self.bins, self.maps = get_bins_maps(self.data, self.max_bins)
             self._set_bin(self.bins)
             self.maps = np.ascontiguousarray(self.maps.transpose())
-            self.preds_train = np.full((len(self.data), self.out_dim), self.base_score, dtype=np.float64)
+            self.preds_train = np.full((len(self.data), self.out_dim), self.params['base_score'], dtype=np.float64)
             set_Nth_argtype(self.lib.SetTrainData, 3, array_2d_double)
             self.lib.SetTrainData(self._boostnode, self.maps, self.data, self.preds_train, len(self.data))
             if self.label is not None:
@@ -173,7 +154,7 @@ class GBDTMulti(BoostUtils):
 
         if eval_set is not None:
             self.data_eval, self.label_eval = map(np.ascontiguousarray, eval_set)
-            self.preds_eval = np.full((len(self.data_eval), self.out_dim), self.base_score, dtype=np.float64)
+            self.preds_eval = np.full((len(self.data_eval), self.out_dim), self.params['base_score'], dtype=np.float64)
             maps = np.zeros((1, 1), dtype=np.uint16)
             set_Nth_argtype(self.lib.SetEvalData, 3, array_2d_double)
             self.lib.SetEvalData(self._boostnode, maps, self.data_eval, self.preds_eval, len(self.data_eval))
@@ -181,7 +162,7 @@ class GBDTMulti(BoostUtils):
                 self._set_label(self.label_eval, False)
 
     def predict(self, X, num_trees=0):
-        preds = np.full((len(X), self.out_dim), self.base_score, dtype=np.float64)
+        preds = np.full((len(X), self.out_dim), self.params['base_score'], dtype=np.float64)
         set_Nth_argtype(self.lib.Predict, 2, array_2d_double)
         self.lib.Predict(self._boostnode, X, preds, len(X), num_trees)
         return preds

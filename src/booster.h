@@ -58,6 +58,7 @@ public:
     virtual void growth() = 0;
     virtual void train(int) = 0;
     virtual void predict(const double*, double*, const size_t, int) = 0;
+    void reset();
 
 protected:
     Tree tree;
@@ -86,10 +87,23 @@ protected:
 
 class BoosterSingle : public BoosterUtils {
 public:
-    BoosterSingle(int, int, const char*,
-                  int, int, int, int,
-                  double, double, double, double, double,
-                  int, bool, int);
+    BoosterSingle(
+        int inp_dim,
+        int out_dim,
+        const char* loss,
+        int max_depth,
+        int max_leaves,
+        int seed,
+        int min_samples,
+        double lr,
+        double reg_l1,
+        double reg_l2,
+        double gamma,
+        double base_score,
+        int early_stop,
+        bool verbose,
+        int hist_cache
+    );
     void update() override;
     void growth() override;
     void train(int) override;
@@ -119,10 +133,25 @@ private:
 
 class BoosterMulti : public BoosterUtils {
 public:
-    BoosterMulti(int, int, int, const char *,
-                 int, int, int, int,
-                 double, double, double, double, double,
-                 int, bool, bool, int);
+    BoosterMulti(
+        int inp_dim,
+        int out_dim,
+        const char *name,
+        int max_depth,
+        int max_leaves,
+        int seed,
+        int min_samples,
+        double lr,
+        double reg_l1,
+        double reg_l2,
+        double gamma,
+        double base_score,
+        int early_stop,
+        bool verbose,
+        int hist_cache,
+        int topk,
+        bool one_side
+    );
     void update() override;
     void growth() override;
     void train(int) override;

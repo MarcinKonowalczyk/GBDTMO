@@ -51,9 +51,6 @@ Learning
 
 - ``base_score``: default = 0.0, type = double.
     - Initial value of prediction.
-
-- ``subsample``: default = 1.0, type = double. 
-    - Column sample rate. **No effect currently**.
   
 - ``lr``: default = 0.2, type = double.
     - Learning rate.

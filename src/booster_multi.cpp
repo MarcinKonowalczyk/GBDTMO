@@ -13,7 +13,6 @@
 BoosterMulti::BoosterMulti(
     int inp_dim,
     int out_dim,
-    int topk = 0,
     const char *name = "mse",
     int max_depth = 5,
     int max_leaves = 32,
@@ -25,13 +24,13 @@ BoosterMulti::BoosterMulti(
     double gamma = 1e-3,
     double base_score = 0.0f,
     int early_stop = 0,
-    bool one_side = true,
     bool verbose = true,
-    int hist_cache = 16)
-{
+    int hist_cache = 16,
+    int topk = 0,
+    bool one_side = true
+) {
     hp.inp_dim = inp_dim;
     hp.out_dim = out_dim;
-    hp.topk = std::min(topk, out_dim);
     hp.loss = name;
     hp.max_depth = max_depth;
     hp.max_leaves = max_leaves;
@@ -43,9 +42,10 @@ BoosterMulti::BoosterMulti(
     hp.gamma = gamma;
     hp.base_score = base_score;
     hp.early_stop = early_stop;
-    hp.one_side = one_side;
     hp.verbose = verbose;
-    hp.Max_caches = hist_cache;
+    hp.max_caches = hist_cache;
+    hp.topk = std::min(topk, out_dim);
+    hp.one_side = one_side;
 
     srand(hp.seed);
     Score.resize(hp.out_dim);
@@ -55,7 +55,7 @@ BoosterMulti::BoosterMulti(
         Opt.resize(hp.out_dim);
     }
 
-    cache = TopkDeque<CacheInfo>(hp.Max_caches);
+    cache = TopkDeque<CacheInfo>(hp.max_caches);
     obj = Objective(hp.loss);
 }
 

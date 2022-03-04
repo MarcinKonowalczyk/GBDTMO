@@ -26,6 +26,8 @@ def load_lib(path):
     lib.Dump.restype = None
     lib.Load.argtypes = [c_void_p, c_char_p]
     lib.Load.restype = None
+    lib.Reset.argtypes = [c_void_p]
+    lib.Reset.restype = None
 
     # Default to 1d array, but this might change in the _set_label call
     lib.SetTrainData.argtypes = [c_void_p, array_2d_uint16, array_2d_double, array_2d_double, c_int]
@@ -38,28 +40,18 @@ def load_lib(path):
     lib.SetLabelInt.restype = None
     lib.Predict.argtypes = [c_void_p, array_2d_double, array_1d_double, c_int, c_int]
     lib.Predict.restype = None
-    lib.PredictMulti.argtypes = [c_void_p, array_2d_double, array_1d_double, c_int, c_int, c_int]
-    # lib.PredictMulti.argtypes = [c_void_p, array_2d_double, array_2d_double, c_int, c_int, c_int]
-    lib.PredictMulti.restype = None
 
-    # lib.Predict.argtypes = [c_void_p, array_2d_double, array_2d_double, c_int, c_int]
-
-    lib.SingleNew.argtypes = [
+    # Single and Multi boosters share a lot of parameters in common
+    # TODO: Would it make sense to pass these as the hp struct??
+    argtypes_common = [
         c_int, c_int, c_char_p, c_int, c_int, c_int, c_int, c_double, c_double, c_double, c_double, c_double, c_int,
         c_bool, c_int
     ]
+
+    lib.SingleNew.argtypes = argtypes_common
     lib.SingleNew.restype = c_void_p
-
-    lib.MultiNew.argtypes = [
-        c_int, c_int, c_int, c_char_p, c_int, c_int, c_int, c_int, c_double, c_double, c_double, c_double, c_double,
-        c_int, c_bool, c_bool, c_int
-    ]
+    lib.MultiNew.argtypes = argtypes_common + [c_int, c_bool]  # All the same arguments
     lib.MultiNew.restype = c_void_p
-
-    lib.TrainMulti.argtypes = [c_void_p, c_int]
-    lib.TrainMulti.restype = None
-    lib.Reset.argtypes = [c_void_p]
-    lib.Reset.restype = None
 
     return lib
 
@@ -75,23 +67,20 @@ def set_Nth_argtype(lib_fun, N, value):
     lib_fun.argtypes = argtypes
 
 
-def default_params():
-    return dict(
-        topk=0,
-        loss=b"mse",
-        max_depth=4,
-        max_leaves=32,
-        seed=0,
-        min_samples=20,
-        lr=0.2,
-        reg_l1=0.0,
-        reg_l2=1.0,
-        gamma=1e-3,
-        base_score=0.0,
-        early_stop=0,
-        one_side=True,
-        verbose=True,
-        hist_cache=16,
-        max_bins=32,
-        subsample=1.0,
-    )
+DEFAULT_SINGLE_PARAMS = dict(
+    loss=b"mse",
+    max_depth=4,
+    max_leaves=32,
+    seed=0,
+    min_samples=20,
+    lr=0.2,
+    reg_l1=0.0,
+    reg_l2=1.0,
+    gamma=1e-3,
+    base_score=0.0,
+    early_stop=0,
+    verbose=True,
+    hist_cache=16,
+)
+
+DEFAULT_MULTI_PARAMS = dict(**DEFAULT_SINGLE_PARAMS, topk=0, one_side=True)

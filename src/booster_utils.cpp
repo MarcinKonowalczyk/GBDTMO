@@ -84,3 +84,13 @@ double* BoosterUtils::calloc_H(int elements, bool constHessian = true, double co
     }
     return H;
 }
+
+// Clear the trees and predictions of the booster
+void BoosterUtils::reset() {
+    // cache.clear(); tree.clear(); // No need to clear these
+    trees.clear();
+    // if (Train.num > 0) { std::fill_n(Train.Preds, Train.num, hp.base_score); }
+    // if (Eval.num > 0) { std::fill_n(Eval.Preds, Eval.num, hp.base_score); }
+    std::fill_n(Train.Preds, Train.num, hp.base_score);
+    std::fill_n(Eval.Preds, Eval.num, hp.base_score);
+}
