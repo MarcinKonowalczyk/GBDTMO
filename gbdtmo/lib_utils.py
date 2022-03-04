@@ -45,8 +45,8 @@ def load_lib(path):
     # lib.Predict.argtypes = [c_void_p, array_2d_double, array_2d_double, c_int, c_int]
 
     lib.SingleNew.argtypes = [
-        c_int, c_int, c_char_p, c_int, c_int, c_int, c_int, c_double, c_double, c_double, c_double, c_double, c_int, c_bool,
-        c_int
+        c_int, c_int, c_char_p, c_int, c_int, c_int, c_int, c_double, c_double, c_double, c_double, c_double, c_int,
+        c_bool, c_int
     ]
     lib.SingleNew.restype = c_void_p
 

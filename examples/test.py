@@ -16,6 +16,7 @@ LIB = load_lib("../build/gbdtmo.so" if os.path.exists("../build/gbdtmo.so") else
 
 from contextlib import contextmanager
 
+
 @contextmanager
 def seed_rng(random_state):
     """Temporarilly seed the state of the random number generator"""
@@ -27,15 +28,6 @@ def seed_rng(random_state):
     finally:
         if random_state:
             np.random.set_state(old_state)
-
-def f(X, out_dim, seed = None):
-    """Function to approximate by the GBDT"""
-    inp_dim = X.shape[1]
-    with seed_rng(seed):
-        M = np.random.randn(5*inp_dim, out_dim)
-    y = np.c_[X,X**2,X**(1/2),X**3,X**(1/3)] @ M
-    y = y - np.mean(y, axis=0)
-    return y
 
 
 # def regression():
@@ -62,32 +54,44 @@ def f(X, out_dim, seed = None):
 #     booster.train(20)
 #     booster.dump(b"classification.txt")
 
-
 if __name__ == '__main__':
     inp_dim, out_dim = 10, 2
-    params = params=dict(max_depth=args.depth, lr=args.lr, loss="mse")
-    
-    seed = 42
-    X_train, X_test = np.random.rand(10000, inp_dim), np.random.rand(100, inp_dim)
-    y_train, y_test = f(X_train, out_dim, seed), f(X_test, out_dim, seed)
+    params = params = dict(max_depth=args.depth, lr=args.lr, loss="mse", early_stop=10)
 
-    booster_single = GBDTSingle(LIB, out_dim=out_dim, params=params)
-    booster_single.set_data((X_train, y_train), (X_test, y_test))
-    booster_single.train(31)
-    yp = booster_single.predict(X_test)
+    seed = 42
+    with seed_rng(seed):
+        X_train, X_test = np.random.rand(10000, inp_dim), np.random.rand(100, inp_dim)
+        M = np.random.randn(5 * inp_dim, out_dim)
+
+    # Function to approximate with the gradient booster
+    f = lambda X: np.apply_along_axis(lambda a: a - np.mean(a), 0, np.c_[X, X**2, X**(1 / 2), X**3, X**(1 / 3)] @ M)
+    y_train, y_test = f(X_train), f(X_test)
+
+    booster = GBDTSingle(LIB, out_dim=y_train.shape[1], params=params)
+    # booster = GBDTMulti(LIB, out_dim=y_train.shape[1], params=params)
+    booster.set_data((X_train, y_train), (X_test, y_test))
+    booster.train(10000)
+    yp = booster.predict(X_test)
     y = y_test
 
-    cla(); plot(y[:,0]); plot(yp[:,0]);
-# if __name__ == '__main__':
-#     inp_dim, out_dim = 10, 5
-#     params = params=dict(max_depth=args.depth, lr=args.lr, loss="mse")
-    
-#     seed = 42
-#     X_train, X_test = np.random.rand(10000, inp_dim), np.random.rand(100, inp_dim)
-#     y_train, y_test = f(X_train, out_dim, seed), f(X_test, out_dim, seed)
+    eval_score = np.sqrt(np.mean((y[:, 0] - yp[:, 0])**2))
+    print(f"first column eval_score = {eval_score}")
 
-#     booster_mutli = GBDTMulti(LIB, out_dim=out_dim, params=params)
-#     booster_mutli.set_data((X_train, y_train), (X_test, y_test))
-#     booster_mutli.train(100)
-#     yp = booster_mutli.predict(X_test)
-#     y = y_test
+    if y.shape[1] == 2:
+        cla()
+        subplot(2, 1, 1)
+        I = np.argsort(y[:, 0])
+        plot(y[I, 0])
+        plot(yp[I, 0])
+        grid("on")
+        subplot(2, 1, 2)
+        I = np.argsort(y[:, 1])
+        plot(y[I, 1])
+        plot(yp[I, 1])
+        grid("on")
+    else:
+        cla()
+        I = np.argsort(y[:, 0])
+        plot(y[I, 0])
+        plot(yp[I, 0])
+        grid("on")

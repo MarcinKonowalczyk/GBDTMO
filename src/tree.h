@@ -95,7 +95,9 @@ struct Tree {
 
     inline void shrinkage(double lr) {
         for (int i = 1; i < leaf.size() + 1; ++i) {
-            for (auto &p : leaf[i].values) { p *= lr; }
+            for (auto &p : leaf[i].values) {
+                p *= lr;
+            }
         }
     }
 

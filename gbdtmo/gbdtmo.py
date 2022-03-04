@@ -89,22 +89,22 @@ class GBDTSingle(BoostUtils):
     def set_data(self, train_set: tuple = None, eval_set: tuple = None):
 
         if train_set is not None:
-            self.data, self.label = train_set
+            self.data = np.ascontiguousarray(train_set[0])
+            self.label = np.ascontiguousarray(train_set[1].transpose())
             self.set_booster(self.data.shape[-1])
             self.bins, self.maps = get_bins_maps(self.data, self.max_bins)
-            print(f"len maps = {len(self.maps)}")
             self._set_bin(self.bins)
             self.maps = np.ascontiguousarray(self.maps.transpose())
             self.preds_train = np.full(len(self.data) * self.out_dim, self.base_score, dtype=np.float64)
-
             set_Nth_argtype(self.lib.SetTrainData, 3, array_1d_double)
             self.lib.SetTrainData(self._boostnode, self.maps, self.data, self.preds_train, len(self.data))
-
             if self.label is not None:
                 self._set_label(self.label, True)
 
         if eval_set is not None:
-            self.data_eval, self.label_eval = eval_set
+            self.data_eval = np.ascontiguousarray(eval_set[0])
+            self.label_eval = np.ascontiguousarray(eval_set[1].transpose())
+            # self.data_eval, self.label_eval = map(np.ascontiguousarray, eval_set)
             self.preds_eval = np.full(len(self.data_eval) * self.out_dim, self.base_score, dtype=np.float64)
             maps = np.zeros((1, 1), dtype=np.uint16)
             set_Nth_argtype(self.lib.SetEvalData, 3, array_1d_double)
@@ -113,29 +113,13 @@ class GBDTSingle(BoostUtils):
                 self._set_label(self.label_eval, False)
 
     def train(self, num):
-        if self.out_dim == 1:
-            self.lib.Train(self._boostnode, num)
-        else:
-            self.lib.TrainMulti(self._boostnode, num)
+        self.lib.TrainMulti(self._boostnode, num)
 
     def predict(self, X, num_trees=0):
-
         N = X.shape[0]
         preds = np.full(N * self.out_dim, self.base_score, dtype=np.float64)
-        if self.out_dim == 1:
-            set_Nth_argtype(self.lib.Predict, 2, array_1d_double)
-            self.lib.Predict(self._boostnode, X, preds, N, num_trees)
-        else:
-            print(f"self._boostnode = {self._boostnode}")
-            print(f"X.shape = {X.shape}")
-            print(f"preds.shape = {preds.shape}")
-            print(f"N = {N}")
-            print(f"self.out_dim = {self.out_dim}")
-            print(f"num_trees = {num_trees}")
-            print("about to call lib.PredictMulti")
-            self.lib.PredictMulti(self._boostnode, X, preds, N, self.out_dim, num_trees)
-            print("out of lib.PredictMulti")
-            preds = np.transpose(np.reshape(preds, (self.out_dim, N)))
+        self.lib.PredictMulti(self._boostnode, X, preds, N, self.out_dim, num_trees)
+        preds = np.transpose(np.reshape(preds, (self.out_dim, N)))
 
         return preds
 
@@ -176,7 +160,7 @@ class GBDTMulti(BoostUtils):
     def set_data(self, train_set: tuple = None, eval_set: tuple = None):
 
         if train_set is not None:
-            self.data, self.label = train_set
+            self.data, self.label = map(np.ascontiguousarray, train_set)
             self.set_booster(self.data.shape[-1])
             self.bins, self.maps = get_bins_maps(self.data, self.max_bins)
             self._set_bin(self.bins)
@@ -188,17 +172,16 @@ class GBDTMulti(BoostUtils):
                 self._set_label(self.label, True)
 
         if eval_set is not None:
-            self.data_eval, self.label_eval = eval_set
+            self.data_eval, self.label_eval = map(np.ascontiguousarray, eval_set)
             self.preds_eval = np.full((len(self.data_eval), self.out_dim), self.base_score, dtype=np.float64)
             maps = np.zeros((1, 1), dtype=np.uint16)
             set_Nth_argtype(self.lib.SetEvalData, 3, array_2d_double)
             self.lib.SetEvalData(self._boostnode, maps, self.data_eval, self.preds_eval, len(self.data_eval))
-
             if self.label_eval is not None:
                 self._set_label(self.label_eval, False)
 
-    def predict(self, x, num_trees=0):
-        preds = np.full((len(x), self.out_dim), self.base_score, dtype=np.float64)
+    def predict(self, X, num_trees=0):
+        preds = np.full((len(X), self.out_dim), self.base_score, dtype=np.float64)
         set_Nth_argtype(self.lib.Predict, 2, array_2d_double)
-        self.lib.Predict(self._boostnode, x, preds, len(x), num_trees)
+        self.lib.Predict(self._boostnode, X, preds, len(X), num_trees)
         return preds

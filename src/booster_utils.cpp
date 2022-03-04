@@ -55,12 +55,12 @@ void BoosterUtils::set_label(double* x, bool is_train) {
     else { Eval.Label_double = x; }
 }
 
-void BoosterUtils::set_label(int32_t *x, bool is_train) {
+void BoosterUtils::set_label(int32_t* x, bool is_train) {
     if (is_train) { Train.Label_int32 = x; }
     else { Eval.Label_int32 = x; }
 }
 
-void BoosterUtils::rebuild_order(std::vector<int32_t> &order, std::vector<int32_t> &order_l, std::vector<int32_t> &order_r, uint16_t* maps, uint16_t bin) {
+void BoosterUtils::rebuild_order(std::vector<int32_t>& order, std::vector<int32_t>& order_l, std::vector<int32_t>& order_r, uint16_t* maps, uint16_t bin) {
     int count_l = 0, count_r = 0;
     for (auto i : order) {
         if (maps[i] <= bin) {

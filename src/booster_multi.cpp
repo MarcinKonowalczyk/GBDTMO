@@ -310,7 +310,8 @@ void BoosterMulti::build_tree_best() {
 
 void BoosterMulti::update() {
     tree.shrinkage(hp.lr);
-    tree.pred_value_multi(Train.Maps, Train.Preds, hp, Train.num);
+    // tree.pred_value_multi(Train.Maps, Train.Preds, hp, Train.num);
+    tree.pred_value_multi(Train.Features, Train.Preds, hp, Train.num);
     if (Eval.num > 0) {
         tree.pred_value_multi(Eval.Features, Eval.Preds, hp, Eval.num);
     }
@@ -377,7 +378,6 @@ void BoosterMulti::train(int num_rounds) {
 }
 
 void BoosterMulti::predict(const double* features, double* preds, const size_t n, int num_trees = 0) {
-    num_trees = num_trees == 0 ?
-        int(trees.size()) : std::min(num_trees, int(trees.size()));
+    num_trees = num_trees == 0 ? int(trees.size()) : std::min(num_trees, int(trees.size()));
     for (int i = 0; i < num_trees; ++i) { trees[i].pred_value_multi(features, preds, hp, n); }
 }

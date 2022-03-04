@@ -144,11 +144,11 @@ public:
 
     EarlyStoper() {};
 
-    EarlyStoper(int n, bool state) : k(n), larger_better(state) {
-        info = std::make_pair(state ? -1e10 : 1e10, 0);
+    EarlyStoper(int n, bool lb) : k(n), larger_better(lb) {
+        info = std::make_pair(lb ? -1e10 : 1e10, 0);
     };
 
-    inline void push(const std::pair<double, int> &x) {
+    inline void push(const std::pair<double, int>& x) {
         if (larger_better == x > info) { info = x; } // xnor(larger_better, x > info)
         is_continue = (std::get<1>(x) < std::get<1>(info) + k);
     }

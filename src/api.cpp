@@ -33,7 +33,7 @@ void SetEvalData(BoosterUtils* foo, uint16_t* maps, double* features, double* pr
 void SetLabelDouble(BoosterUtils* foo, double* x, bool is_train) {
     foo->set_label(x, is_train);
 }
-void SetLabelInt(BoosterUtils* foo, int32_t *x, bool is_train) {
+void SetLabelInt(BoosterUtils* foo, int32_t* x, bool is_train) {
     foo->set_label(x, is_train);
 }
 void Predict(BoosterUtils* foo, double* features, double* preds, int n, int num_trees) {
