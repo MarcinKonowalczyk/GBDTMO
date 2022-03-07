@@ -1,4 +1,5 @@
 #include "booster.h"
+#include "histogram.h"
 
 //===========================================================================
 //                                                                           
@@ -10,53 +11,13 @@
 //                                                                           
 //===========================================================================
 
-BoosterMulti::BoosterMulti(
-    int inp_dim,
-    int out_dim,
-    const char *name = "mse",
-    int max_depth = 5,
-    int max_leaves = 32,
-    int seed = 0,
-    int min_samples = 5,
-    double lr = 0.2,
-    double reg_l1 = 0.0,
-    double reg_l2 = 1.0,
-    double gamma = 1e-3,
-    double base_score = 0.0f,
-    int early_stop = 0,
-    bool verbose = true,
-    int hist_cache = 16,
-    int topk = 0,
-    bool one_side = true
-) {
-    hp.inp_dim = inp_dim;
-    hp.out_dim = out_dim;
-    hp.loss = name;
-    hp.max_depth = max_depth;
-    hp.max_leaves = max_leaves;
-    hp.seed = seed;
-    hp.min_samples = min_samples;
-    hp.lr = lr;
-    hp.reg_l1 = reg_l1;
-    hp.reg_l2 = reg_l2;
-    hp.gamma = gamma;
-    hp.base_score = base_score;
-    hp.early_stop = early_stop;
-    hp.verbose = verbose;
-    hp.max_caches = hist_cache;
-    hp.topk = std::min(topk, out_dim);
-    hp.one_side = one_side;
-
-    srand(hp.seed);
+BoosterMulti::BoosterMulti(HyperParameter hp) : BoosterBase(hp) {
     Score.resize(hp.out_dim);
     if (hp.topk > 0) {
         OptPair.resize(hp.topk);
     } else {
         Opt.resize(hp.out_dim);
     }
-
-    cache = TopkDeque<CacheInfo>(hp.max_caches);
-    obj = Objective(hp.loss);
 }
 
 void BoosterMulti::get_score_opt(

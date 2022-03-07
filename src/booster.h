@@ -3,9 +3,10 @@
 
 #include "tree.h"
 #include "mathFunc.h"
-#include "dataStruct.h"
+#include "datastruct.h"
 #include "loss.h"
 #include "io.h"
+#include "histogram.h"
 #include <algorithm>
 
 struct CacheInfo {
@@ -32,8 +33,10 @@ struct CacheInfo {
 //======================================================================
 
 
-class BoosterUtils {
+class BoosterBase {
 public:
+    BoosterBase(const HyperParameter p);
+
     void set_bin(uint16_t* , double* );
     void set_gh(double* , double* );
     void set_train_data(uint16_t* maps, double* features, double* preds, int n);
@@ -57,7 +60,7 @@ public:
     virtual void update() = 0;
     virtual void growth() = 0;
     virtual void train(int) = 0;
-    virtual void predict(const double*, double*, const size_t, int) = 0;
+    virtual void predict(const double* features, double* preds, const size_t n, int num_trees) = 0;
     void reset();
 
 protected:
@@ -70,7 +73,7 @@ protected:
     Dataset Eval;
     double* G;
     double* H;
-    HyperParameter hp;
+    const HyperParameter hp;
     TopkDeque<CacheInfo> cache;
     Objective obj;
 };
@@ -85,25 +88,9 @@ protected:
 //                                                                                
 //================================================================================
 
-class BoosterSingle : public BoosterUtils {
+class BoosterSingle : public BoosterBase {
 public:
-    BoosterSingle(
-        int inp_dim,
-        int out_dim,
-        const char* loss,
-        int max_depth,
-        int max_leaves,
-        int seed,
-        int min_samples,
-        double lr,
-        double reg_l1,
-        double reg_l2,
-        double gamma,
-        double base_score,
-        int early_stop,
-        bool verbose,
-        int hist_cache
-    );
+    BoosterSingle(const HyperParameter hp);
     void update() override;
     void growth() override;
     void train(int) override;
@@ -131,27 +118,9 @@ private:
 //                                                                           
 //===========================================================================
 
-class BoosterMulti : public BoosterUtils {
+class BoosterMulti : public BoosterBase {
 public:
-    BoosterMulti(
-        int inp_dim,
-        int out_dim,
-        const char *name,
-        int max_depth,
-        int max_leaves,
-        int seed,
-        int min_samples,
-        double lr,
-        double reg_l1,
-        double reg_l2,
-        double gamma,
-        double base_score,
-        int early_stop,
-        bool verbose,
-        int hist_cache,
-        int topk,
-        bool one_side
-    );
+    BoosterMulti(const HyperParameter hp);
     void update() override;
     void growth() override;
     void train(int) override;

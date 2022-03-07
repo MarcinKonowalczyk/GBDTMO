@@ -7,14 +7,14 @@ TARGET = gbdtmo.so
 # Compiler settings
 CPP = clang++
 CPP_FLAGS = -std=c++11
-CPP_FLAGS += -fPIC -O3
+CPP_FLAGS += -fPIC -Ofast
 CPP_FLAGS += -Wall -Wfatal-errors
 CPP_FLAGS += -m64
 
 BUILD_DIR = build
 SOURCES_DIR = src
 
-SOURCES = api.cpp booster_single.cpp booster_multi.cpp booster_utils.cpp dataStruct.cpp io.cpp loss.cpp tree.cpp
+SOURCES = api.cpp booster_single.cpp booster_multi.cpp booster_base.cpp histogram.cpp io.cpp loss.cpp tree.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 # SOURCES := $(addprefix ${SOURCES_DIR}/,${SOURCES})
 # OBJECTS := $(addprefix ${BUILD_DIR}/,${OBJECTS})

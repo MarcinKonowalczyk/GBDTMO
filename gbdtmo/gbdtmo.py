@@ -13,15 +13,14 @@ from .lib_utils import *
 #======================================================================
 
 
-class BoostUtils:
+class GBDTBase:
 
-    _default_params = None
     _lib_init = None
 
     def __init__(self, lib, shape, params={}, max_bins=32):
 
         # Make sure the required parameters are set in the children classes
-        for required_attr in ('_default_params', '_lib_init'):
+        for required_attr in ('_lib_init', ):
             if getattr(self, required_attr) is None:
                 raise NotImplementedError(f"Attribute '{required_attr}' not set")
 
@@ -29,15 +28,20 @@ class BoostUtils:
         self.inp_dim, self.out_dim = shape
         self.max_bins = max_bins
 
-        self.params = self._default_params
+        hp = self.lib.DefaultHyperParameters()
+        hp.inp_dim = self.inp_dim
+        hp.out_dim = self.out_dim
+        self.params = dict(hp)
+
         # Make sure loss is a bytes string, to make the api a bit more user-friendly
         params['loss'] = params['loss'].encode() if isinstance(params['loss'], str) else params['loss']
+
         self.params.update(params)
         # self.__dict__.update(self.params)
 
         # NOTE: The values in DEFAULT_PARAMS are in the correct order for the library call
         lib_init = getattr(self.lib, self._lib_init)
-        self._boostnode = lib_init(self.inp_dim, self.out_dim, *self.params.values())
+        self._boostnode = lib_init(HyperParameters(**self.params))
 
     def _set_bin(self, bins):
         num = np.fromiter((len(b) for b in bins), dtype=np.uint16)
@@ -86,9 +90,8 @@ class BoostUtils:
 #================================================================================
 
 
-class GBDTSingle(BoostUtils):
+class GBDTSingle(GBDTBase):
 
-    _default_params = DEFAULT_SINGLE_PARAMS
     _lib_init = "SingleNew"
 
     def set_data(self, train_set: tuple = None, eval_set: tuple = None):
@@ -134,9 +137,8 @@ class GBDTSingle(BoostUtils):
 #===========================================================================
 
 
-class GBDTMulti(BoostUtils):
+class GBDTMulti(GBDTBase):
 
-    _default_params = DEFAULT_MULTI_PARAMS
     _lib_init = "MultiNew"
 
     def set_data(self, train_set: tuple = None, eval_set: tuple = None):

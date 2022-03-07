@@ -10,6 +10,32 @@ array_2d_int = npct.ndpointer(dtype=np.int32, ndim=2, flags='CONTIGUOUS')
 array_1d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=1, flags='CONTIGUOUS')
 array_2d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=2, flags='CONTIGUOUS')
 
+class HyperParameters(Structure):
+    _fields_ = [
+        ("inp_dim", c_int),
+        ("out_dim", c_int),
+        ("loss", c_char_p),
+        ("max_depth", c_int),
+        ("max_leaves", c_int),
+        ("seed", c_int),
+        ("min_samples", c_int),
+        ("lr", c_double),
+        ("reg_l1", c_double),
+        ("reg_l2", c_double),
+        ("gamma", c_double),
+        ("base_score", c_double),
+        ("early_stop", c_int),
+        ("verbose", c_bool),
+        ("max_caches", c_int),
+        ("topk", c_int),
+        ("one_side", c_bool),
+    ]
+
+    def __iter__(self):
+        """Iterate through fields of self. This allows calls like `dict(hp)`"""
+        for field in self._fields_:
+            yield (field[0], getattr(self, field[0]))
+
 
 def load_lib(path):
     lib = npct.load_library(path, '.')
@@ -41,17 +67,13 @@ def load_lib(path):
     lib.Predict.argtypes = [c_void_p, array_2d_double, array_1d_double, c_int, c_int]
     lib.Predict.restype = None
 
-    # Single and Multi boosters share a lot of parameters in common
-    # TODO: Would it make sense to pass these as the hp struct??
-    argtypes_common = [
-        c_int, c_int, c_char_p, c_int, c_int, c_int, c_int, c_double, c_double, c_double, c_double, c_double, c_int,
-        c_bool, c_int
-    ]
-
-    lib.SingleNew.argtypes = argtypes_common
+    lib.SingleNew.argtypes = [HyperParameters]
     lib.SingleNew.restype = c_void_p
-    lib.MultiNew.argtypes = argtypes_common + [c_int, c_bool]  # All the same arguments
+    lib.MultiNew.argtypes = [HyperParameters]
     lib.MultiNew.restype = c_void_p
+
+    lib.DefaultHyperParameters.argtypes = None
+    lib.DefaultHyperParameters.restype = HyperParameters
 
     return lib
 
@@ -65,22 +87,3 @@ def set_Nth_argtype(lib_fun, N, value):
     argtypes = lib_fun.argtypes
     argtypes[N] = value
     lib_fun.argtypes = argtypes
-
-
-DEFAULT_SINGLE_PARAMS = dict(
-    loss=b"mse",
-    max_depth=4,
-    max_leaves=32,
-    seed=0,
-    min_samples=20,
-    lr=0.2,
-    reg_l1=0.0,
-    reg_l2=1.0,
-    gamma=1e-3,
-    base_score=0.0,
-    early_stop=0,
-    verbose=True,
-    hist_cache=16,
-)
-
-DEFAULT_MULTI_PARAMS = dict(**DEFAULT_SINGLE_PARAMS, topk=0, one_side=True)

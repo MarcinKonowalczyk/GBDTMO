@@ -5,7 +5,7 @@
 #include <exception>
 #include <stdexcept>
 #include <cstring>
-#include "dataStruct.h"
+#include "datastruct.h"
 #include "mathFunc.h"
 
 //TODO: make it easier to implement new loss objective
@@ -14,8 +14,8 @@
 // score function: dataset, rows, columns
 // function with "column": only used for multiple predictions one by one
 
-typedef void (*func_grad) (const Dataset& data, const int n, const int out_dim, double* g, double* h);
-typedef double (*func_score) (const Dataset& data, const int n, const int out_dim);
+typedef void   (*func_grad)   (const Dataset& data, const int n, const int out_dim, double* g, double* h);
+typedef double (*func_score)  (const Dataset& data, const int n, const int out_dim);
 typedef double (*func_metric) (const Dataset& data, const int n, const int out_dim);
 
 void   mse_grad              (const Dataset&, const int, const int, double*, double*);

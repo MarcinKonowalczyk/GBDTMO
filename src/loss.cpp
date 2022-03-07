@@ -21,7 +21,7 @@ double mse_score(const Dataset& data, const int n, const int out_dim) {
     return sqrt(s / N);
 }
 
-// ----------
+// Binary cross-entropy
 void bce_grad(const Dataset& data, const int n, const int out_dim, double* g, double* h) {
     auto preds = data.Preds;
     auto labels = data.Label_int32;
@@ -46,7 +46,7 @@ double bce_score(const Dataset& data, const int n, const int out_dim) {
     return score / N;
 }
 
-// ----------
+// Cross-entropy
 void ce_grad(const Dataset& data, const int n, const int out_dim, double* g, double* h) {
     auto preds = data.Preds;
     auto labels = data.Label_int32;

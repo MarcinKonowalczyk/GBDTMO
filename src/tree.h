@@ -2,7 +2,7 @@
 #define GBDTMO_TREE_H
 
 #include "mathFunc.h"
-#include "dataStruct.h"
+#include "datastruct.h"
 #include <vector>
 #include <map>
 #include <iomanip>

@@ -1,4 +1,5 @@
 #include "booster.h"
+#include "histogram.h"
 
 //================================================================================
 //                                                                                
@@ -10,43 +11,7 @@
 //                                                                                
 //================================================================================
 
-BoosterSingle::BoosterSingle(
-    int inp_dim,
-    int out_dim,
-    const char* loss = "mse",
-    int max_depth = 5,
-    int max_leaves = 32,
-    int seed = 0,
-    int min_samples = 5,
-    double lr = 0.2,
-    double reg_l1 = 0.0,
-    double reg_l2 = 1.0,
-    double gamma = 1e-3,
-    double base_score = 0.0f,
-    int early_stop = 0,
-    bool verbose = true,
-    int hist_cache = 16
-) {
-    hp.inp_dim = inp_dim;
-    hp.out_dim = out_dim;
-    hp.loss = loss;
-    hp.max_depth = max_depth;
-    hp.max_leaves = max_leaves;
-    hp.seed = seed;
-    hp.min_samples = min_samples;
-    hp.lr = lr;
-    hp.reg_l1 = reg_l1;
-    hp.reg_l2 = reg_l2;
-    hp.gamma = gamma;
-    hp.base_score = base_score;
-    hp.early_stop = early_stop;
-    hp.verbose = verbose;
-    hp.max_caches = hist_cache;
-
-    srand(hp.seed);
-    cache = TopkDeque<CacheInfo>(hp.max_caches);
-    obj = Objective(hp.loss);
-}
+BoosterSingle::BoosterSingle(HyperParameter hp) : BoosterBase(hp) {};
 
 void BoosterSingle::get_score_opt(Histogram& Hist, double& opt, double& score_sum) {
     double gr = Hist.g[Hist.g.size() - 1];

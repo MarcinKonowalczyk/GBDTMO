@@ -38,3 +38,4 @@ __pycache__
 .DS_Store
 .vscode
 build
+test.png
