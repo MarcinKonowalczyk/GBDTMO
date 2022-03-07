@@ -12,24 +12,14 @@ extern "C" {
 //                                                                                       
 //=======================================================================================
 
-void SetBin(BoosterBase* foo, uint16_t* bins, double* values) {
-    foo->set_bin(bins, values);
-}
-void SetGH(BoosterBase* foo, double* x, double* y) {
-    foo->set_gh(x, y);
-}
-void SetTrainData(BoosterBase* foo, uint16_t* maps, double* features, double* preds, int n) {
-    foo->set_train_data(maps, features, preds, n);
-}
-void SetEvalData(BoosterBase* foo, uint16_t* maps, double* features, double* preds, int n) {
-    foo->set_eval_data(maps, features, preds, n);
-}
-void SetLabelDouble(BoosterBase* foo, double* x, bool is_train) {
-    foo->set_label(x, is_train);
-}
-void SetLabelInt(BoosterBase* foo, int32_t* x, bool is_train) {
-    foo->set_label(x, is_train);
-}
+void SetBin(BoosterBase* foo, uint16_t* bins, double* values) { foo->set_bin(bins, values); }
+void SetGH(BoosterBase* foo, double* x, double* y) { foo->set_gh(x, y); }
+void SetTrainData(BoosterBase* foo, uint16_t* maps, double* features, double* preds, int n) { foo->set_train_data(maps, features, preds, n); }
+void SetEvalData(BoosterBase* foo, uint16_t* maps, double* features, double* preds, int n) { foo->set_eval_data(maps, features, preds, n); }
+void SetTrainLabelDouble(BoosterBase* foo, double* label) { foo->set_train_label(label); }
+void SetTrainLabelInt(BoosterBase* foo, int32_t* label) { foo->set_train_label(label); }
+void SetEvalLabelDouble(BoosterBase* foo, double* label) { foo->set_eval_label(label); }
+void SetEvalLabelInt(BoosterBase* foo, int32_t* label) { foo->set_eval_label(label); }
 
 //========================================================================
 //                                                                        
@@ -42,18 +32,10 @@ void SetLabelInt(BoosterBase* foo, int32_t* x, bool is_train) {
 //========================================================================
 
 
-void Boost(BoosterBase* foo) {
-    foo->growth(); foo->update();
-}
-void Train(BoosterBase* foo, int num_rounds) {
-    foo->train(num_rounds);
-}
-void Predict(BoosterBase* foo, double* features, double* preds, int n, int num_trees) {
-    foo->predict(features, preds, n, num_trees);
-}
-void Reset(BoosterBase* foo) {
-    foo->reset();
-}
+void Boost(BoosterBase* foo) { foo->growth(); foo->update(); }
+void Train(BoosterBase* foo, int num_rounds) { foo->train(num_rounds); }
+void Predict(BoosterBase* foo, double* features, double* preds, int n, int num_trees) { foo->predict(features, preds, n, num_trees); }
+void Reset(BoosterBase* foo) { foo->reset(); }
 
 //===============================================
 //                                               
@@ -65,12 +47,8 @@ void Reset(BoosterBase* foo) {
 //                                               
 //===============================================
 
-void Dump(BoosterBase* foo, const char* path) {
-    foo->dump(path);
-}
-void Load(BoosterBase* foo, const char* path) {
-    foo->load(path);
-}
+void Dump(BoosterBase* foo, const char* path) { foo->dump(path); }
+void Load(BoosterBase* foo, const char* path) { foo->load(path); }
 
 //=============================================================
 //                                                             
@@ -83,8 +61,8 @@ void Load(BoosterBase* foo, const char* path) {
 //=============================================================
 
 // Define the default hyperparameters in the shared object itself, not on the python side
-HyperParameter DefaultHyperParameters() {
-    return (HyperParameter) {
+HyperParameters DefaultHyperParameters() {
+    return (HyperParameters) {
         1, // inp_dim
         1, // out_dim
         "mse", // loss
@@ -105,12 +83,7 @@ HyperParameter DefaultHyperParameters() {
     };
 }
 
-BoosterMulti* MultiNew(HyperParameter hp) {
-    return new BoosterMulti(hp);
-}
-
-BoosterSingle* SingleNew(HyperParameter hp) {
-    return new BoosterSingle(hp);
-}
+BoosterMulti* MultiNew(HyperParameters hp) { return new BoosterMulti(hp); }
+BoosterSingle* SingleNew(HyperParameters hp) { return new BoosterSingle(hp); }
 
 }

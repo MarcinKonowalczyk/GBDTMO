@@ -19,28 +19,25 @@ struct Dataset {
     int32_t* Label_int32;
 };
 
-struct HyperParameter {
+struct HyperParameters {
     const int inp_dim;
     const int out_dim;
-    const char* loss; // = "mse";
-    const int max_depth; // = 5;
-    const int max_leaves; // = int(pow(2, max_depth));
-    const int seed; // = 0; // unsigned ?
-    const int min_samples; // = 2; // 5
-    const double lr; // = 0.2;
-    const double reg_l1; // = 0.0;
-    const double reg_l2; // = 1.0;
-    const double gamma; // = 1e-3;
-    const double base_score; // = 0.0f;
-    const int early_stop; // = 0;
-    const bool verbose; // = true;
-    const int max_caches; // = 16; // hist_cache
-    const int topk; // = 0;
-    const bool one_side; // = true;
+    const char* loss;
+    const int max_depth;
+    const int max_leaves;
+    const int seed;
+    const int min_samples;
+    const double lr;
+    const double reg_l1;
+    const double reg_l2;
+    const double gamma;
+    const double base_score;
+    const int early_stop;
+    const bool verbose;
+    const int max_caches;
+    const int topk;
+    const bool one_side;
 };
-// const bool hist; // = true;
-// const bool best_first; // = true;
-// const double max_delta; // = 10.0;
 
 // access to all top-k elements
 template<class T>

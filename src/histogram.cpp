@@ -1,9 +1,8 @@
 #include "histogram.h"
 
 void histogram_single(std::vector<int32_t>& order, Histogram& Hist, uint16_t* maps, double* G, double* H) {
-    uint16_t bin;
     for (auto i : order) {
-        bin = maps[i];
+        size_t bin = maps[i];
         ++Hist.count[bin];
         Hist.g[bin] += G[i];
         Hist.h[bin] += H[i];
@@ -17,24 +16,24 @@ void histogram_single(std::vector<int32_t>& order, Histogram& Hist, uint16_t* ma
 }
 
 void histogram_multi(std::vector<int32_t>& order, Histogram& Hist, uint16_t* maps, double* G, double* H, int out_dim) {
-    int j, ind, bin;
-    for (auto i : order) {
-        bin = maps[i] * out_dim;
-        ind = i * out_dim;
+    for (int32_t i : order) {
         ++Hist.count[maps[i]];
-        for (j = 0; j < out_dim; ++j) {
-            Hist.g[bin] += G[ind];
-            Hist.h[bin++] += H[ind++];
+        size_t bin = maps[i] * out_dim;
+        size_t ind = i * out_dim;
+        for (size_t j = 0; j < out_dim; ++j) {
+            Hist.g[bin+j] += G[ind+j];
+            Hist.h[bin+j] += H[ind+j];
         }
     }
     // integration
-    ind = 0;
-    for (int i = 1; i < Hist.count.size(); ++i) {
+    size_t ind = 0;
+    for (size_t i = 1; i < Hist.count.size(); ++i) {
         Hist.count[i] += Hist.count[i - 1];
-        for (j = 0; j < out_dim; ++j) {
+        for (size_t j = 0; j < out_dim; ++j) {
             Hist.g[ind + out_dim] += Hist.g[ind];
             Hist.h[ind + out_dim] += Hist.h[ind];
             ++ind;
         }
     }
 }
+

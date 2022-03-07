@@ -11,7 +11,7 @@
 //                                                                           
 //===========================================================================
 
-BoosterMulti::BoosterMulti(HyperParameter hp) : BoosterBase(hp) {
+BoosterMulti::BoosterMulti(HyperParameters hp) : BoosterBase(hp) {
     Score.resize(hp.out_dim);
     if (hp.topk > 0) {
         OptPair.resize(hp.topk);

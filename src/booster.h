@@ -35,15 +35,24 @@ struct CacheInfo {
 
 class BoosterBase {
 public:
-    BoosterBase(const HyperParameter p);
+    BoosterBase(const HyperParameters p);
 
-    void set_bin(uint16_t* , double* );
-    void set_gh(double* , double* );
+    void set_bin(uint16_t*, double*);
+    void set_gh(double*, double*);
     void set_train_data(uint16_t* maps, double* features, double* preds, int n);
     void set_eval_data(uint16_t* maps, double* features, double* preds, int n);
-    void set_label(double* , bool);
-    void set_label(int32_t *, bool);
-    void rebuild_order(std::vector<int32_t>& , std::vector<int32_t>& , std::vector<int32_t>& , uint16_t* , uint16_t);
+    void set_train_label(double*);
+    void set_train_label(int32_t*);
+    void set_eval_label(double*);
+    void set_eval_label(int32_t*);
+
+    void rebuild_order(
+        std::vector<int32_t>& order,
+        std::vector<int32_t>& order_l,
+        std::vector<int32_t>& order_r,
+        uint16_t* maps,
+        uint16_t bin
+    );
 
     double* calloc_G(int elements);
     double* calloc_H(int elements, bool constHessian, double constValue);
@@ -73,7 +82,7 @@ protected:
     Dataset Eval;
     double* G;
     double* H;
-    const HyperParameter hp;
+    const HyperParameters hp;
     TopkDeque<CacheInfo> cache;
     Objective obj;
 };
@@ -90,7 +99,7 @@ protected:
 
 class BoosterSingle : public BoosterBase {
 public:
-    BoosterSingle(const HyperParameter hp);
+    BoosterSingle(const HyperParameters hp);
     void update() override;
     void growth() override;
     void train(int) override;
@@ -120,7 +129,7 @@ private:
 
 class BoosterMulti : public BoosterBase {
 public:
-    BoosterMulti(const HyperParameter hp);
+    BoosterMulti(const HyperParameters hp);
     void update() override;
     void growth() override;
     void train(int) override;

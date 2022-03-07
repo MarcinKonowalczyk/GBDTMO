@@ -10,7 +10,7 @@
 //                                                                      
 //======================================================================
 
-BoosterBase::BoosterBase(HyperParameter p) : hp(p) {
+BoosterBase::BoosterBase(HyperParameters p) : hp(p) {
     srand(hp.seed);
     cache = TopkDeque<CacheInfo>(hp.max_caches);
     obj = Objective(hp.loss);
@@ -54,15 +54,20 @@ void BoosterBase::set_eval_data(uint16_t* maps, double* features, double* preds,
     Eval.LeafIndex.resize(n);
 }
 
-void BoosterBase::set_label(double* x, bool is_train) {
-    if (is_train) { Train.Label_double = x; }
-    else { Eval.Label_double = x; }
-}
+void BoosterBase::set_train_label(double* label) { Train.Label_double = label; }
+void BoosterBase::set_eval_label(double* label) { Eval.Label_double = label; }
+void BoosterBase::set_train_label(int32_t* label) { Train.Label_int32 = label; }
+void BoosterBase::set_eval_label(int32_t* label) { Eval.Label_int32 = label; }
 
-void BoosterBase::set_label(int32_t* x, bool is_train) {
-    if (is_train) { Train.Label_int32 = x; }
-    else { Eval.Label_int32 = x; }
-}
+// void BoosterBase::set_label(double* x, bool is_train) {
+//     if (is_train) { Train.Label_double = x; }
+//     else { Eval.Label_double = x; }
+// }
+
+// void BoosterBase::set_label(int32_t* x, bool is_train) {
+//     if (is_train) { Train.Label_int32 = x; }
+//     else { Eval.Label_int32 = x; }
+// }
 
 void BoosterBase::rebuild_order(
     std::vector<int32_t>& order,

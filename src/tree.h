@@ -102,12 +102,12 @@ struct Tree {
     }
 
     // predict by original features
-    void pred_value_single(const double* features, double* preds, const HyperParameter& hp, const int n);
-    void pred_value_multi(const double* features, double* preds, const HyperParameter& hp, const int n);
+    void pred_value_single(const double* features, double* preds, const HyperParameters& hp, const int n);
+    void pred_value_multi(const double* features, double* preds, const HyperParameters& hp, const int n);
 
     // predict by bin maps
-    void pred_value_single(const uint16_t* features, double* preds, const HyperParameter& hp, const int n);
-    void pred_value_multi(const uint16_t* features, double* preds, const HyperParameter& hp, const int n);
+    void pred_value_single(const uint16_t* features, double* preds, const HyperParameters& hp, const int n);
+    void pred_value_multi(const uint16_t* features, double* preds, const HyperParameters& hp, const int n);
 
 };
 

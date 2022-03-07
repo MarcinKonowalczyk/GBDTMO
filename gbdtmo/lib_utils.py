@@ -1,14 +1,14 @@
 import numpy as np
 import numpy.ctypeslib as npct
-import ctypes
 from ctypes import *
 
-array_1d_double = npct.ndpointer(dtype=np.double, ndim=1, flags='CONTIGUOUS')
-array_2d_double = npct.ndpointer(dtype=np.double, ndim=2, flags='CONTIGUOUS')
-array_1d_int = npct.ndpointer(dtype=np.int32, ndim=1, flags='CONTIGUOUS')
-array_2d_int = npct.ndpointer(dtype=np.int32, ndim=2, flags='CONTIGUOUS')
-array_1d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=1, flags='CONTIGUOUS')
-array_2d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=2, flags='CONTIGUOUS')
+array_1d_double = npct.ndpointer(dtype=np.double, ndim=1, flags='C_CONTIGUOUS')
+array_2d_double = npct.ndpointer(dtype=np.double, ndim=2, flags='C_CONTIGUOUS')
+array_1d_int = npct.ndpointer(dtype=np.int32, ndim=1, flags='C_CONTIGUOUS')
+array_2d_int = npct.ndpointer(dtype=np.int32, ndim=2, flags='C_CONTIGUOUS')
+array_1d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=1, flags='C_CONTIGUOUS')
+array_2d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=2, flags='C_CONTIGUOUS')
+
 
 class HyperParameters(Structure):
     _fields_ = [
@@ -38,52 +38,29 @@ class HyperParameters(Structure):
 
 
 def load_lib(path):
+    """ Load GBDTMO library from path, and set the API types """
     lib = npct.load_library(path, '.')
 
-    lib.SetBin.argtypes = [c_void_p, array_1d_uint16, array_1d_double]
-    lib.SetBin.restype = None
-    lib.SetGH.argtypes = [c_void_p, array_2d_double, array_2d_double]
-    lib.SetGH.restype = None
-    lib.Boost.argtypes = [c_void_p]
-    lib.Boost.restype = None
-    lib.Train.argtypes = [c_void_p, c_int]
-    lib.Train.restype = None
-    lib.Dump.argtypes = [c_void_p, c_char_p]
-    lib.Dump.restype = None
-    lib.Load.argtypes = [c_void_p, c_char_p]
-    lib.Load.restype = None
-    lib.Reset.argtypes = [c_void_p]
-    lib.Reset.restype = None
+    def _s(fun, argtypes, restype=None):
+        fun.argtypes = argtypes
+        fun.restype = restype
 
-    # Default to 1d array, but this might change in the _set_label call
-    lib.SetTrainData.argtypes = [c_void_p, array_2d_uint16, array_2d_double, array_2d_double, c_int]
-    lib.SetTrainData.restype = None
-    lib.SetEvalData.argtypes = [c_void_p, array_2d_uint16, array_2d_double, array_2d_double, c_int]
-    lib.SetEvalData.restype = None
-    lib.SetLabelDouble.argtypes = [c_void_p, array_1d_double, c_bool]
-    lib.SetLabelDouble.restype = None
-    lib.SetLabelInt.argtypes = [c_void_p, array_1d_int, c_bool]
-    lib.SetLabelInt.restype = None
-    lib.Predict.argtypes = [c_void_p, array_2d_double, array_1d_double, c_int, c_int]
-    lib.Predict.restype = None
-
-    lib.SingleNew.argtypes = [HyperParameters]
-    lib.SingleNew.restype = c_void_p
-    lib.MultiNew.argtypes = [HyperParameters]
-    lib.MultiNew.restype = c_void_p
-
-    lib.DefaultHyperParameters.argtypes = None
-    lib.DefaultHyperParameters.restype = HyperParameters
+    _s(lib.SetBin, [c_void_p, array_1d_uint16, array_1d_double])
+    _s(lib.SetGH, [c_void_p, array_2d_double, array_2d_double])
+    _s(lib.Boost, [c_void_p])
+    _s(lib.Train, [c_void_p, c_int])
+    _s(lib.Dump, [c_void_p, c_char_p])
+    _s(lib.Load, [c_void_p, c_char_p])
+    _s(lib.Reset, [c_void_p])
+    _s(lib.SetTrainData, [c_void_p, array_2d_uint16, array_2d_double, array_2d_double, c_int])
+    _s(lib.SetEvalData, [c_void_p, array_2d_uint16, array_2d_double, array_2d_double, c_int])
+    _s(lib.SetTrainLabelDouble, [c_void_p, array_2d_double])
+    _s(lib.SetTrainLabelInt, [c_void_p, array_2d_int])
+    _s(lib.SetEvalLabelDouble, [c_void_p, array_2d_double])
+    _s(lib.SetEvalLabelInt, [c_void_p, array_2d_int])
+    _s(lib.Predict, [c_void_p, array_2d_double, array_2d_double, c_int, c_int])
+    _s(lib.SingleNew, [HyperParameters], c_void_p)
+    _s(lib.MultiNew, [HyperParameters], c_void_p)
+    _s(lib.DefaultHyperParameters, None, HyperParameters)
 
     return lib
-
-
-def set_Nth_argtype(lib_fun, N, value):
-    """
-    Set the argtype of the N'th argument to a C-library function.
-    This has to be done this way as opposed to lib.fun.argtypes[N] = value
-    since ctypes has custom setter/getter which does not support indexing.
-    """
-    argtypes = lib_fun.argtypes
-    argtypes[N] = value
-    lib_fun.argtypes = argtypes

@@ -11,7 +11,7 @@
 //                                                                                
 //================================================================================
 
-BoosterSingle::BoosterSingle(HyperParameter hp) : BoosterBase(hp) {};
+BoosterSingle::BoosterSingle(HyperParameters hp) : BoosterBase(hp) {};
 
 void BoosterSingle::get_score_opt(Histogram& Hist, double& opt, double& score_sum) {
     double gr = Hist.g[Hist.g.size() - 1];
@@ -197,20 +197,22 @@ void BoosterSingle::train(int num_rounds) {
         }
         
     }
-    if (early_stoper.is_continue && Eval.num > 0) {
-        showbest(early_stoper.info);
-        }
+    if (early_stoper.is_continue && Eval.num > 0) { showbest(early_stoper.info); }
     free(G);
     free(H);
 }
 
 void BoosterSingle::predict(const double* features, double* preds, const size_t n, int num_trees = 0) {
-    int out_dim = hp.out_dim;
-    int max_trees = trees.size() / out_dim;
+    int max_trees = trees.size() / hp.out_dim;
     num_trees = (num_trees == 0) ? max_trees : std::min(std::max(num_trees, 1), max_trees);
+    // for (int i = 0; i < num_trees; ++i) {
+    //     for (int j = 0; j < hp.out_dim; ++j) {
+    //         trees[(i*hp.out_dim)+j].pred_value_single(features, preds + (j*n), hp, n);
+    //     }
+    // }
     for (int i = 0; i < num_trees; ++i) {
-        for (int j = 0; j < out_dim; ++j) {
-            trees[(i*out_dim)+j].pred_value_single(features, preds + (j*n), hp, n);
+        for (int j = 0; j < hp.out_dim; ++j) {
+            trees[(i*hp.out_dim)+j].pred_value_single(features, preds + (j*n), hp, n);
         }
     }
 }

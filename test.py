@@ -66,8 +66,10 @@ if __name__ == '__main__':
     booster_single = GBDTSingle(LIB, shape=booster_shape, params=booster_params)
     booster_multi = GBDTMulti(LIB, shape=booster_shape, params=booster_params)
 
-    booster_single.set_data((X_train, y_train), (X_test, y_test))
-    booster_multi.set_data((X_train, y_train), (X_test, y_test))
+    booster_single.set_train_data(X_train, y_train)
+    booster_single.set_eval_data(X_test, y_test)
+    booster_multi.set_train_data(X_train, y_train)
+    booster_multi.set_eval_data(X_test, y_test)
 
     booster_single.train(100)
     booster_multi.train(100)
