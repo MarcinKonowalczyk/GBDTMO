@@ -29,14 +29,14 @@ class GBDTBase:
         self.max_bins = max_bins
 
         hp = self.lib.DefaultHyperParameters()
-        hp.inp_dim = self.inp_dim
-        hp.out_dim = self.out_dim
         self.params = dict(hp)
+        self.params.update(dict(inp_dim = self.inp_dim, out_dim = self.out_dim))
+        self.params.update(params)
 
         # Make sure loss is a bytes string, to make the api a bit more user-friendly
-        params['loss'] = params['loss'].encode() if isinstance(params['loss'], str) else params['loss']
+        if isinstance(self.params['loss'], str):
+            self.params['loss'] = self.params['loss'].encode() 
 
-        self.params.update(params)
         # self.__dict__.update(self.params)
 
         # NOTE: The values in DEFAULT_PARAMS are in the correct order for the library call

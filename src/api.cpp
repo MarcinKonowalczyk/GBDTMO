@@ -1,25 +1,5 @@
 #include "booster.h"
 
-const HyperParameter default_hp = {
-    1, // inp_dim
-    1, // out_dim
-    "mse", // loss
-    5, // max_depth
-    32, // max_leaves
-    0, // seed
-    5, // min_samples
-    0.2, // lr
-    0.0, // reg_l1
-    1.0, // reg_l2
-    1e-3, // gamma
-    0.0f, // base_score
-    0, // early_stop
-    true, // verbose
-    16, // max_caches
-    0, // topk
-    true, // one_side
-};
-
 extern "C" {
 
 //=======================================================================================
@@ -102,8 +82,27 @@ void Load(BoosterBase* foo, const char* path) {
 //                                                             
 //=============================================================
 
+// Define the default hyperparameters in the shared object itself, not on the python side
 HyperParameter DefaultHyperParameters() {
-    return default_hp;
+    return (HyperParameter) {
+        1, // inp_dim
+        1, // out_dim
+        "mse", // loss
+        5, // max_depth
+        32, // max_leaves
+        0, // seed
+        5, // min_samples
+        0.2, // lr
+        0.0, // reg_l1
+        1.0, // reg_l2
+        1e-3, // gamma
+        0.0f, // base_score
+        0, // early_stop
+        true, // verbose
+        16, // max_caches
+        0, // topk
+        true, // one_side
+    };
 }
 
 BoosterMulti* MultiNew(HyperParameter hp) {
