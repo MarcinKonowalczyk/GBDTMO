@@ -107,7 +107,6 @@ class GBDTBase:
             self._set_label(self.label_eval, False)
 
     def calc_train_maps(self):
-        print(f"calc_train_maps")
         self.lib.CalcTrainMaps(self._boostnode)
 
 

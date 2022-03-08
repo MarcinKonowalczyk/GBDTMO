@@ -38,7 +38,6 @@ class BoosterBase {
 public:
     BoosterBase(const HyperParameters p);
 
-    void set_bin(uint16_t*, double*);
     void set_gh(double*, double*);
     void set_train_data(double* features, double* preds, int n);
     void set_eval_data(double* features, double* preds, int n);

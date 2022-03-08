@@ -29,6 +29,7 @@ void histogram_single(
     double* G,
     double* H
 );
+
 void histogram_multi(
     std::vector<size_t>& order,
     Histogram& Hist,
@@ -37,6 +38,7 @@ void histogram_multi(
     double* H,
     int out_dim
 );
+
 // void histogram_single(std::vector<size_t>& order, Histogram& Hit, uint16_t*, double*, double*);
 // void histogram_multi(std::vector<size_t>& order, Histogram&, uint16_t*, double*, double*, int);
 

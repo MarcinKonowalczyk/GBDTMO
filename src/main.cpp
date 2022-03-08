@@ -67,7 +67,6 @@ void test(int inp_dim, int out_dim, int N, const char* mode) {
         m.set_eval_data(data_eval, preds_eval, N);
         m.calc_train_maps();
 
-        m.set_bin(bins, values);
         m.set_train_label(lables);
         m.set_eval_label(lables_eval);
         m.train(30);
@@ -80,7 +79,6 @@ void test(int inp_dim, int out_dim, int N, const char* mode) {
         m.set_eval_data(data_eval, preds_eval, N);
         m.calc_train_maps();
 
-        m.set_bin(bins, values);
         m.set_train_label(lables);
         m.set_eval_label(lables_eval);
         m.train(30);

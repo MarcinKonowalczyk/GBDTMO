@@ -1,4 +1,6 @@
 #include "histogram.h"
+#include <algorithm>
+#include <utility>
 
 void histogram_single(
     std::vector<size_t>& order,
@@ -50,21 +52,16 @@ void histogram_multi(
     }
 }
 
-//==========================================================
-//                                                          
-//  ##      ##  ##  #####                                 
-//  ##      ##  ##  ##  ##                                
-//  ##  ##  ##  ##  #####                                 
-//  ##  ##  ##  ##  ##                                    
-//   ###  ###   ##  ##                                    
-//                                                          
-//==========================================================
+//======================================================================
+//                                                                      
+//  ###    ###    ###    #####    ####                                
+//  ## #  # ##   ## ##   ##  ##  ##                                   
+//  ##  ##  ##  ##   ##  #####    ###                                 
+//  ##      ##  #######  ##         ##                                
+//  ##      ##  ##   ##  ##      ####                                 
+//                                                                      
+//======================================================================
 
-
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <utility>
 
 // Modification of std::unique implementaiton form: https://en.cppreference.com/w/cpp/algorithm/unique
 // It also counts the number of elements in each 
@@ -107,8 +104,6 @@ void construct_bin_column(
     std::vector<double>& bins,
     const uint16_t max_bins
 ) {
-    // Create feature vector
-    // std::vector<double> _feature = feature.copy();
     size_t n = feature.size();
     // Inplace find unique elements and their counts
     std::vector<size_t> counts;
@@ -140,26 +135,9 @@ void construct_bin_column(
         }
         bins[bin_index++] = feature[N-1]; // Assign last bin to last feature
     }
-    // std::cout << "N_unique = " << N_unique << std::endl;
-    // std::cout << "bins.size() = " << bins.size() << std::endl;
-
-    // std::cout << "counts.size() = " << counts.size() << std::endl;
-    // std::cout << "counts = [ ";
-    // for (auto& v: counts) { std::cout << v << " ";}
-    // std::cout << "]\n";
-
-    // std::cout << "_feature_unique.size() = " << feature.size() << std::endl;
-    // std::cout << "_feature_unique[:10] = [ ";
-    // for (int i = 0; i < 10; ++i) { std::cout << feature[i] << " ";}
-    // std::cout << "]\n";
-
-    // std::cout << "max_bins = " << max_bins << std::endl; 
-    // std::cout << "bins.size() = " << bins.size() << std::endl;
-    // std::cout << "bins = [ ";
-    // for (auto& v: bins) { std::cout << v << " ";}
-    // std::cout << "]\n";
 };
 
+// Map bins 
 void map_bin_column(
     const std::vector<double> feature,
     uint16_t* maps,
@@ -179,42 +157,21 @@ void calculate_histogram_maps(
     const size_t inp_dim,
     const uint16_t max_bins
 ) {
-    // std::cout << "maps[50:] = [ ";
-    // for(size_t i = 0; i < 50; ++i) { std::cout << maps[i] << " "; }
-    // std::cout << "]\n";
-
-    // std::cout << "maps[:50] = [ ";
-    // for(size_t i = 0; i < 50; ++i) { std::cout << maps[inp_dim*n-i] << " "; }
-    // std::cout << "]\n";
-
-    // std::vector<std::vector<double>> bins;
-    
-    // std::vector<uint16_t> bin_nums;
-    // std::vector<std::vector<double>> bin_values;
-
-
     for (size_t i = 0; i < inp_dim; ++i) {
-        std::vector<double> bins_column;
-
         // Get features column
         std::vector<double> feature;
         feature.reserve(n);
         for (size_t j = 0; j < n; ++j) { feature.push_back(features[i + j*inp_dim]); }
-        construct_bin_column(feature, bins_column, max_bins);
 
+        // Construct bins for the column
+        std::vector<double> bins_column;
+        construct_bin_column(feature, bins_column, max_bins);
         bins.push_back(bins_column);
+
+        // Map features in the particular column
+        // NOTE: This means that maps are column-major
         map_bin_column(feature, maps + i*n, bins_column);
     }
-
-    // std::cout << "maps[50:] = [ ";
-    // for(size_t i = 0; i < 50; ++i) { std::cout << maps[i] << " "; }
-    // std::cout << "]\n";
-
-    // std::cout << "maps[:50] = [ ";
-    // for(size_t i = 0; i < 50; ++i) { std::cout << maps[inp_dim*n-i] << " "; }
-    // std::cout << "]\n";
-
-    // std::cout << "hello from calculate_histogram_maps()" << std::endl;
 };
 
 

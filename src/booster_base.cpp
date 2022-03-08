@@ -16,20 +16,6 @@ BoosterBase::BoosterBase(HyperParameters p) : hp(p) {
     obj = Objective(hp.loss);
 }
 
-void BoosterBase::set_bin(uint16_t* n_bins, double* values) {
-    bin_nums.clear();
-    bin_values.clear();
-    size_t count = 0;
-    for (size_t i = 0; i < hp.inp_dim; ++i) {
-        std::vector<double> tmp;
-        bin_nums.push_back(n_bins[i] + 1);
-        for (size_t j = 0; j < n_bins[i]; ++j) { tmp.push_back(values[count + j]); }
-        tmp.push_back(std::numeric_limits<double>::max());
-        count += n_bins[i];
-        bin_values.push_back(tmp);
-    }
-}
-
 // Set gradient and Hessian matrices
 void BoosterBase::set_gh(double* G, double* H) {
     this->G = G;
@@ -55,71 +41,21 @@ void BoosterBase::set_eval_data(double* features, double* preds, int n) {
     Eval.Maps = (uint16_t*) nullptr;
 }
 
-// #include <iomanip>
-// TODO: What frees this memory...?
 void BoosterBase::calc_train_maps() {
-    // uint16_t* maps = (uint16_t*) malloc(Train.num * hp.inp_dim * sizeof(double));
-
-
-    // uint16_t* new_maps = (uint16_t*) calloc(Train.num * hp.inp_dim, sizeof(double));
-
+    // Calculate Train.Maps and bins
     std::vector<std::vector<double>> bins;
     calculate_histogram_maps(Train.Features, Train.Maps, bins, Train.num, hp.inp_dim, hp.max_bins);
-    // Train.Maps = new_maps;
 
-    // std::cout << "Train.maps[:50] = [ ";
-    // std::cout << std::fixed << std::setprecision(2);
-    // for(int i = 0; i < 50; ++i) { std::cout << Train.Maps[i] << " "; }
-    // std::cout << "]\n";
-
-    // std::cout << "new_maps  [:50] = [ ";
-    // std::cout << std::fixed << std::setprecision(2);
-    // for(int i = 0; i < 50; ++i) { std::cout << new_maps[i] << " "; }
-    // std::cout << "]\n";
-
-    std::vector<uint16_t> n_bins;
-    std::vector<double> values;
-    // n_bins.resize(bins.size());
-    for(auto& bin : bins) {
-        n_bins.push_back(bin.size());
-        for(auto& value : bin) {
-            values.push_back(value);
-        }
+    // Number of bins in each column
+    bin_nums.clear();
+    bin_values.clear();
+    constexpr static auto DOUBLE_MAX = std::numeric_limits<double>::max();
+    for (auto& bin : bins) {
+        bin_nums.push_back(bin.size() + 1);
+        auto tmp = bin;
+        tmp.push_back(DOUBLE_MAX);
+        bin_values.push_back(tmp);
     }
-    std::cout << "got here" << std::endl;
-    std::cout << "bin_nums.size() = " << n_bins.size() << std::endl;
-    std::cout << "bin_values.size() = " << values.size() << std::endl; 
-
-    set_bin(&n_bins[0], &values[0]);
-    std::cout << "and also got here" << std::endl;
-
-
-    // set_bin(uint16_t* n_bins, double* values) {
-    //     bin_nums.clear();
-    //     bin_values.clear();
-    //     size_t count = 0;
-    //     for (size_t i = 0; i < hp.inp_dim; ++i) {
-    //         std::vector<double> tmp;
-    //         bin_nums.push_back(n_bins[i] + 1);
-    //         for (size_t j = 0; j < n_bins[i]; ++j) { tmp.push_back(values[count + j]); }
-    //         tmp.push_back(std::numeric_limits<double>::max());
-    //         count += n_bins[i];
-    //         bin_values.push_back(tmp);
-    //     }
-    // }
-
-    // std::vector<uint16_t> bin_nums;
-    // std::vector<std::vector<double>> bin_values;
-
-    // std::cout << "maps[50:] = [ ";
-    // for(size_t i = 0; i < 50; ++i) { std::cout << maps[i] << " "; }
-    // std::cout << "]\n";
-
-    // std::cout << "maps[:50] = [ ";
-    // for(size_t i = 0; i < 50; ++i) { std::cout << maps[hp.inp_dim*Train.num-i] << " "; }
-    // std::cout << "]\n";
-
-    // Train.Maps = maps;
 }
 
 // void BoosterBase::calc_eval_maps() {
