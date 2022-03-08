@@ -1,7 +1,7 @@
 #include <iostream>
 #include "booster.h"
 
-void test(int inp_dim, int out_dim, int N, const char *mode) {
+void test(int inp_dim, int out_dim, int N, const char* mode) {
     double data[N * inp_dim];
     double preds[N * out_dim];
     int32_t lables[N];
@@ -41,53 +41,59 @@ void test(int inp_dim, int out_dim, int N, const char *mode) {
 
     uint16_t bins[inp_dim];
     double values[inp_dim * 19];
-    for (int i = 0; i < inp_dim; i++) {
+    for (int i = 0; i < inp_dim; ++i) {
         bins[i] = 19;
-        for (int j = 0; j < 19; j++) {
+        for (int j = 0; j < 19; ++j) {
             values[i * 19 + j] = (j + 1) / 20.0f;
         }
     }
 
     if (mode == "single") {
         BoosterSingle m = BoosterSingle(inp_dim, "ce_column", 3, 32, 0, 2, 2, 0.5, 0.0, 1.0, 1e-3, 0.0, 0, true, 16);
-        m.set_data(maps, data, preds, N, true);
-        m.set_data(maps_eval, data_eval, preds_eval, N, false);
-        m.set_bin(bins, values);
-        m.set_label(lables, true);
-        m.set_label(lables_eval, false);
-        m.train_multi(30, out_dim);
+        
+        m.set_train_data(data, preds, N);
+        m.set_eval_data(data_eval, preds_eval, N);
+        m.calc_train_maps();
+
+        m.set_train_label(lables);
+        m.set_eval_label(lables_eval);
+        m.train(30);
         m.dump("single.txt");
     }
     if (mode == "multi") {
-        BoosterMulti m = BoosterMulti(inp_dim, out_dim, 0, "ce", 3, 32, 0, 2, 2, 0.5, 0.0, 1.0, 1e-3, 0.0, 0, true,
-                                      true, 16);
-        m.set_data(maps, data, preds, N, true);
-        m.set_data(maps_eval, data_eval, preds_eval, N, false);
+        BoosterMulti m = BoosterMulti(inp_dim, out_dim, 0, "ce", 3, 32, 0, 2, 2, 0.5, 0.0, 1.0, 1e-3, 0.0, 0, true, true, 16);
+        
+        m.set_train_data(data, preds, N);
+        m.set_eval_data(data_eval, preds_eval, N);
+        m.calc_train_maps();
+
         m.set_bin(bins, values);
-        m.set_label(lables, true);
-        m.set_label(lables_eval, false);
+        m.set_train_label(lables);
+        m.set_eval_label(lables_eval);
         m.train(30);
         m.dump("multi.txt");
     }
     if (mode == "sparse") {
-        BoosterMulti m = BoosterMulti(inp_dim, out_dim, out_dim / 2, "ce", 3, 32, 0, 2, 2, 0.5, 0.0, 1.0, 1e-3, 0.0, 0,
-                                      true, true, 16);
-        m.set_data(maps, data, preds, N, true);
-        m.set_data(maps_eval, data_eval, preds_eval, N, false);
+        BoosterMulti m = BoosterMulti(inp_dim, out_dim, out_dim / 2, "ce", 3, 32, 0, 2, 2, 0.5, 0.0, 1.0, 1e-3, 0.0, 0, true, true, 16);
+        
+        m.set_train_data(data, preds, N);
+        m.set_eval_data(data_eval, preds_eval, N);
+        m.calc_train_maps();
+
         m.set_bin(bins, values);
-        m.set_label(lables, true);
-        m.set_label(lables_eval, false);
+        m.set_train_label(lables);
+        m.set_eval_label(lables_eval);
         m.train(30);
         m.dump("sparse.txt");
     }
 }
 
 int main() {
-    cout << "single:" << endl;
+    std::cout << "single:" << std::endl;
     test(5, 5, 1000, "single");
-    cout << "multi:" << endl;
+    std::cout << "multi:" << std::endl;
     test(5, 5, 1000, "multi");
-    cout << "sparse:" << endl;
+    std::cout << "sparse:" << std::endl;
     test(5, 5, 1000, "sparse");
     return 0;
 }

@@ -5,7 +5,7 @@ void mse_grad(const Dataset& data, const int n, const int out_dim, double* g, do
     auto preds = data.Preds;
     auto labels = data.Label_double;
     int N = n * out_dim;
-    for (int i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         g[i] = preds[i] - labels[i];
     }
 }
@@ -15,7 +15,7 @@ double mse_score(const Dataset& data, const int n, const int out_dim) {
     auto labels = data.Label_double;
     int N = n * out_dim;
     double s = 0.0f;
-    for (int i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         s += Sqr(preds[i] - labels[i]);
     }
     return sqrt(s / N);
@@ -26,7 +26,7 @@ void bce_grad(const Dataset& data, const int n, const int out_dim, double* g, do
     auto preds = data.Preds;
     auto labels = data.Label_int32;
     int N = n * out_dim;
-    for (int i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         const double t = 1.0f / (1.0f + exp(-preds[i]));
         g[i] = t - labels[i];
         h[i] = t * (1 - t);
@@ -38,7 +38,7 @@ double bce_score(const Dataset& data, const int n, const int out_dim) {
     auto labels = data.Label_int32;
     int N = n * out_dim;
     double score = 0.0f;
-    for (int i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         double t = log(1 + exp(-preds[i]));
         if (labels[i] == 1) { score += t; }
         else { score += t + preds[i]; }
@@ -126,11 +126,11 @@ double acc_multiclass(const Dataset& data, const int n, const int out_dim) {
     auto preds = data.Preds;
     auto labels = data.Label_int32;
     int acc = 0;
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         int idx = i * out_dim;
         double score = preds[idx];
         int ind = 0;
-        for (int j = 1; j < out_dim; j++) {
+        for (size_t j = 1; j < out_dim; ++j) {
             ++idx;
             if (preds[idx] > score) {
                 score = preds[idx];
@@ -146,11 +146,11 @@ double acc_multiclass_column(const Dataset& data, const int n, const int out_dim
     auto preds = data.Preds;
     auto labels = data.Label_int32;
     int acc = 0;
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         int idx = i;
         double score = preds[idx];
         int ind = 0;
-        for (int j = 1; j < out_dim; j++) {
+        for (size_t j = 1; j < out_dim; ++j) {
             idx += n;
             if (preds[idx] > score) {
                 score = preds[idx];
@@ -166,7 +166,7 @@ double acc_binary(const Dataset& data, const int n, const int out_dim) {
     auto preds = data.Preds;
     auto labels = data.Label_int32;
     int acc = 0, N = n * out_dim;
-    for (int i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         if (labels[i] == 1) {
             if (preds[i] >= 0.0f) { ++acc; }
         } else {

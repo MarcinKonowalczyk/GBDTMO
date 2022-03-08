@@ -29,6 +29,7 @@ class HyperParameters(Structure):
         ("max_caches", c_int),
         ("topk", c_int),
         ("one_side", c_bool),
+        ("max_bins", c_int),
     ]
 
     def __iter__(self):
@@ -45,19 +46,19 @@ def load_lib(path):
         fun.argtypes = argtypes
         fun.restype = restype
 
-    _s(lib.SetBin, [c_void_p, array_1d_uint16, array_1d_double])
     _s(lib.SetGH, [c_void_p, array_2d_double, array_2d_double])
     _s(lib.Boost, [c_void_p])
     _s(lib.Train, [c_void_p, c_int])
     _s(lib.Dump, [c_void_p, c_char_p])
     _s(lib.Load, [c_void_p, c_char_p])
     _s(lib.Reset, [c_void_p])
-    _s(lib.SetTrainData, [c_void_p, array_2d_uint16, array_2d_double, array_2d_double, c_int])
-    _s(lib.SetEvalData, [c_void_p, array_2d_uint16, array_2d_double, array_2d_double, c_int])
+    _s(lib.SetTrainData, [c_void_p, array_2d_double, array_2d_double, c_int])
+    _s(lib.SetEvalData, [c_void_p, array_2d_double, array_2d_double, c_int])
     _s(lib.SetTrainLabelDouble, [c_void_p, array_2d_double])
     _s(lib.SetTrainLabelInt, [c_void_p, array_2d_int])
     _s(lib.SetEvalLabelDouble, [c_void_p, array_2d_double])
     _s(lib.SetEvalLabelInt, [c_void_p, array_2d_int])
+    _s(lib.CalcTrainMaps, [c_void_p])
     _s(lib.Predict, [c_void_p, array_2d_double, array_2d_double, c_int, c_int])
     _s(lib.SingleNew, [HyperParameters], c_void_p)
     _s(lib.MultiNew, [HyperParameters], c_void_p)

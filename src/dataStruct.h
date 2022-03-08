@@ -8,13 +8,15 @@
 #include <utility>
 #include <limits.h>
 
+// TODO: ?? typedef Maps uint16_t*
+
 struct Dataset {
     int num = 0;
     double* Features;
     uint16_t* Maps;
     double* Preds;
-    std::vector<int32_t> Orders;
-    std::vector<int32_t> LeafIndex;
+    std::vector<size_t> Orders;
+    std::vector<size_t> LeafIndex;
     double* Label_double;
     int32_t* Label_int32;
 };
@@ -37,6 +39,7 @@ struct HyperParameters {
     const int max_caches;
     const int topk;
     const bool one_side;
+    const int max_bins;
 };
 
 // access to all top-k elements

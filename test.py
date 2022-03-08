@@ -54,10 +54,13 @@ if __name__ == '__main__':
     booster_shape = (10, 2)
     seed = 42
 
-    booster_params = dict(max_depth=2, lr=0.1, loss="mse", early_stop=50, verbose=True, seed=seed)
+    booster_params = dict(max_depth=2, lr=0.1, loss="mse", early_stop=50, verbose=False, seed=seed)
     with seed_rng(seed):
         X_train, X_test = np.random.rand(10000, booster_shape[0]), np.random.rand(100, booster_shape[0])
         M = np.random.randn(5 * booster_shape[0], booster_shape[1])
+
+    # Round to two
+    X_train, X_test = np.round(X_train, 2), np.round(X_test, 2)
 
     # Function to approximate with the gradient booster
     f = lambda X: np.apply_along_axis(lambda a: a - np.mean(a), 0, np.c_[X, X**2, X**(1 / 2), X**3, X**(1 / 3)] @ M)
@@ -67,8 +70,11 @@ if __name__ == '__main__':
     booster_multi = GBDTMulti(LIB, shape=booster_shape, params=booster_params)
 
     booster_single.set_train_data(X_train, y_train)
+    booster_single.calc_train_maps()
     booster_single.set_eval_data(X_test, y_test)
+
     booster_multi.set_train_data(X_train, y_train)
+    booster_multi.calc_train_maps()
     booster_multi.set_eval_data(X_test, y_test)
 
     booster_single.train(100)

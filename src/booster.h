@@ -8,16 +8,17 @@
 #include "io.h"
 #include "histogram.h"
 #include <algorithm>
+// #include <cstdlib> /* malloc */
 
 struct CacheInfo {
     int node;
     int depth;
     SplitInfo split;
-    std::vector<int32_t> order;
+    std::vector<size_t> order;
     std::vector<Histogram> hist;
 
-    CacheInfo(int n, int d, SplitInfo& x, std::vector<int32_t>& y, std::vector<Histogram>& z) :
-            node(n), depth(d), split(x), order(y), hist(z) {};
+    CacheInfo(int n, int d, SplitInfo& s, std::vector<size_t>& o, std::vector<Histogram>& h) :
+            node(n), depth(d), split(s), order(o), hist(h) {};
 
     bool operator>(const CacheInfo &x) const { return split.gain > x.split.gain; }
 };
@@ -39,23 +40,25 @@ public:
 
     void set_bin(uint16_t*, double*);
     void set_gh(double*, double*);
-    void set_train_data(uint16_t* maps, double* features, double* preds, int n);
-    void set_eval_data(uint16_t* maps, double* features, double* preds, int n);
+    void set_train_data(double* features, double* preds, int n);
+    void set_eval_data(double* features, double* preds, int n);
     void set_train_label(double*);
     void set_train_label(int32_t*);
     void set_eval_label(double*);
     void set_eval_label(int32_t*);
 
+    void calc_train_maps();
+
     void rebuild_order(
-        std::vector<int32_t>& order,
-        std::vector<int32_t>& order_l,
-        std::vector<int32_t>& order_r,
+        std::vector<size_t>& order,
+        std::vector<size_t>& order_l,
+        std::vector<size_t>& order_r,
         uint16_t* maps,
         uint16_t bin
     );
 
-    double* calloc_G(int elements);
-    double* calloc_H(int elements, bool constHessian, double constValue);
+    double* malloc_G(int elements);
+    double* malloc_H(int elements, bool constHessian, double constValue);
 
     // Print helpers
     inline void showloss(double score, double metric, int i) const { std::cout << "[" << i << "] train->" << std::setprecision(5) << std::fixed << score << "\teval->" << std::setprecision(5) << std::fixed << metric << std::endl; }
@@ -63,8 +66,9 @@ public:
     inline void showbest(std::pair<double, int> info) const { showbest(std::get<0>(info), std::get<1>(info)); }
     inline void showbest(double score, int round) const { std::cout << "Best score " << score << " at round " << round << std::endl; }
 
-    void load(const char *path) { LoadTrees(trees, path); }
-    void dump(const char *path) { DumpTrees(trees, path); }
+    // IO
+    void load(const char* path) { LoadTrees(trees, path); }
+    void dump(const char* path) { DumpTrees(trees, path); }
 
     virtual void update() = 0;
     virtual void growth() = 0;
@@ -105,13 +109,12 @@ public:
     void train(int) override;
     void predict(const double* features, double* preds, const size_t n, int num_trees) override;
     void reset();
-    void train_multi(int);
     void predict_multi(const double* features, double* preds, const size_t n, const int out_dim, int num_trees);
 
 private:
     double Score_sum, Opt;
     void get_score_opt(Histogram &, double &, double &);
-    void hist_all(std::vector<int32_t> &, std::vector<Histogram> &);
+    void hist_all(std::vector<size_t>& order, std::vector<Histogram>& Hist);
     void boost_column(Histogram &, int);
     void boost_all(std::vector<Histogram> &);
     void build_tree_best();
@@ -142,7 +145,7 @@ private:
     std::vector<std::pair<double, int>> OptPair;
     void get_score_opt(Histogram &, std::vector<double> &, std::vector<double> &, double &);
     void get_score_opt(Histogram &, std::vector<std::pair<double, int>> &, std::vector<double> &, double &);
-    void hist_all(std::vector<int32_t> &, std::vector<Histogram> &);
+    void hist_all(std::vector<size_t>& order, std::vector<Histogram>& Hist);
     void boost_column_full(Histogram &, int);
     void boost_column_topk_two_side(Histogram &, int);
     void boost_column_topk_one_side(Histogram &, int);

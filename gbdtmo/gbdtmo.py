@@ -1,5 +1,4 @@
 import numpy as np
-from .histogram import get_bins_maps
 from .lib_utils import *
 
 #======================================================================
@@ -17,7 +16,7 @@ class GBDTBase:
 
     _lib_init = None
 
-    def __init__(self, lib, shape, params={}, max_bins=32):
+    def __init__(self, lib, shape, params={}):
 
         # Make sure the required parameters are set in the children classes
         for required_attr in ('_lib_init', ):
@@ -26,7 +25,6 @@ class GBDTBase:
 
         self.lib = lib
         self.inp_dim, self.out_dim = shape
-        self.max_bins = max_bins
 
         self.params = dict(self.lib.DefaultHyperParameters())
         self.params.update(dict(inp_dim=self.inp_dim, out_dim=self.out_dim))
@@ -41,11 +39,6 @@ class GBDTBase:
         # NOTE: The values in DEFAULT_PARAMS are in the correct order for the library call
         lib_init = getattr(self.lib, self._lib_init)
         self._boostnode = lib_init(HyperParameters(**self.params))
-
-    def _set_bin(self, bins):
-        num = np.fromiter((len(b) for b in bins), dtype=np.uint16)
-        value = np.concatenate(bins, axis=0)
-        self.lib.SetBin(self._boostnode, num, value)
 
     def _set_label(self, y: np.array, is_train: bool):
         dtype = y.dtype
@@ -95,12 +88,8 @@ class GBDTBase:
     def set_train_data(self, data, label=None):
         """ """
         self.data = np.ascontiguousarray(data)
-
-        self.bins, self.maps = get_bins_maps(self.data, self.max_bins)
-        self._set_bin(self.bins)
-        self.maps = np.ascontiguousarray(self.maps.transpose())
         self.preds_train = np.full((len(self.data), self.out_dim), self.params['base_score'], dtype=np.float64)
-        self.lib.SetTrainData(self._boostnode, self.maps, self.data, self.preds_train, len(self.data))
+        self.lib.SetTrainData(self._boostnode, self.data, self.preds_train, len(self.data))
 
         if label is not None:
             self.label = np.ascontiguousarray(label)
@@ -110,12 +99,16 @@ class GBDTBase:
         """ """
         self.data_eval = np.ascontiguousarray(data)
         self.preds_eval = np.full((len(self.data_eval), self.out_dim), self.params['base_score'], dtype=np.float64)
-        maps = np.zeros((1, 1), dtype=np.uint16)  # Eval set does not need maps
-        self.lib.SetEvalData(self._boostnode, maps, self.data_eval, self.preds_eval, len(self.data_eval))
+        # maps = np.zeros((1, 1), dtype=np.uint16)  # Eval set does not need maps
+        self.lib.SetEvalData(self._boostnode, self.data_eval, self.preds_eval, len(self.data_eval))
 
         if label is not None:
             self.label_eval = np.ascontiguousarray(label)
             self._set_label(self.label_eval, False)
+
+    def calc_train_maps(self):
+        print(f"calc_train_maps")
+        self.lib.CalcTrainMaps(self._boostnode)
 
 
 #================================================================================

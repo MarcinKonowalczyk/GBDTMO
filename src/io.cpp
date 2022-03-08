@@ -14,33 +14,27 @@ std::string do_strip(const std::string &str, int striptype, const std::string &c
     if (charslen == 0) {
         i = 0;
         if (striptype != RIGHTSTRIP) {
-            while (i < len && ::isspace(str[i])) {
-                i++;
-            }
+            while (i < len && ::isspace(str[i])) ++i;
         }
 
         j = len;
         if (striptype != LEFTSTRIP) {
-            do {
-                j--;
-            } while (j >= i && ::isspace(str[j]));
-            j++;
+            do --j; while (j >= i && ::isspace(str[j]));
+            ++j;
         }
     } else {
         const char *sep = chars.c_str();
         i = 0;
         if (striptype != RIGHTSTRIP) {
             while (i < len && memchr(sep, str[i], charslen)) {
-                i++;
+                ++i;
             }
         }
 
         j = len;
         if (striptype != LEFTSTRIP) {
-            do {
-                j--;
-            } while (j >= i && memchr(sep, str[j], charslen));
-            j++;
+            do --j; while (j >= i && memchr(sep, str[j], charslen));
+            ++j;
         }
     }
 
@@ -66,15 +60,15 @@ std::string rstrip(const std::string &str, const std::string &chars) {
 void split_whitespace(const std::string &str, std::vector<std::string> &result, int maxsplit) {
     std::string::size_type i, j, len = str.size();
     for (i = j = 0; i < len;) {
-        while (i < len && ::isspace(str[i])) i++;
+        while (i < len && ::isspace(str[i])) ++i;
         j = i;
 
-        while (i < len && !::isspace(str[i])) i++;
+        while (i < len && !::isspace(str[i])) ++i;
 
         if (j < i) {
             if (maxsplit-- <= 0) break;
             result.push_back(str.substr(j, i - j));
-            while (i < len && ::isspace(str[i])) i++;
+            while (i < len && ::isspace(str[i])) ++i;
             j = i;
         }
     }
@@ -99,7 +93,7 @@ void split(const std::string &str, std::vector<std::string> &result, const std::
             result.push_back(str.substr(j, i - j));
             i = j = i + n;
         } else {
-            i++;
+            ++i;
         }
     }
     result.push_back(str.substr(j, len - j));
@@ -140,7 +134,7 @@ void DumpTrees(std::vector<Tree> &trees, const char *path) {
         for (auto &it : tree.leaf) {
             auto v = it.second;
             outfile << "\t\t" << it.first << ",";
-            for (int i = 0; i < v.values.size(); i++) {
+            for (int i = 0; i < v.values.size(); ++i) {
                 if (i < v.values.size() - 1) {
                     outfile << std::scientific << std::setprecision(PRECISION) << v.values[i] << ",";
                 } else {

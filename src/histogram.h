@@ -22,7 +22,31 @@ struct Histogram {
     }
 };
 
-void histogram_single(std::vector<int32_t> &, Histogram &, uint16_t *, double *, double *);
-void histogram_multi(std::vector<int32_t> &, Histogram &, uint16_t *, double *, double *, int);
+void histogram_single(
+    std::vector<size_t>& order,
+    Histogram& Hist,
+    uint16_t* maps,
+    double* G,
+    double* H
+);
+void histogram_multi(
+    std::vector<size_t>& order,
+    Histogram& Hist,
+    uint16_t* maps,
+    double* G,
+    double* H,
+    int out_dim
+);
+// void histogram_single(std::vector<size_t>& order, Histogram& Hit, uint16_t*, double*, double*);
+// void histogram_multi(std::vector<size_t>& order, Histogram&, uint16_t*, double*, double*, int);
+
+void calculate_histogram_maps(
+    const double* features,
+    uint16_t* maps,
+    std::vector<std::vector<double>>& bins,
+    const size_t n,
+    const size_t inp_dim,
+    const uint16_t max_bins
+);
 
 #endif /* GBDTMO_HISTOGRAM_H */

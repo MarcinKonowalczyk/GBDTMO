@@ -12,10 +12,9 @@ extern "C" {
 //                                                                                       
 //=======================================================================================
 
-void SetBin(BoosterBase* foo, uint16_t* bins, double* values) { foo->set_bin(bins, values); }
 void SetGH(BoosterBase* foo, double* x, double* y) { foo->set_gh(x, y); }
-void SetTrainData(BoosterBase* foo, uint16_t* maps, double* features, double* preds, int n) { foo->set_train_data(maps, features, preds, n); }
-void SetEvalData(BoosterBase* foo, uint16_t* maps, double* features, double* preds, int n) { foo->set_eval_data(maps, features, preds, n); }
+void SetTrainData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_train_data(features, preds, n); }
+void SetEvalData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_eval_data(features, preds, n); }
 void SetTrainLabelDouble(BoosterBase* foo, double* label) { foo->set_train_label(label); }
 void SetTrainLabelInt(BoosterBase* foo, int32_t* label) { foo->set_train_label(label); }
 void SetEvalLabelDouble(BoosterBase* foo, double* label) { foo->set_eval_label(label); }
@@ -31,7 +30,7 @@ void SetEvalLabelInt(BoosterBase* foo, int32_t* label) { foo->set_eval_label(lab
 //                                                                        
 //========================================================================
 
-
+void CalcTrainMaps(BoosterBase* foo) { foo->calc_train_maps(); }
 void Boost(BoosterBase* foo) { foo->growth(); foo->update(); }
 void Train(BoosterBase* foo, int num_rounds) { foo->train(num_rounds); }
 void Predict(BoosterBase* foo, double* features, double* preds, int n, int num_trees) { foo->predict(features, preds, n, num_trees); }
@@ -80,6 +79,7 @@ HyperParameters DefaultHyperParameters() {
         16, // max_caches
         0, // topk
         true, // one_side
+        32, // max_bins
     };
 }
 
