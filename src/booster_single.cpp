@@ -5,7 +5,7 @@
 //                                                                                
 //   ####  ##  ##     ##   ####    ##      #####                                
 //  ##     ##  ####   ##  ##       ##      ##                                   
-//   ###   ##  ##  ## ##  ##  ###  ##      #####                                
+//   ###   ##  ##  ## ##  ##  ###  ##      #####                               Ì 
 //     ##  ##  ##    ###  ##   ##  ##      ##                                   
 //  ####   ##  ##     ##   ####    ######  #####                                
 //                                                                                
@@ -20,14 +20,53 @@ void BoosterSingle::get_score_opt(Histogram& Hist, double& opt, double& score_su
     score_sum = CalScore(gr, hr, hp.reg_l1, hp.reg_l2);
 }
 
+//=============================================================================================
+//                                                                                             
+//  ##   ##  ##   ####  ######          ###    ##      ##                                    
+//  ##   ##  ##  ##       ##           ## ##   ##      ##                                    
+//  #######  ##   ###     ##          ##   ##  ##      ##                                    
+//  ##   ##  ##     ##    ##          #######  ##      ##                                    
+//  ##   ##  ##  ####     ##          ##   ##  ######  ######                                
+//                                                                                             
+//=============================================================================================
+
+void BoosterSingle::hist_column(
+    const std::vector<size_t>& order,
+    Histogram& Hist,
+    const uint16_t* maps
+) {
+    for (size_t i : order) {
+        size_t bin = maps[i];
+        ++Hist.count[bin];
+        Hist.g[bin] += G[i];
+        Hist.h[bin] += H[i];
+    }
+    // integration
+    for (size_t i = 1; i < Hist.count.size(); ++i) {
+        Hist.count[i] += Hist.count[i - 1];
+        Hist.g[i] += Hist.g[i - 1];
+        Hist.h[i] += Hist.h[i - 1];
+    }
+}
+
 void BoosterSingle::hist_all(
-    std::vector<size_t>& order,
+    const std::vector<size_t>& order,
     std::vector<Histogram>& Hist
 ) {
     for (size_t i = 0; i < hp.inp_dim; ++i) {
-        histogram_single(order, Hist[i], Train.Maps + i * Train.num, G, H);
+        hist_column(order, Hist[i], Train.Maps + i*Train.num);
     }
 }
+
+//==========================================================================================================
+//                                                                                                          
+//  #####    #####    #####    ####  ######          ###    ##      ##                                    
+//  ##  ##  ##   ##  ##   ##  ##       ##           ## ##   ##      ##                                    
+//  #####   ##   ##  ##   ##   ###     ##          ##   ##  ##      ##                                    
+//  ##  ##  ##   ##  ##   ##     ##    ##          #######  ##      ##                                    
+//  #####    #####    #####   ####     ##          ##   ##  ######  ######                                
+//                                                                                                          
+//==========================================================================================================
 
 boost_column_result BoosterSingle::boost_column(const Histogram& Hist, const size_t column) {
     const size_t max_bins = Hist.count.size() - 1;

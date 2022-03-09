@@ -60,14 +60,62 @@ void BoosterMulti::get_score_opt(
     }
 }
 
+//=============================================================================================
+//                                                                                             
+//  ##   ##  ##   ####  ######          ###    ##      ##                                    
+//  ##   ##  ##  ##       ##           ## ##   ##      ##                                    
+//  #######  ##   ###     ##          ##   ##  ##      ##                                    
+//  ##   ##  ##     ##    ##          #######  ##      ##                                    
+//  ##   ##  ##  ####     ##          ##   ##  ######  ######                                
+//                                                                                             
+//=============================================================================================
+
+void BoosterMulti::hist_column_multi(
+    const std::vector<size_t>& order,
+    Histogram& Hist,
+    const uint16_t* maps
+) {
+    size_t out_dim = hp.out_dim;
+    for (size_t i : order) {
+        ++Hist.count[maps[i]];
+        size_t bin = maps[i] * out_dim;
+        size_t ind = i * out_dim;
+        for (size_t j = 0; j < out_dim; ++j) {
+            Hist.g[bin+j] += G[ind+j];
+            Hist.h[bin+j] += H[ind+j];
+        }
+    }
+    // integration
+    size_t ind = 0;
+    for (size_t i = 1; i < Hist.count.size(); ++i) {
+        Hist.count[i] += Hist.count[i - 1];
+        for (size_t j = 0; j < out_dim; ++j) {
+            Hist.g[ind + out_dim] += Hist.g[ind];
+            Hist.h[ind + out_dim] += Hist.h[ind];
+            ++ind;
+        }
+    }
+}
+
 void BoosterMulti::hist_all(
-    std::vector<size_t>& order,
+    const std::vector<size_t>& order,
     std::vector<Histogram>& Hist
 ) {
     for (size_t i = 0; i < hp.inp_dim; ++i) {
-        histogram_multi(order, Hist[i], Train.Maps + i*Train.num, G, H, hp.out_dim);
+        hist_column_multi(order, Hist[i], Train.Maps + i*Train.num);
     }
 }
+
+//==========================================================================================================
+//                                                                                                          
+//  #####    #####    #####    ####  ######          ###    ##      ##                                    
+//  ##  ##  ##   ##  ##   ##  ##       ##           ## ##   ##      ##                                    
+//  #####   ##   ##  ##   ##   ###     ##          ##   ##  ##      ##                                    
+//  ##  ##  ##   ##  ##   ##     ##    ##          #######  ##      ##                                    
+//  #####    #####    #####   ####     ##          ##   ##  ######  ######                                
+//                                                                                                          
+//==========================================================================================================
+
 
 boost_column_result
 BoosterMulti::boost_column_full(const Histogram& Hist, const size_t column) {
@@ -178,9 +226,17 @@ void BoosterMulti::boost_all(const std::vector<Histogram>& Hist) {
             }
         }
     }
-
-
 }
+
+//============================================================================================================
+//                                                                                                            
+//  #####   ##   ##  ##  ##      ####          ######  #####    #####  #####                                
+//  ##  ##  ##   ##  ##  ##      ##  ##          ##    ##  ##   ##     ##                                   
+//  #####   ##   ##  ##  ##      ##  ##          ##    #####    #####  #####                                
+//  ##  ##  ##   ##  ##  ##      ##  ##          ##    ##  ##   ##     ##                                   
+//  #####    #####   ##  ######  ####            ##    ##   ##  #####  #####                                
+//                                                                                                            
+//============================================================================================================
 
 void BoosterMulti::build_tree_best() {
     if (tree.leaf_num >= hp.max_leaves) { return; }

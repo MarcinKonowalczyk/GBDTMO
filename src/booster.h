@@ -98,7 +98,7 @@ public:
 
 protected:
     virtual void boost_all(const std::vector<Histogram>& Hist) = 0;
-    virtual void hist_all(std::vector<size_t>& order, std::vector<Histogram>& Hist) = 0;
+    virtual void hist_all(const std::vector<size_t>& order, std::vector<Histogram>& Hist) = 0;
 
     Tree tree;
     std::vector<Tree> trees;
@@ -139,7 +139,8 @@ private:
     boost_column_result boost_column(const Histogram& Hist, const size_t column);
     void boost_all(const std::vector<Histogram>& Hist) override;
 
-    void hist_all(std::vector<size_t>& order, std::vector<Histogram>& Hist) override;
+    void hist_column(const std::vector<size_t>& order, Histogram& Hist, const uint16_t* maps);
+    void hist_all(const std::vector<size_t>& order, std::vector<Histogram>& Hist) override;
 
     double Score_sum, Opt;
     void get_score_opt(Histogram&, double& , double& );
@@ -171,7 +172,8 @@ private:
     boost_column_result boost_column_topk_one_side(const Histogram& Hist, const size_t column);
     void boost_all(const std::vector<Histogram>& Hist) override;
 
-    void hist_all(std::vector<size_t>& order, std::vector<Histogram>& Hist) override;
+    void hist_column_multi(const std::vector<size_t>& order, Histogram& Hist, const uint16_t* maps);
+    void hist_all(const std::vector<size_t>& order, std::vector<Histogram>& Hist) override;
 
     double Score_sum;
     std::vector<double> Score;

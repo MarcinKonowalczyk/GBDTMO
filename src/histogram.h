@@ -22,23 +22,6 @@ struct Histogram {
     }
 };
 
-void histogram_single(
-    const std::vector<size_t>& order,
-    Histogram& Hist,
-    const uint16_t* maps,
-    const double* G,
-    const double* H
-);
-
-void histogram_multi(
-    const std::vector<size_t>& order,
-    Histogram& Hist,
-    const uint16_t* maps,
-    const double* G,
-    const double* H,
-    const size_t out_dim
-);
-
 // void histogram_single(std::vector<size_t>& order, Histogram& Hit, uint16_t*, double*, double*);
 // void histogram_multi(std::vector<size_t>& order, Histogram&, uint16_t*, double*, double*, int);
 

@@ -2,67 +2,6 @@
 #include <algorithm>
 #include <utility>
 
-void histogram_single(
-    const std::vector<size_t>& order,
-    Histogram& Hist,
-    const uint16_t* maps,
-    const double* G,
-    const double* H
-) {
-    for (size_t i : order) {
-        size_t bin = maps[i];
-        ++Hist.count[bin];
-        Hist.g[bin] += G[i];
-        Hist.h[bin] += H[i];
-    }
-    // integration
-    for (size_t i = 1; i < Hist.count.size(); ++i) {
-        Hist.count[i] += Hist.count[i - 1];
-        Hist.g[i] += Hist.g[i - 1];
-        Hist.h[i] += Hist.h[i - 1];
-    }
-}
-
-void histogram_multi(
-    const std::vector<size_t>& order,
-    Histogram& Hist,
-    const uint16_t* maps,
-    const double* G,
-    const double* H,
-    const size_t out_dim
-) {
-    for (size_t i : order) {
-        ++Hist.count[maps[i]];
-        size_t bin = maps[i] * out_dim;
-        size_t ind = i * out_dim;
-        for (size_t j = 0; j < out_dim; ++j) {
-            Hist.g[bin+j] += G[ind+j];
-            Hist.h[bin+j] += H[ind+j];
-        }
-    }
-    // integration
-    size_t ind = 0;
-    for (size_t i = 1; i < Hist.count.size(); ++i) {
-        Hist.count[i] += Hist.count[i - 1];
-        for (size_t j = 0; j < out_dim; ++j) {
-            Hist.g[ind + out_dim] += Hist.g[ind];
-            Hist.h[ind + out_dim] += Hist.h[ind];
-            ++ind;
-        }
-    }
-}
-
-//======================================================================
-//                                                                      
-//  ###    ###    ###    #####    ####                                
-//  ## #  # ##   ## ##   ##  ##  ##                                   
-//  ##  ##  ##  ##   ##  #####    ###                                 
-//  ##      ##  #######  ##         ##                                
-//  ##      ##  ##   ##  ##      ####                                 
-//                                                                      
-//======================================================================
-
-
 // Modification of std::unique implementaiton form:
 // https://en.cppreference.com/w/cpp/algorithm/unique
 // It also counts the number of elements in each 
