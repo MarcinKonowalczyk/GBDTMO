@@ -29,39 +29,31 @@ void BoosterSingle::hist_all(
     }
 }
 
-void BoosterSingle::boost_column(const Histogram& Hist, const size_t column) {
+boost_column_result BoosterSingle::boost_column(const Histogram& Hist, const size_t column) {
     const size_t max_bins = Hist.count.size() - 1;
     const double gx = Hist.g[max_bins];
     const double hx = Hist.h[max_bins];
 
-    double column_gain = 0.0f;
-    size_t bin_index;
-
-    double split_found = false;
+    boost_column_result result;
     for (size_t i = 0; i < max_bins; ++i) {
         double score_l = CalScore(Hist.g[i], Hist.h[i], hp.reg_l1, hp.reg_l2);
         double score_r = CalScore(gx - Hist.g[i], hx - Hist.h[i], hp.reg_l1, hp.reg_l2);
         double bin_gain = score_l + score_r;
-
-        if (bin_gain > column_gain) {
-            column_gain = bin_gain;
-            bin_index = i;
-            split_found = true;
-        }
+        result.update(bin_gain, i);
     }
-    if (split_found) {
-        column_gain -= Score_sum;
-        column_gain *= 0.5f;
-        if (column_gain > meta.gain) {
-            meta.update(column_gain, column, bin_index, bin_values[column][bin_index]);
-        }
-    }
+    return result;
 }
 
 void BoosterSingle::boost_all(const std::vector<Histogram>& Hist) {
     meta.reset();
     for (size_t i = 0; i < hp.inp_dim; ++i) {
-        boost_column(Hist[i], i);
+        auto result = boost_column(Hist[i], i);
+        if (result.split_found()) {
+            double overall_gain = (result.gain - Score_sum) * 0.5;
+            if (overall_gain > meta.gain) {
+                meta.update(overall_gain, i, result.bin_index, bin_values[i][result.bin_index]);
+            }
+        }
     }
 }
 

@@ -69,19 +69,17 @@ void BoosterMulti::hist_all(
     }
 }
 
-void BoosterMulti::boost_column_full(const Histogram& Hist, const size_t column) {
+boost_column_result
+BoosterMulti::boost_column_full(const Histogram& Hist, const size_t column) {
     const double* gx = &Hist.g[Hist.g.size() - hp.out_dim];
     const double* hx = &Hist.h[Hist.h.size() - hp.out_dim];
     const size_t max_bins = Hist.count.size() - 1; // TODO: Make sure Hist.count.size > 0 ?
 
-    double column_gain = 0.0;
-    size_t bin_index;
-
-    bool split_found = false;
+    boost_column_result result;
     for (size_t i = 0; i < max_bins; ++i) {
         size_t bo = i * hp.out_dim; // bin offset
         
-        // Gain for all the outut variables
+        // Gain for all the output variables
         double bin_gain = 0.0;
         for (size_t j = 0; j < hp.out_dim; ++j) {
             size_t ho = bo + j; // histogram offset
@@ -89,34 +87,21 @@ void BoosterMulti::boost_column_full(const Histogram& Hist, const size_t column)
             double score_r = CalScore(gx[j] - Hist.g[ho], hx[j] - Hist.h[ho], hp.reg_l1, hp.reg_l2);
             bin_gain += score_l + score_r;
         }
-
-        if (bin_gain > column_gain) {
-            column_gain = bin_gain;
-            bin_index = i;
-            split_found = true;
-        }
+        result.update(bin_gain, i);
     }
-    if (split_found) {
-        column_gain -= Score_sum;
-        column_gain *= 0.5 / hp.out_dim;
-        if (column_gain > meta.gain) {
-            meta.update(column_gain, column, bin_index, bin_values[column][bin_index]);
-        }
-    }
+    return result;
 }
 
-void BoosterMulti::boost_column_topk_two_side(const Histogram& Hist, const size_t column) {
+boost_column_result
+BoosterMulti::boost_column_topk_two_side(const Histogram& Hist, const size_t column) {
     const double* gx = &Hist.g[Hist.g.size() - hp.out_dim];
     const double* hx = &Hist.h[Hist.h.size() - hp.out_dim];
     const size_t max_bins = Hist.count.size() - 1;
 
-    double gain = 0.0;
-    size_t row_bins;
+    auto pq_l = TopkPriority<double>(hp.topk);
+    auto pq_r = TopkPriority<double>(hp.topk);
 
-    auto pq_l = TopkPriority<std::pair<double, size_t>>(hp.topk);
-    auto pq_r = TopkPriority<std::pair<double, size_t>>(hp.topk);
-
-    bool split_found = false;
+    boost_column_result result;
     for (size_t i = 0; i < max_bins; ++i) {
         size_t bo = i * hp.out_dim; // bin offset
 
@@ -125,46 +110,27 @@ void BoosterMulti::boost_column_topk_two_side(const Histogram& Hist, const size_
             size_t ho = bo + j; // histogram offset
             double score_l = CalScore(Hist.g[ho], Hist.h[ho], hp.reg_l1, hp.reg_l2);
             double score_r = CalScore(gx[j] - Hist.g[ho], hx[j] - Hist.h[ho], hp.reg_l1, hp.reg_l2);
-            pq_l.push(std::make_pair(score_l, j));
-            pq_r.push(std::make_pair(score_r, j));
+            pq_l.push(score_l);
+            pq_r.push(score_r);
         }
 
         double bin_gain = 0.0;
-        while (!pq_l.empty()) {
-            bin_gain += std::get<0>(pq_l.top());
-            pq_l.pop();
-        }
-        while (!pq_r.empty()) {
-            bin_gain += std::get<0>(pq_r.top());
-            pq_r.pop();
-        }
-
-        if (bin_gain > gain) {
-            gain = bin_gain;
-            row_bins = i;
-            split_found = true;
-        }
+        for(; !pq_l.empty(); pq_l.pop()) { bin_gain += pq_l.top(); }
+        for(; !pq_r.empty(); pq_r.pop()) { bin_gain += pq_r.top(); }
+        result.update(bin_gain, i);
     }
-    if (split_found) {
-        gain -= Score_sum;
-        gain *= 0.5 / hp.topk;
-        if (gain > meta.gain) {
-            meta.update(gain, column, row_bins, bin_values[column][row_bins]);
-        }
-    }
+    return result;
 }
 
-void BoosterMulti::boost_column_topk_one_side(const Histogram& Hist, const size_t column) {
+boost_column_result
+BoosterMulti::boost_column_topk_one_side(const Histogram& Hist, const size_t column) {
     const double* gx = &Hist.g[Hist.g.size() - hp.out_dim];
     const double* hx = &Hist.h[Hist.h.size() - hp.out_dim];
     const size_t max_bins = Hist.count.size() - 1;
 
-    double column_gain = 0.0;
-    size_t row_bins;
+    auto pq = TopkPriority<double>(hp.topk);
 
-    auto pq = TopkPriority<std::pair<double, int>>(hp.topk);
-
-    bool split_found = false;
+    boost_column_result result;
     for (size_t i = 0; i < max_bins; ++i) {
         size_t bo = i * hp.out_dim; // bin offset
         
@@ -172,49 +138,48 @@ void BoosterMulti::boost_column_topk_one_side(const Histogram& Hist, const size_
             size_t ho = bo + j; // histogram offset
             double score_l = CalScore(Hist.g[ho], Hist.h[ho], hp.reg_l1, hp.reg_l2);
             double score_r = CalScore(gx[j] - Hist.g[ho], hx[j] - Hist.h[ho], hp.reg_l1, hp.reg_l2);
-
-            pq.push(std::make_pair(score_l + score_r, j));
+            pq.push(score_l + score_r);
         }
 
-        double bin_score = 0.0;
-        while (!pq.data.empty()) {
-            bin_score += std::get<0>(pq.data.top());
-            pq.data.pop();
-        }
-
-        if (bin_score > column_gain) {
-            column_gain = bin_score;
-            row_bins = i;
-            split_found = true;
-        }
+        double bin_gain = 0.0;
+        for (; !pq.empty(); pq.pop()) { bin_gain += pq.top(); }
+        result.update(bin_gain, i);
     }
-
-    if (split_found) {
-        column_gain -= Score_sum;
-        column_gain *= 0.5 / hp.topk;
-        if (column_gain > meta.gain) {
-            meta.update(column_gain, column, row_bins, bin_values[column][row_bins]);
-        }
-    }
+    return result;
 }
 
 void BoosterMulti::boost_all(const std::vector<Histogram>& Hist) {
-    meta.reset();
+    std::vector<boost_column_result> results;
+    results.reserve(hp.inp_dim);
     if (hp.topk == 0) {
         for (size_t i = 0; i < hp.inp_dim; ++i) {
-            boost_column_full(Hist[i], i);
+            results.push_back(boost_column_full(Hist[i], i));
         }
     } else {
         if (hp.one_side) {
             for (size_t i = 0; i < hp.inp_dim; ++i) {
-                boost_column_topk_one_side(Hist[i], i);
+                results.push_back(boost_column_topk_one_side(Hist[i], i));
             }
         } else {
             for (size_t i = 0; i < hp.inp_dim; ++i) {
-                boost_column_topk_two_side(Hist[i], i);
+                results.push_back(boost_column_topk_two_side(Hist[i], i));
             }
         }
     }
+
+    int divisor = (hp.topk == 0) ? hp.out_dim : hp.topk;
+    meta.reset();
+    for (size_t i  = 0; i < hp.inp_dim; ++i) {
+        auto result = results[i];
+        if (result.split_found()) {
+            double overall_gain =  (result.gain - Score_sum) / (2 * divisor);
+            if (overall_gain > meta.gain) {
+                meta.update(overall_gain, i, result.bin_index, bin_values[i][result.bin_index]);
+            }
+        }
+    }
+
+
 }
 
 void BoosterMulti::build_tree_best() {

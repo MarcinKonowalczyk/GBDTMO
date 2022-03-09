@@ -28,6 +28,21 @@ struct CacheInfo {
     bool operator>(const CacheInfo &x) const { return split.gain > x.split.gain; }
 };
 
+struct boost_column_result {
+    double gain = 0.0;
+    size_t bin_index = 0;
+
+    inline bool split_found() { return gain > 0.0; };
+
+    inline void update(double new_gain, size_t index) {
+        if (new_gain > gain) {
+            gain = new_gain;
+            bin_index = index;
+        }
+    }
+
+};
+
 //======================================================================
 //                                                                      
 //  ##   ##  ######  ##  ##       ####                                
@@ -121,7 +136,7 @@ public:
 
 private:
 
-    void boost_column(const Histogram& Hist, const size_t column);
+    boost_column_result boost_column(const Histogram& Hist, const size_t column);
     void boost_all(const std::vector<Histogram>& Hist) override;
 
     void hist_all(std::vector<size_t>& order, std::vector<Histogram>& Hist) override;
@@ -151,9 +166,9 @@ public:
 
 private:
     
-    void boost_column_full(const Histogram& Hist, const size_t column);
-    void boost_column_topk_two_side(const Histogram& Hist, const size_t column);
-    void boost_column_topk_one_side(const Histogram& Hist, const size_t column);
+    boost_column_result boost_column_full(const Histogram& Hist, const size_t column);
+    boost_column_result boost_column_topk_two_side(const Histogram& Hist, const size_t column);
+    boost_column_result boost_column_topk_one_side(const Histogram& Hist, const size_t column);
     void boost_all(const std::vector<Histogram>& Hist) override;
 
     void hist_all(std::vector<size_t>& order, std::vector<Histogram>& Hist) override;
