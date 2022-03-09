@@ -9,18 +9,25 @@
 
 struct SplitInfo {
     double gain = -1e8;
-    int column = -1;
-    int bin = -1;
+    size_t column = 0;
+    size_t bin = 0;
     double threshold = 0.0f;
+    bool isset = false;
 
-    inline void reset() { gain = -1e8, column = -1; }
+    inline void reset() {
+        gain = -1e16, column = 0, bin = 0, threshold = 0.0f;
+        isset = false; 
+    }
 
     inline void update(double gain, int column, int bin, double threshold) {
         this->gain = gain;
         this->column = column;
         this->bin = bin;
         this->threshold = threshold;
+        this->isset = true;
     }
+
+    inline void show() { std::cout << "SplitInfo = [\n .gain = " << this->gain << "\n .column = " << this->column << "\n .bin = " << this->bin << "\n .threshold = " << this->threshold << "\n .isset = " << this->isset << "\n]\n"; }
 };
 
 struct NonLeafNode {

@@ -3,11 +3,11 @@
 #include <utility>
 
 void histogram_single(
-    std::vector<size_t>& order,
+    const std::vector<size_t>& order,
     Histogram& Hist,
-    uint16_t* maps,
-    double* G,
-    double* H
+    const uint16_t* maps,
+    const double* G,
+    const double* H
 ) {
     for (size_t i : order) {
         size_t bin = maps[i];
@@ -24,12 +24,12 @@ void histogram_single(
 }
 
 void histogram_multi(
-    std::vector<size_t>& order,
+    const std::vector<size_t>& order,
     Histogram& Hist,
-    uint16_t* maps,
-    double* G,
-    double* H,
-    int out_dim
+    const uint16_t* maps,
+    const double* G,
+    const double* H,
+    const size_t out_dim
 ) {
     for (size_t i : order) {
         ++Hist.count[maps[i]];
@@ -63,7 +63,8 @@ void histogram_multi(
 //======================================================================
 
 
-// Modification of std::unique implementaiton form: https://en.cppreference.com/w/cpp/algorithm/unique
+// Modification of std::unique implementaiton form:
+// https://en.cppreference.com/w/cpp/algorithm/unique
 // It also counts the number of elements in each 
 template<typename T>
 void inplace_unique_with_count(
@@ -99,8 +100,9 @@ void inplace_unique_with_count(
     vector.erase(++result, last); // Trim vector to length
 }
 
+// Construt bin edges based on the column of the features matrix
 void construct_bin_column(
-    std::vector<double> feature, // Note: don't pass by reference. Copy.
+    std::vector<double> feature, // Note: don't pass by reference. Copy. 'feature' is not modified outside of the function.
     std::vector<double>& bins,
     const uint16_t max_bins
 ) {
@@ -137,7 +139,7 @@ void construct_bin_column(
     }
 };
 
-// Map bins 
+// Calculate binning of a single column of the features matrix
 void map_bin_column(
     const std::vector<double> feature,
     uint16_t* maps,
@@ -149,6 +151,7 @@ void map_bin_column(
     }
 };
 
+// Calculate binning of each colum of the features matrix, and the corresponding histogram map
 void calculate_histogram_maps(
     const double* features,
     uint16_t* maps,
@@ -173,5 +176,3 @@ void calculate_histogram_maps(
         map_bin_column(feature, maps + i*n, bins_column);
     }
 };
-
-

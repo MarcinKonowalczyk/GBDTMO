@@ -20,14 +20,6 @@ void BoosterSingle::get_score_opt(Histogram& Hist, double& opt, double& score_su
     score_sum = CalScore(gr, hr, hp.reg_l1, hp.reg_l2);
 }
 
-// void histogram_single(
-//     std::vector<size_t>& order,
-//     Histogram& Hist,
-//     uint16_t* maps,
-//     double* G,
-//     double* H
-// )
-
 void BoosterSingle::hist_all(
     std::vector<size_t>& order,
     std::vector<Histogram>& Hist
@@ -37,28 +29,36 @@ void BoosterSingle::hist_all(
     }
 }
 
-void BoosterSingle::boost_column(Histogram& Hist, int column) {
-    int max_bins = Hist.count.size() - 1;
-    double gr, hr;
-    double gain = 0.0f, tmp;
-    int row_bins = -1;
+void BoosterSingle::boost_column(const Histogram& Hist, const size_t column) {
+    const size_t max_bins = Hist.count.size() - 1;
+    const double gx = Hist.g[max_bins];
+    const double hx = Hist.h[max_bins];
+
+    double column_gain = 0.0f;
+    size_t bin_index;
+
+    double split_found = false;
     for (size_t i = 0; i < max_bins; ++i) {
-        gr = Hist.g[max_bins] - Hist.g[i];
-        hr = Hist.h[max_bins] - Hist.h[i];
-        tmp = CalScore(Hist.g[i], Hist.h[i], hp.reg_l1, hp.reg_l2) + CalScore(gr, hr, hp.reg_l1, hp.reg_l2);
-        if (tmp > gain) {
-            gain = tmp;
-            row_bins = i;
+        double score_l = CalScore(Hist.g[i], Hist.h[i], hp.reg_l1, hp.reg_l2);
+        double score_r = CalScore(gx - Hist.g[i], hx - Hist.h[i], hp.reg_l1, hp.reg_l2);
+        double bin_gain = score_l + score_r;
+
+        if (bin_gain > column_gain) {
+            column_gain = bin_gain;
+            bin_index = i;
+            split_found = true;
         }
     }
-    gain -= Score_sum;
-    gain *= 0.5f;
-    if (gain > meta.gain) {
-        meta.update(gain, column, row_bins, bin_values[column][row_bins]);
+    if (split_found) {
+        column_gain -= Score_sum;
+        column_gain *= 0.5f;
+        if (column_gain > meta.gain) {
+            meta.update(column_gain, column, bin_index, bin_values[column][bin_index]);
+        }
     }
 }
 
-void BoosterSingle::boost_all(std::vector<Histogram>& Hist) {
+void BoosterSingle::boost_all(const std::vector<Histogram>& Hist) {
     meta.reset();
     for (size_t i = 0; i < hp.inp_dim; ++i) {
         boost_column(Hist[i], i);
@@ -96,7 +96,7 @@ void BoosterSingle::build_tree_best() {
         get_score_opt(Hist_l[rand() % hp.inp_dim], Opt, Score_sum);
         boost_all(Hist_l);
 
-        if (depth + 1 < hp.max_depth && meta.column > -1 && meta.gain > hp.gamma) {
+        if (meta.isset && depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
             auto node = NonLeafNode(parent, meta.column, meta.bin, meta.threshold);
             tree.add_nonleaf(node, true);
             cache.push(CacheInfo(tree.nonleaf_num, depth + 1, meta, order_l, Hist_l));
@@ -114,7 +114,7 @@ void BoosterSingle::build_tree_best() {
         get_score_opt(Hist_r[rand() % hp.inp_dim], Opt, Score_sum);
         boost_all(Hist_r);
 
-        if (depth + 1 < hp.max_depth && meta.column > -1 && meta.gain > hp.gamma) {
+        if (meta.isset && depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
             auto node = NonLeafNode(parent, meta.column, meta.bin, meta.threshold);
             tree.add_nonleaf(node, false);
             cache.push(CacheInfo(tree.nonleaf_num, depth + 1, meta, order_r, Hist_r));
@@ -139,9 +139,10 @@ void BoosterSingle::growth() {
     hist_all(Train.Orders, Hist);
 
     get_score_opt(Hist[rand() % hp.inp_dim], Opt, Score_sum);
+   
     boost_all(Hist);
-
-    if (meta.column > -1 & meta.gain > -10.0f) {
+  
+    if (meta.isset && meta.gain > -10.0f) {
         auto node = NonLeafNode(-1, meta.column, meta.bin, meta.threshold);
         tree.add_nonleaf(node, true);
         cache.push(CacheInfo(-1, 0, meta, Train.Orders, Hist));
@@ -204,7 +205,6 @@ void BoosterSingle::train(int num_rounds) {
         } else {
             if (hp.verbose) { showloss(score, i); }
         }
-        
     }
     if (early_stoper.is_continue && Eval.num > 0) { showbest(early_stoper.info); }
     free(G);

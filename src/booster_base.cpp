@@ -1,4 +1,5 @@
 #include "booster.h"
+#include <limits>
 
 //======================================================================
 //                                                                      
@@ -68,14 +69,13 @@ void BoosterBase::set_train_label(int32_t* label) { Train.Label_int32 = label; }
 void BoosterBase::set_eval_label(int32_t* label) { Eval.Label_int32 = label; }
 
 void BoosterBase::rebuild_order(
-    std::vector<size_t>& order,
+    const std::vector<size_t>& order,
     std::vector<size_t>& order_l,
     std::vector<size_t>& order_r,
-    uint16_t* maps,
-    uint16_t bin
+    const uint16_t* maps,
+    const uint16_t bin
 ) {
     int count_l = 0, count_r = 0;
-
     for (size_t i : order) {
         if (maps[i] <= bin) {
             order_l[count_l++] = i;

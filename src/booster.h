@@ -17,8 +17,13 @@ struct CacheInfo {
     std::vector<size_t> order;
     std::vector<Histogram> hist;
 
-    CacheInfo(int n, int d, SplitInfo& s, std::vector<size_t>& o, std::vector<Histogram>& h) :
-            node(n), depth(d), split(s), order(o), hist(h) {};
+    CacheInfo(
+        int n,
+        int d,
+        SplitInfo& s,
+        std::vector<size_t>& o,
+        std::vector<Histogram>& h
+    ) : node(n), depth(d), split(s), order(o), hist(h) {};
 
     bool operator>(const CacheInfo &x) const { return split.gain > x.split.gain; }
 };
@@ -49,11 +54,11 @@ public:
     void calc_train_maps();
 
     void rebuild_order(
-        std::vector<size_t>& order,
+        const std::vector<size_t>& order,
         std::vector<size_t>& order_l,
         std::vector<size_t>& order_r,
-        uint16_t* maps,
-        uint16_t bin
+        const uint16_t* maps,
+        const uint16_t bin
     );
 
     double* malloc_G(int elements);
@@ -69,6 +74,7 @@ public:
     void load(const char* path) { LoadTrees(trees, path); }
     void dump(const char* path) { DumpTrees(trees, path); }
 
+    // API
     virtual void update() = 0;
     virtual void growth() = 0;
     virtual void train(int) = 0;
@@ -76,6 +82,9 @@ public:
     void reset();
 
 protected:
+    virtual void boost_all(const std::vector<Histogram>& Hist) = 0;
+    virtual void hist_all(std::vector<size_t>& order, std::vector<Histogram>& Hist) = 0;
+
     Tree tree;
     std::vector<Tree> trees;
     std::vector<uint16_t> bin_nums;
@@ -111,11 +120,14 @@ public:
     void predict_multi(const double* features, double* preds, const size_t n, const int out_dim, int num_trees);
 
 private:
+
+    void boost_column(const Histogram& Hist, const size_t column);
+    void boost_all(const std::vector<Histogram>& Hist) override;
+
+    void hist_all(std::vector<size_t>& order, std::vector<Histogram>& Hist) override;
+
     double Score_sum, Opt;
-    void get_score_opt(Histogram &, double &, double &);
-    void hist_all(std::vector<size_t>& order, std::vector<Histogram>& Hist);
-    void boost_column(Histogram &, int);
-    void boost_all(std::vector<Histogram> &);
+    void get_score_opt(Histogram&, double& , double& );
     void build_tree_best();
 };
 
@@ -138,17 +150,20 @@ public:
     void predict(const double* features, double* preds, const size_t n, int num_trees) override;
 
 private:
+    
+    void boost_column_full(const Histogram& Hist, const size_t column);
+    void boost_column_topk_two_side(const Histogram& Hist, const size_t column);
+    void boost_column_topk_one_side(const Histogram& Hist, const size_t column);
+    void boost_all(const std::vector<Histogram>& Hist) override;
+
+    void hist_all(std::vector<size_t>& order, std::vector<Histogram>& Hist) override;
+
     double Score_sum;
     std::vector<double> Score;
     std::vector<double> Opt;
     std::vector<std::pair<double, int>> OptPair;
-    void get_score_opt(Histogram &, std::vector<double> &, std::vector<double> &, double &);
-    void get_score_opt(Histogram &, std::vector<std::pair<double, int>> &, std::vector<double> &, double &);
-    void hist_all(std::vector<size_t>& order, std::vector<Histogram>& Hist);
-    void boost_column_full(Histogram &, int);
-    void boost_column_topk_two_side(Histogram &, int);
-    void boost_column_topk_one_side(Histogram &, int);
-    void boost_all(std::vector<Histogram> &);
+    void get_score_opt(Histogram&, std::vector<double>&, std::vector<double>&, double&);
+    void get_score_opt(Histogram&, std::vector<std::pair<double, int>>& , std::vector<double>&, double&);
     void build_tree_best();
 };
 
