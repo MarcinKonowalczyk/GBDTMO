@@ -188,9 +188,7 @@ void BoosterSingle::growth() {
     std::vector<Histogram> Hist(hp.inp_dim);
     for (size_t i = 0; i < hp.inp_dim; ++i) { Hist[i] = Histogram(bin_nums[i], 1); }
     hist_all(Train.Orders, Hist);
-
     get_score_opt(Hist[rand() % hp.inp_dim], Opt, Score_sum);
-   
     boost_all(Hist);
     
     // TODO: Parametrise the -10.0??
@@ -254,7 +252,7 @@ void BoosterSingle::train(int num_rounds) {
                 auto info = early_stoper.info;
                 int round = std::get<1>(info);
                 showbest(std::get<0>(info), round);
-                trees.resize(round + 1);
+                trees.resize(hp.out_dim * round);
                 break;
             }
         } else {

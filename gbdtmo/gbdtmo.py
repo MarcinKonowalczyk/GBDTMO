@@ -16,14 +16,13 @@ class GBDTBase:
 
     _lib_init = None
 
-    def __init__(self, lib, shape, params={}):
-
+    def __init__(self, shape, params={}):
         # Make sure the required parameters are set in the children classes
         for required_attr in ('_lib_init', ):
             if getattr(self, required_attr) is None:
                 raise NotImplementedError(f"Attribute '{required_attr}' not set")
 
-        self.lib = lib
+        self.lib = load_lib(LIB)
         self.inp_dim, self.out_dim = shape
 
         self.params = dict(self.lib.DefaultHyperParameters())
@@ -38,7 +37,6 @@ class GBDTBase:
         self._booster = lib_init(HyperParameters(**self.params))
 
     def __del__(self):
-        # print("Debug test print on delete. This should free the memory of the C object");
         self.lib.Delete(self._booster)
 
     @staticmethod
@@ -95,7 +93,7 @@ class GBDTBase:
         return tree_array, threshold_array, leaf_array
 
     def _get_nonleaf_sizes(self, n_trees=None):
-        """Get the array describing the sizes of each of the trees in the nonleaf array"""
+        """ Get the array describing the sizes of each of the trees in the nonleaf array """
         n_trees = self._get_n_trees() if not n_trees else n_trees
         nonleaf_sizes = np.zeros(n_trees, dtype=np.uint16)
         self.lib.GetNonleafSizes(self._booster, nonleaf_sizes)
@@ -113,7 +111,7 @@ class GBDTBase:
         return np.ascontiguousarray(np.moveaxis(np.stack([padder(x) for x in X], axis=0), 1, 2))
 
     def _get_nonleaf_nodes(self, n_trees=None):
-        """Get the tree array and the corresponding threshold array"""
+        """ Get the tree array and the corresponding threshold array """
         tree_sizes = self._get_nonleaf_sizes(n_trees)
         N_nonleaf = np.sum(tree_sizes)
         tree_array = np.full((N_nonleaf, 5), 0, dtype=np.int32)

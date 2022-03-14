@@ -74,3 +74,6 @@ def load_lib(path):
     _s(lib.Load, [c_void_p, c_char_p])
 
     return lib
+
+import os
+LIB = os.path.realpath(os.path.join(os.path.dirname(__file__), "lib.so"))

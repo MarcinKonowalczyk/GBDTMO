@@ -1,21 +1,10 @@
-import argparse
-import numpy as np
-
 import os, sys
+from contextlib import contextmanager
 
 sys.path.append(os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
 
-from gbdtmo import GBDTMulti, load_lib, GBDTSingle
-
-# parser = argparse.ArgumentParser()
-# parser.add_argument("-lr", default=0.1, type=float)
-# parser.add_argument("-depth", default=2, type=int)
-# args = parser.parse_args()
-
-LIB = load_lib("../build/gbdtmo.so" if os.path.exists("../build/gbdtmo.so") else "./build/gbdtmo.so")
-
-from contextlib import contextmanager
-
+import numpy as np
+from gbdtmo import GBDTMulti, GBDTSingle
 
 @contextmanager
 def seed_rng(random_state):
@@ -54,7 +43,7 @@ if __name__ == '__main__':
     booster_shape = (10, 2)
     seed = 42
 
-    booster_params = dict(max_depth=4, lr=0.1, loss="mse", early_stop=50, verbose=True, seed=seed)
+    booster_params = dict(max_depth=2, lr=0.1, loss="mse", early_stop=50, verbose=True, seed=seed)
     with seed_rng(seed):
         X_train, X_test = np.random.rand(10000, booster_shape[0]), np.random.rand(100, booster_shape[0])
         M = np.random.randn(5 * booster_shape[0], booster_shape[1])
@@ -70,8 +59,8 @@ if __name__ == '__main__':
     # y_train = y_train.astype(np.int32); y_train -= np.min(y_train);
     # y_test = y_test.astype(np.int32); y_test -= np.min(y_test);
 
-    booster_single = GBDTSingle(LIB, shape=booster_shape, params=booster_params)
-    booster_multi = GBDTMulti(LIB, shape=booster_shape, params=booster_params)
+    booster_single = GBDTSingle(shape=booster_shape, params=booster_params)
+    booster_multi = GBDTMulti(shape=booster_shape, params=booster_params)
 
     booster_single.set_train_data(X_train, y_train)
     booster_single.calc_train_maps()
@@ -81,8 +70,8 @@ if __name__ == '__main__':
     booster_multi.calc_train_maps()
     booster_multi.set_eval_data(X_test, y_test)
 
-    booster_single.train(100)
-    booster_multi.train(100)
+    booster_single.train(10000)
+    booster_multi.train(10000)
 
     booster_single.dump('state_single.txt')
     state_single = booster_single.get_state()

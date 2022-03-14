@@ -376,7 +376,7 @@ void BoosterMulti::train(int num_rounds) {
                 auto info = early_stoper.info;
                 int round = std::get<1>(info);
                 showbest(std::get<0>(info), round);
-                trees.resize(round + 1);
+                trees.resize(round);
                 break;
             }
         } else {
