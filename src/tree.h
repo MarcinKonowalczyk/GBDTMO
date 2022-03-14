@@ -38,8 +38,8 @@ struct NonLeafNode {
 
     NonLeafNode() {};
 
-    NonLeafNode(int parent_, int column_, int bin_, double threshold_) :
-            parent(parent_), column(column_), bin(bin_), threshold(threshold_) {};
+    NonLeafNode(int p, int c, int b, double t) :
+            parent(p), column(c), bin(b), threshold(t) {};
 };
 
 struct LeafNode {
@@ -101,20 +101,45 @@ struct Tree {
     }
 
     inline void shrinkage(double lr) {
-        for (int i = 1; i < leaf.size() + 1; ++i) {
-            for (auto &p : leaf[i].values) {
+        // for (size_t i = 1; i < leaf.size() + 1; ++i) {
+        //     for (auto &p : leaf[i].values) {
+        //         p *= lr;
+        //     }
+        // }
+        for (auto l : leaf) {
+            for (auto& p : l.second.values) {
                 p *= lr;
             }
         }
     }
 
     // predict by original features
-    void pred_value_single(const double* features, double* preds, const HyperParameters& hp, const int n);
-    void pred_value_multi(const double* features, double* preds, const HyperParameters& hp, const int n);
+    void pred_value_single(
+        const double* features,
+        double* preds,
+        const HyperParameters& hp,
+        const int n
+    ) const;
+    void pred_value_multi(
+        const double* features,
+        double* preds,
+        const HyperParameters& hp,
+        const int n
+    ) const;
 
     // predict by bin maps
-    void pred_value_single(const uint16_t* features, double* preds, const HyperParameters& hp, const int n);
-    void pred_value_multi(const uint16_t* features, double* preds, const HyperParameters& hp, const int n);
+    void pred_value_single(
+        const uint16_t* features,
+        double* preds,
+        const HyperParameters& hp,
+        const int n
+    ) const;
+    void pred_value_multi(
+        const uint16_t* features,
+        double* preds,
+        const HyperParameters& hp,
+        const int n
+    ) const;
 
 };
 

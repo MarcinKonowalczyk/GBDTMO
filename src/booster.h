@@ -8,7 +8,6 @@
 #include "io.h"
 #include "histogram.h"
 #include <algorithm>
-// #include <cstdlib> /* malloc */
 
 struct CacheInfo {
     int node;
@@ -43,20 +42,20 @@ struct boost_column_result {
 
 };
 
-//======================================================================
-//                                                                      
-//  ##   ##  ######  ##  ##       ####                                
-//  ##   ##    ##    ##  ##      ##                                   
-//  ##   ##    ##    ##  ##       ###                                 
-//  ##   ##    ##    ##  ##         ##                                
-//   #####     ##    ##  ######  ####                                 
-//                                                                      
-//======================================================================
-
+//=================================================================
+//                                                                 
+//  #####     ###     ####  #####                                
+//  ##  ##   ## ##   ##     ##                                   
+//  #####   ##   ##   ###   #####                                
+//  ##  ##  #######     ##  ##                                   
+//  #####   ##   ##  ####   #####                                
+//                                                                 
+//=================================================================
 
 class BoosterBase {
 public:
     BoosterBase(const HyperParameters p);
+    virtual ~BoosterBase();
 
     void set_gh(double*, double*);
     void set_train_data(double* features, double* preds, int n);
@@ -76,9 +75,6 @@ public:
         const uint16_t bin
     );
 
-    double* malloc_G(int elements);
-    double* malloc_H(int elements, bool constHessian, double constValue);
-
     // Print helpers
     inline void showloss(double score, double metric, int i) const { std::cout << "[" << i << "] train->" << std::setprecision(5) << std::fixed << score << "\teval->" << std::setprecision(5) << std::fixed << metric << std::endl; }
     inline void showloss(double metric, int i) const { std::cout << "[" << i << "] score->" << std::setprecision(5) << std::fixed << metric << std::endl; }
@@ -95,13 +91,23 @@ public:
     virtual void train(int) = 0;
     virtual void predict(const double* features, double* preds, const size_t n, int num_trees) = 0;
     void reset();
+    std::vector<Tree> trees;
 
+    // Used to dump state to arrays
+    void dump_nonleaf_sizes(uint16_t* nonleaf_sizes) const;
+    void dump_leaf_sizes(uint16_t* leaf_sizes) const;
+    void dump_nonleaf_nodes(int* trees, double* thresholds) const;
+    void dump_leaf_nodes(double* leaves) const;
+    
 protected:
+
+    double* malloc_G(size_t elements);
+    double* malloc_H(size_t elements, bool constHessian, double constValue);
+
     virtual void boost_all(const std::vector<Histogram>& Hist) = 0;
     virtual void hist_all(const std::vector<size_t>& order, std::vector<Histogram>& Hist) = 0;
 
     Tree tree;
-    std::vector<Tree> trees;
     std::vector<uint16_t> bin_nums;
     std::vector<std::vector<double>> bin_values;
     SplitInfo meta;

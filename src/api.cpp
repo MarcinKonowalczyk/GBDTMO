@@ -12,7 +12,7 @@ extern "C" {
 //                                                                                       
 //=======================================================================================
 
-void SetGH(BoosterBase* foo, double* x, double* y) { foo->set_gh(x, y); }
+// void SetGH(BoosterBase* foo, double* x, double* y) { foo->set_gh(x, y); }
 void SetTrainData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_train_data(features, preds, n); }
 void SetEvalData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_eval_data(features, preds, n); }
 void SetTrainLabelDouble(BoosterBase* foo, double* label) { foo->set_train_label(label); }
@@ -45,6 +45,12 @@ void Reset(BoosterBase* foo) { foo->reset(); }
 //  ##   #####                                 
 //                                               
 //===============================================
+
+size_t GetNTrees(BoosterBase* foo) { return foo->trees.size(); }
+void GetNonleafSizes(BoosterBase* foo, uint16_t* nonleaf_sizes) { foo->dump_nonleaf_sizes(nonleaf_sizes); }
+void GetLeafSizes(BoosterBase* foo, uint16_t* leaf_sizes) { foo->dump_leaf_sizes(leaf_sizes); }
+void GetNonleafNodes(BoosterBase* foo, int* trees, double* thresholds) { foo->dump_nonleaf_nodes(trees, thresholds); }
+void GetLeafNodes(BoosterBase* foo, double* leaves) { foo->dump_leaf_nodes(leaves); }
 
 void Dump(BoosterBase* foo, const char* path) { foo->dump(path); }
 void Load(BoosterBase* foo, const char* path) { foo->load(path); }
@@ -83,7 +89,7 @@ HyperParameters DefaultHyperParameters() {
     };
 }
 
-BoosterMulti* MultiNew(HyperParameters hp) { return new BoosterMulti(hp); }
-BoosterSingle* SingleNew(HyperParameters hp) { return new BoosterSingle(hp); }
-
+BoosterMulti* MultiNew(HyperParameters hp) { return new(std::nothrow) BoosterMulti(hp); }
+BoosterSingle* SingleNew(HyperParameters hp) { return new(std::nothrow) BoosterSingle(hp); }
+void Delete(BoosterBase* foo) { delete foo; }
 }

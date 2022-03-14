@@ -47,6 +47,7 @@ double bce_score(const Dataset& data, const int n, const int out_dim) {
 }
 
 // Cross-entropy
+// TODO: Precompute rec??
 void ce_grad(const Dataset& data, const int n, const int out_dim, double* g, double* h) {
     auto preds = data.Preds;
     auto labels = data.Label_int32;

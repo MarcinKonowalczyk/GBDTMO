@@ -51,12 +51,11 @@ void BoosterMulti::get_score_opt(
     }
     opt.resize(0);
     score_sum = 0.0f;
-    while (!score_k.empty()) {
+    for (; !score_k.empty(); score_k.pop() ) {
         auto top = score_k.top();
         score_sum += std::get<0>(top);
         int k = std::get<1>(top);
         opt.push_back(std::make_pair(CalWeight(gr[k], hr[k], hp.reg_l1, hp.reg_l2), k));
-        score_k.pop();
     }
 }
 
@@ -311,6 +310,16 @@ void BoosterMulti::build_tree_best() {
     if (!cache.empty()) { build_tree_best(); }
 }
 
+//===========================================================================
+//                                                                           
+//  ######  #####      ###    ##  ##     ##                                
+//    ##    ##  ##    ## ##   ##  ####   ##                                
+//    ##    #####    ##   ##  ##  ##  ## ##                                
+//    ##    ##  ##   #######  ##  ##    ###                                
+//    ##    ##   ##  ##   ##  ##  ##     ##                                
+//                                                                           
+//===========================================================================
+
 void BoosterMulti::update() {
     tree.shrinkage(hp.lr);
     tree.pred_value_multi(Train.Features, Train.Preds, hp, Train.num);
@@ -351,7 +360,7 @@ void BoosterMulti::train(int num_rounds) {
     H = malloc_H(Train.num * hp.out_dim, obj.constHessian, obj.hessian);
 
     int round = hp.early_stop == 0 ? num_rounds : hp.early_stop;
-    auto early_stoper = EarlyStoper(round, obj.largerBetter);
+    auto early_stoper = EarlyStopper(round, obj.largerBetter);
 
     // start training
     for (size_t i = 0; i < num_rounds; ++i) {
@@ -378,6 +387,16 @@ void BoosterMulti::train(int num_rounds) {
     free(G);
     free(H);
 }
+
+//=====================================================================================
+//                                                                                     
+//  #####   #####    #####  ####    ##   ####  ######                                
+//  ##  ##  ##  ##   ##     ##  ##  ##  ##       ##                                  
+//  #####   #####    #####  ##  ##  ##  ##       ##                                  
+//  ##      ##  ##   ##     ##  ##  ##  ##       ##                                  
+//  ##      ##   ##  #####  ####    ##   ####    ##                                  
+//                                                                                     
+//=====================================================================================
 
 void BoosterMulti::predict(const double* features, double* preds, const size_t n, int num_trees = 0) {
     num_trees = num_trees == 0 ? int(trees.size()) : std::min(num_trees, int(trees.size()));

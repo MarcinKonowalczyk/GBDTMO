@@ -1,128 +1,31 @@
 #include "io.h"
+#include "string_utils.h"
+
+#include <iostream>
+#include <fstream>
+#include <string>
 #include <algorithm>
 #include <cctype>
 #include <cstring>
 #include <sstream>
 
-#define LEFTSTRIP 0
-#define RIGHTSTRIP 1
-#define BOTHSTRIP 2
 #define PRECISION 16
 
-std::string do_strip(const std::string &str, int striptype, const std::string &chars) {
-    int len = (int) str.size(), i, j, charslen = (int) chars.size();
-    if (charslen == 0) {
-        i = 0;
-        if (striptype != RIGHTSTRIP) {
-            while (i < len && ::isspace(str[i])) ++i;
-        }
+//=======================================================================
+//                                                                       
+//  ####    ##   ##  ###    ###  #####                                 
+//  ##  ##  ##   ##  ## #  # ##  ##  ##                                
+//  ##  ##  ##   ##  ##  ##  ##  #####                                 
+//  ##  ##  ##   ##  ##      ##  ##                                    
+//  ####     #####   ##      ##  ##                                    
+//                                                                       
+//=======================================================================
 
-        j = len;
-        if (striptype != LEFTSTRIP) {
-            do --j; while (j >= i && ::isspace(str[j]));
-            ++j;
-        }
-    } else {
-        const char *sep = chars.c_str();
-        i = 0;
-        if (striptype != RIGHTSTRIP) {
-            while (i < len && memchr(sep, str[i], charslen)) {
-                ++i;
-            }
-        }
-
-        j = len;
-        if (striptype != LEFTSTRIP) {
-            do --j; while (j >= i && memchr(sep, str[j], charslen));
-            ++j;
-        }
-    }
-
-    if (i == 0 && j == len) {
-        return str;
-    } else {
-        return str.substr(i, j - i);
-    }
-}
-
-std::string strip(const std::string &str, const std::string &chars) {
-    return do_strip(str, BOTHSTRIP, chars);
-}
-
-std::string lstrip(const std::string &str, const std::string &chars) {
-    return do_strip(str, LEFTSTRIP, chars);
-}
-
-std::string rstrip(const std::string &str, const std::string &chars) {
-    return do_strip(str, RIGHTSTRIP, chars);
-}
-
-void split_whitespace(const std::string &str, std::vector<std::string> &result, int maxsplit) {
-    std::string::size_type i, j, len = str.size();
-    for (i = j = 0; i < len;) {
-        while (i < len && ::isspace(str[i])) ++i;
-        j = i;
-
-        while (i < len && !::isspace(str[i])) ++i;
-
-        if (j < i) {
-            if (maxsplit-- <= 0) break;
-            result.push_back(str.substr(j, i - j));
-            while (i < len && ::isspace(str[i])) ++i;
-            j = i;
-        }
-    }
-    if (j < len) {
-        result.push_back(str.substr(j, len - j));
-    }
-}
-
-void split(const std::string &str, std::vector<std::string> &result, const std::string &sep, int maxsplit) {
-    result.clear();
-    if (maxsplit < 0) maxsplit = INT_MAX;//result.max_size();
-    if (sep.size() == 0) {
-        split_whitespace(str, result, maxsplit);
-        return;
-    }
-
-    std::string::size_type i, j, len = str.size(), n = sep.size();
-    i = j = 0;
-    while (i + n <= len) {
-        if (str[i] == sep[0] && str.substr(i, n) == sep) {
-            if (maxsplit-- <= 0) break;
-            result.push_back(str.substr(j, i - j));
-            i = j = i + n;
-        } else {
-            ++i;
-        }
-    }
-    result.push_back(str.substr(j, len - j));
-}
-
-std::string zfill(const std::string &str, int width) {
-    int len = (int) str.size();
-    if (len >= width) {
-        return str;
-    }
-    std::string s(str);
-    int fill = width - len;
-    s = std::string(fill, '0') + s;
-
-    if (s[fill] == '+' || s[fill] == '-') {
-        s[0] = s[fill];
-        s[fill] = '0';
-    }
-
-    return s;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-
-void DumpTrees(std::vector<Tree> &trees, const char *path) {
+void DumpTrees(std::vector<Tree>& trees, const char* path) {
     std::ofstream outfile;
     outfile.open(path);
     size_t t = 0;
-    for (auto &tree : trees) {
+    for (auto& tree : trees) {
         outfile << "Booster[" << t << "]:\n";
         for (auto it : tree.nonleaf) {
             auto v = it.second;
@@ -131,14 +34,16 @@ void DumpTrees(std::vector<Tree> &trees, const char *path) {
             outfile << std::scientific << std::setprecision(PRECISION) << v.threshold << std::endl;
         }
 
-        for (auto &it : tree.leaf) {
+        // std::cout << "tree.leaf.size() = " << tree.leaf.size() << std::endl;
+        for (auto& it : tree.leaf) {
             auto v = it.second;
             outfile << "\t\t" << it.first << ",";
-            for (int i = 0; i < v.values.size(); ++i) {
+            for (size_t i = 0; i < v.values.size(); ++i) {
+                outfile << std::scientific << std::setprecision(PRECISION) << v.values[i];
                 if (i < v.values.size() - 1) {
-                    outfile << std::scientific << std::setprecision(PRECISION) << v.values[i] << ",";
+                    outfile << ",";
                 } else {
-                    outfile << std::scientific << std::setprecision(PRECISION) << v.values[i] << std::endl;
+                    outfile << std::endl;
                 }
             }
         }
@@ -147,7 +52,44 @@ void DumpTrees(std::vector<Tree> &trees, const char *path) {
     outfile.close();
 }
 
-void LoadTrees(std::vector<Tree> &trees, const char *path) {
+// void DumpState(std::vector<Tree>& trees) {
+    
+//     for (size_t t = 0; t < trees.size(); ++t) {
+//         auto tree = trees[t];
+//         // outfile << "Booster[" << t << "]:\n";
+//         for (auto it : tree.nonleaf) {
+//             auto v = it.second;
+//             outfile << "\t" << it.first << "," << v.parent << "," << v.left << "," << v.right << "," << v.column << ",";
+//             outfile << std::scientific << std::setprecision(PRECISION) << v.threshold << std::endl;
+//         }
+
+//         for (auto& it : tree.leaf) {
+//             auto v = it.second;
+//             outfile << "\t\t" << it.first << ",";
+//             for (size_t i = 0; i < v.values.size(); ++i) {
+//                 outfile << std::scientific << std::setprecision(PRECISION) << v.values[i];
+//                 if (i < v.values.size() - 1) {
+//                     outfile << ",";
+//                 } else {
+//                     outfile << std::endl;
+//                 }
+//             }
+//         }
+//     }
+//     // outfile.close();
+// }
+
+//====================================================================
+//                                                                    
+//  ##       #####     ###    ####                                  
+//  ##      ##   ##   ## ##   ##  ##                                
+//  ##      ##   ##  ##   ##  ##  ##                                
+//  ##      ##   ##  #######  ##  ##                                
+//  ######   #####   ##   ##  ####                                  
+//                                                                    
+//====================================================================
+
+void LoadTrees(std::vector<Tree>& trees, const char* path) {
     std::ifstream infile(path);
     std::string line;
     std::vector<std::string> contents;

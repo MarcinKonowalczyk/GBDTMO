@@ -96,6 +96,16 @@ void BoosterSingle::boost_all(const std::vector<Histogram>& Hist) {
     }
 }
 
+//============================================================================================================
+//                                                                                                            
+//  #####   ##   ##  ##  ##      ####          ######  #####    #####  #####                                
+//  ##  ##  ##   ##  ##  ##      ##  ##          ##    ##  ##   ##     ##                                   
+//  #####   ##   ##  ##  ##      ##  ##          ##    #####    #####  #####                                
+//  ##  ##  ##   ##  ##  ##      ##  ##          ##    ##  ##   ##     ##                                   
+//  #####    #####   ##  ######  ####            ##    ##   ##  #####  #####                                
+//                                                                                                            
+//============================================================================================================
+
 void BoosterSingle::build_tree_best() {
     if (tree.leaf_num >= hp.max_leaves) { return; }
 
@@ -150,7 +160,7 @@ void BoosterSingle::build_tree_best() {
             tree.add_nonleaf(node, false);
             cache.push(CacheInfo(tree.nonleaf_num, depth + 1, meta, order_r, Hist_r));
         } else {
-            auto node = LeafNode(hp.out_dim);
+            auto node = LeafNode(1);
             node.Update(parent, Opt);
             tree.add_leaf(node, false);
         }
@@ -160,6 +170,16 @@ void BoosterSingle::build_tree_best() {
 
     if (!cache.empty()) { build_tree_best(); }
 }
+
+//===========================================================================
+//                                                                           
+//  ######  #####      ###    ##  ##     ##                                
+//    ##    ##  ##    ## ##   ##  ####   ##                                
+//    ##    #####    ##   ##  ##  ##  ## ##                                
+//    ##    ##  ##   #######  ##  ##    ###                                
+//    ##    ##   ##  ##   ##  ##  ##     ##                                
+//                                                                           
+//===========================================================================
 
 void BoosterSingle::growth() {
     tree.clear();
@@ -172,7 +192,10 @@ void BoosterSingle::growth() {
     get_score_opt(Hist[rand() % hp.inp_dim], Opt, Score_sum);
    
     boost_all(Hist);
-  
+    
+    // TODO: Parametrise the -10.0??
+    //       Also, what is it actually doing here...? Like, what is the meaning
+    //       of this parameter? 
     if (meta.isset && meta.gain > -10.0f) {
         auto node = NonLeafNode(-1, meta.column, meta.bin, meta.threshold);
         tree.add_nonleaf(node, true);
@@ -181,6 +204,7 @@ void BoosterSingle::growth() {
     } else {
         auto node = LeafNode(1);
         node.Update(-1, Opt);
+        // TODO: (tree.leaf_num >= hp.max_leaves) check ??
         tree.add_leaf(node, true);
     }
 }
@@ -199,7 +223,7 @@ void BoosterSingle::train(int num_rounds) {
     int out_dim = hp.out_dim;
     G = malloc_G(Train.num * out_dim);
     H = malloc_H(Train.num * out_dim, obj.constHessian, obj.hessian);
-    auto early_stoper = EarlyStoper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
+    auto early_stoper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
 
     // start training
     for (size_t i = 0; i < num_rounds; ++i) {
@@ -242,14 +266,19 @@ void BoosterSingle::train(int num_rounds) {
     free(H);
 }
 
+//=====================================================================================
+//                                                                                     
+//  #####   #####    #####  ####    ##   ####  ######                                
+//  ##  ##  ##  ##   ##     ##  ##  ##  ##       ##                                  
+//  #####   #####    #####  ##  ##  ##  ##       ##                                  
+//  ##      ##  ##   ##     ##  ##  ##  ##       ##                                  
+//  ##      ##   ##  #####  ####    ##   ####    ##                                  
+//                                                                                     
+//=====================================================================================
+
 void BoosterSingle::predict(const double* features, double* preds, const size_t n, int num_trees = 0) {
     int max_trees = trees.size() / hp.out_dim;
     num_trees = (num_trees == 0) ? max_trees : std::min(std::max(num_trees, 1), max_trees);
-    // for (size_t i = 0; i < num_trees; ++i) {
-    //     for (int j = 0; j < hp.out_dim; ++j) {
-    //         trees[(i*hp.out_dim)+j].pred_value_single(features, preds + (j*n), hp, n);
-    //     }
-    // }
     for (size_t i = 0; i < num_trees; ++i) {
         for (size_t j = 0; j < hp.out_dim; ++j) {
             trees[(i*hp.out_dim)+j].pred_value_single(features, preds + (j*n), hp, n);

@@ -54,17 +54,21 @@ if __name__ == '__main__':
     booster_shape = (10, 2)
     seed = 42
 
-    booster_params = dict(max_depth=2, lr=0.1, loss="mse", early_stop=50, verbose=False, seed=seed)
+    booster_params = dict(max_depth=4, lr=0.1, loss="mse", early_stop=50, verbose=True, seed=seed)
     with seed_rng(seed):
         X_train, X_test = np.random.rand(10000, booster_shape[0]), np.random.rand(100, booster_shape[0])
         M = np.random.randn(5 * booster_shape[0], booster_shape[1])
 
-    # Round to two
+    # Round to two decimal places
     X_train, X_test = np.round(X_train, 2), np.round(X_test, 2)
 
     # Function to approximate with the gradient booster
     f = lambda X: np.apply_along_axis(lambda a: a - np.mean(a), 0, np.c_[X, X**2, X**(1 / 2), X**3, X**(1 / 3)] @ M)
     y_train, y_test = f(X_train), f(X_test)
+
+    # Convert to Ì
+    # y_train = y_train.astype(np.int32); y_train -= np.min(y_train);
+    # y_test = y_test.astype(np.int32); y_test -= np.min(y_test);
 
     booster_single = GBDTSingle(LIB, shape=booster_shape, params=booster_params)
     booster_multi = GBDTMulti(LIB, shape=booster_shape, params=booster_params)
@@ -79,6 +83,12 @@ if __name__ == '__main__':
 
     booster_single.train(100)
     booster_multi.train(100)
+
+    booster_single.dump('state_single.txt')
+    state_single = booster_single.get_state()
+
+    booster_multi.dump('state_multi.txt')
+    state_multi = booster_multi.get_state()
 
     yp_single = booster_single.predict(X_test)
     yp_multi = booster_multi.predict(X_test)

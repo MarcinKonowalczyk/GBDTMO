@@ -46,11 +46,8 @@ def load_lib(path):
         fun.argtypes = argtypes
         fun.restype = restype
 
-    _s(lib.SetGH, [c_void_p, array_2d_double, array_2d_double])
     _s(lib.Boost, [c_void_p])
     _s(lib.Train, [c_void_p, c_int])
-    _s(lib.Dump, [c_void_p, c_char_p])
-    _s(lib.Load, [c_void_p, c_char_p])
     _s(lib.Reset, [c_void_p])
     _s(lib.SetTrainData, [c_void_p, array_2d_double, array_2d_double, c_int])
     _s(lib.SetEvalData, [c_void_p, array_2d_double, array_2d_double, c_int])
@@ -62,6 +59,18 @@ def load_lib(path):
     _s(lib.Predict, [c_void_p, array_2d_double, array_2d_double, c_int, c_int])
     _s(lib.SingleNew, [HyperParameters], c_void_p)
     _s(lib.MultiNew, [HyperParameters], c_void_p)
+    _s(lib.Delete, [c_void_p])
     _s(lib.DefaultHyperParameters, None, HyperParameters)
+
+    # Functions to get the state of the booster
+    _s(lib.GetNTrees, [c_void_p], c_uint)
+    _s(lib.GetNonleafSizes, [c_void_p, array_1d_uint16])
+    _s(lib.GetLeafSizes, [c_void_p, array_1d_uint16])
+    _s(lib.GetNonleafNodes, [c_void_p, array_2d_int, array_1d_double])
+    _s(lib.GetLeafNodes, [c_void_p, array_2d_double])
+
+    # _s(lib.GetState, [c_void_p])
+    _s(lib.Dump, [c_void_p, c_char_p])
+    _s(lib.Load, [c_void_p, c_char_p])
 
     return lib
