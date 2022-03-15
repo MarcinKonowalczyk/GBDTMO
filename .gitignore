@@ -39,3 +39,5 @@ __pycache__
 .vscode
 build
 test.png
+state_single.txt
+state_multi.txt
