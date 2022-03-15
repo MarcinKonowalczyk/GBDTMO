@@ -113,6 +113,7 @@ public:
     inline bool empty() { return data.empty(); }
     inline void clear() { data.clear(); }
     inline void pop_front() { data.pop_front(); }
+    inline T front() { return data.front(); }
 };
 
 //================================================================================================================

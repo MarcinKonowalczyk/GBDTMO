@@ -8,7 +8,7 @@
 #include <iomanip>
 
 struct SplitInfo {
-    double gain = -1e8;
+    double gain = -1e16;
     size_t column = 0;
     size_t bin = 0;
     double threshold = 0.0f;
@@ -31,35 +31,25 @@ struct SplitInfo {
 };
 
 struct NonLeafNode {
-    int parent = 0, left = 0, right = 0;
-    int column = -1;
-    int bin = 0;
-    double threshold = 0.0f;
-
-    NonLeafNode() {};
+    int parent = 0; // Index of parent
+    int left = 0, right = 0; // Left and right node indices
+    int column = -1, bin = 0; // Split column and bin index
+    double threshold = 0.0; // Split threshold
 
     NonLeafNode(int p, int c, int b, double t) :
             parent(p), column(c), bin(b), threshold(t) {};
 };
 
 struct LeafNode {
-    LeafNode(int n = 1) : values(n, 0) {};
-    int parent;
     std::vector<double> values;
 
-    inline void Update(int parent, double value) {
-        this->parent = parent;
-        this->values[0] = value;
-    }
-
-    inline void Update(int parent, std::vector<double>& values) {
-        this->parent = parent;
-        this->values.assign(values.begin(), values.end());
-    }
-
-    inline void Update(int parent, std::vector<std::pair<double, int>>& values) {
-        this->parent = parent;
-        for (auto &it : values) {
+    LeafNode(double v) : values(1, v) {};
+    
+    LeafNode(std::vector<double>& v) : values(v) {};
+    
+    LeafNode(size_t capacity, std::vector<std::pair<double, int>>& v) {
+        this->values = std::vector<double>(capacity);
+        for (auto& it : v) {
             this->values[it.second] = it.first;
         }
     }
@@ -70,48 +60,24 @@ struct Tree {
     Tree(bool is_sparse = false) : sparse(is_sparse) {};
     bool sparse;
     int leaf_num = 0, nonleaf_num = 0;
-    std::map<int, LeafNode> leaf;
-    std::map<int, NonLeafNode> nonleaf;
+    std::map<int, LeafNode> leafs;
+    std::map<int, NonLeafNode> nonleafs;
 
     inline void clear() {
         leaf_num = 0;
         nonleaf_num = 0;
-        leaf.clear();
-        nonleaf.clear();
+        leafs.clear();
+        nonleafs.clear();
     }
 
-    inline void add_leaf(const LeafNode& node, bool left) {
-        ++leaf_num;
-        leaf.emplace(leaf_num, node);
-        if (left) {
-            nonleaf[node.parent].left = leaf_num;
-        } else {
-            nonleaf[node.parent].right = leaf_num;
-        }
-    }
-
-    inline void add_nonleaf(const NonLeafNode& node, bool left) {
-        --nonleaf_num;
-        nonleaf.emplace(nonleaf_num, node);
-        if (left) {
-            nonleaf[node.parent].left = nonleaf_num;
-        } else {
-            nonleaf[node.parent].right = nonleaf_num;
-        }
-    }
-
-    inline void shrinkage(double lr) {
-        // for (size_t i = 1; i < leaf.size() + 1; ++i) {
-        //     for (auto &p : leaf[i].values) {
-        //         p *= lr;
-        //     }
-        // }
-        for (auto l : leaf) {
-            for (auto& p : l.second.values) {
-                p *= lr;
-            }
-        }
-    }
+    void _add_nonleaf(const int parent, const int column, const int bin, const double threshold);
+    void add_root_nonleaf(const int column, const int bin, const double threshold);
+    void add_left_nonleaf(const int parent, const int column, const int bin, const double threshold);
+    void add_right_nonleaf(const int parent, const int column, const int bin, const double threshold);
+    void shrink(const double learning_rate);
+    void _add_leaf(const LeafNode& node);
+    void add_left_leaf(const int parent, const LeafNode& node);
+    void add_right_leaf(const int parent, const LeafNode& node);
 
     // predict by original features
     void pred_value_single(

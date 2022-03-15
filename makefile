@@ -8,7 +8,7 @@ TARGET = gbdtmo.so
 CPP = clang++
 CPP_FLAGS = -std=c++11
 CPP_FLAGS += -fPIC -Ofast
-CPP_FLAGS += -Wall -Wfatal-errors
+CPP_FLAGS += -Wall -Wfatal-errors -pedantic
 CPP_FLAGS += -m64
 
 BUILD_DIR = build

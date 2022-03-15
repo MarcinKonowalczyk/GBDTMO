@@ -20,7 +20,6 @@ BoosterBase::BoosterBase(HyperParameters p) : hp(p) {
 }
 
 BoosterBase::~BoosterBase() {
-    // std::cout << "Hello from the destructor of BoosterBase!\n";
     if (Train.Maps != nullptr) {
         free(Train.Maps);
     }
@@ -128,20 +127,20 @@ void BoosterBase::reset() {
 
 void BoosterBase::dump_nonleaf_sizes(uint16_t* nonleaf_sizes) const {
     for (size_t i = 0; i < trees.size(); ++i) {
-        nonleaf_sizes[i] = trees[i].nonleaf.size();
+        nonleaf_sizes[i] = trees[i].nonleafs.size();
     }
 }
 
 void BoosterBase::dump_leaf_sizes(uint16_t* leaf_sizes) const {
     for (size_t i = 0; i < trees.size(); ++i) {
-        leaf_sizes[i] = trees[i].leaf.size();
+        leaf_sizes[i] = trees[i].leafs.size();
     }
 }
 
 void BoosterBase::dump_nonleaf_nodes(int* trees, double* thresholds) const {
     int i = 0, j = 0;
     for(auto& tree : this->trees) {
-        for (auto it : tree.nonleaf) {
+        for (auto it : tree.nonleafs) {
             auto node = it.second;
             trees[i++] = it.first;
             trees[i++] = node.parent;
@@ -156,8 +155,8 @@ void BoosterBase::dump_nonleaf_nodes(int* trees, double* thresholds) const {
 void BoosterBase::dump_leaf_nodes(double* leaves) const {
     int k = 0;
     for(auto& tree : trees ) {
-        for (auto it : tree.leaf) {
-            auto node = it.second;
+        for (auto leaf : tree.leafs) {
+            auto node = leaf.second;
             for (auto& value : node.values) {
                 leaves[k++] = value;
             }

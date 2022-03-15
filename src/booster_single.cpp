@@ -16,6 +16,8 @@ BoosterSingle::BoosterSingle(HyperParameters hp) : BoosterBase(hp) {};
 void BoosterSingle::get_score_opt(Histogram& Hist, double& opt, double& score_sum) {
     double gr = Hist.g[Hist.g.size() - 1];
     double hr = Hist.h[Hist.h.size() - 1];
+    const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
+    const auto CalWeight = (hp.reg_l1 == 0) ? CalWeightNoL1 : CalWeightL1;
     opt = CalWeight(gr, hr, hp.reg_l1, hp.reg_l2);
     score_sum = CalScore(gr, hr, hp.reg_l1, hp.reg_l2);
 }
@@ -34,7 +36,7 @@ void BoosterSingle::hist_column(
     const std::vector<size_t>& order,
     Histogram& Hist,
     const uint16_t* maps
-) {
+) const {
     for (size_t i : order) {
         size_t bin = maps[i];
         ++Hist.count[bin];
@@ -74,6 +76,7 @@ boost_column_result BoosterSingle::boost_column(const Histogram& Hist, const siz
     const double hx = Hist.h[max_bins];
 
     boost_column_result result;
+    const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
     for (size_t i = 0; i < max_bins; ++i) {
         double score_l = CalScore(Hist.g[i], Hist.h[i], hp.reg_l1, hp.reg_l2);
         double score_r = CalScore(gx - Hist.g[i], hx - Hist.h[i], hp.reg_l1, hp.reg_l2);
@@ -109,60 +112,54 @@ void BoosterSingle::boost_all(const std::vector<Histogram>& Hist) {
 void BoosterSingle::build_tree_best() {
     if (tree.leaf_num >= hp.max_leaves) { return; }
 
-    auto info = &cache.data[0];
-    int parent = info->node;
-    int depth = info->depth;
-
-    int rows_l = info->hist[info->split.column].count[info->split.bin];
-    int rows_r = info->order.size() - rows_l;
+    auto info = cache.front(); cache.pop_front();
+    int this_node = info.node;
+    size_t rows_l = info.hist[info.split.column].count[info.split.bin];
+    size_t rows_r = info.order.size() - rows_l;
 
     std::vector<size_t> order_l(rows_l), order_r(rows_r);
-    rebuild_order(info->order, order_l, order_r, Train.Maps + info->split.column * Train.num, info->split.bin);
+    rebuild_order(info.order, order_l, order_r, Train.Maps + info.split.column * Train.num, info.split.bin);
     std::vector<Histogram> Hist_l(hp.inp_dim), Hist_r(hp.inp_dim);
 
     if (rows_l >= rows_r) {
         for (size_t i = 0; i < hp.inp_dim; ++i) { Hist_r[i] = Histogram(bin_nums[i], 1); }
         hist_all(order_r, Hist_r);
-        for (size_t i = 0; i < hp.inp_dim; ++i) { info->hist[i] - Hist_r[i]; }
-        Hist_l.assign(info->hist.begin(), info->hist.end());
+        for (size_t i = 0; i < hp.inp_dim; ++i) { info.hist[i] - Hist_r[i]; }
+        Hist_l.assign(info.hist.begin(), info.hist.end());
     } else {
         for (size_t i = 0; i < hp.inp_dim; ++i) { Hist_l[i] = Histogram(bin_nums[i], 1); }
         hist_all(order_l, Hist_l);
-        for (size_t i = 0; i < hp.inp_dim; ++i) { info->hist[i] - Hist_l[i]; }
-        Hist_r.assign(info->hist.begin(), info->hist.end());
+        for (size_t i = 0; i < hp.inp_dim; ++i) { info.hist[i] - Hist_l[i]; }
+        Hist_r.assign(info.hist.begin(), info.hist.end());
     }
-    cache.pop_front();
 
     if (rows_l >= hp.min_samples) {
         get_score_opt(Hist_l[rand() % hp.inp_dim], Opt, Score_sum);
         boost_all(Hist_l);
 
-        if (meta.isset && depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
-            auto node = NonLeafNode(parent, meta.column, meta.bin, meta.threshold);
-            tree.add_nonleaf(node, true);
-            cache.push(CacheInfo(tree.nonleaf_num, depth + 1, meta, order_l, Hist_l));
+        if (meta.isset && info.depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
+            tree.add_left_nonleaf(this_node, meta.column, meta.bin, meta.threshold);
+            cache.push(CacheInfo(tree.nonleaf_num, info.depth + 1, meta, order_l, Hist_l));
         } else {
-            auto node = LeafNode(1);
-            node.Update(parent, Opt);
-            tree.add_leaf(node, true);
+            auto node = LeafNode(Opt);
+            tree.add_left_leaf(this_node, node);
         }
     }
     order_l.clear();
     Hist_l.clear();
 
     if (tree.leaf_num >= hp.max_leaves) { return; }
+
     if (rows_r >= hp.min_samples) {
         get_score_opt(Hist_r[rand() % hp.inp_dim], Opt, Score_sum);
         boost_all(Hist_r);
 
-        if (meta.isset && depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
-            auto node = NonLeafNode(parent, meta.column, meta.bin, meta.threshold);
-            tree.add_nonleaf(node, false);
-            cache.push(CacheInfo(tree.nonleaf_num, depth + 1, meta, order_r, Hist_r));
+        if (meta.isset && info.depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
+            tree.add_right_nonleaf(this_node, meta.column, meta.bin, meta.threshold);
+            cache.push(CacheInfo(tree.nonleaf_num, info.depth + 1, meta, order_r, Hist_r));
         } else {
-            auto node = LeafNode(1);
-            node.Update(parent, Opt);
-            tree.add_leaf(node, false);
+            auto node = LeafNode(Opt);
+            tree.add_right_leaf(this_node, node);
         }
     }
     order_r.clear();
@@ -195,20 +192,18 @@ void BoosterSingle::growth() {
     //       Also, what is it actually doing here...? Like, what is the meaning
     //       of this parameter? 
     if (meta.isset && meta.gain > -10.0f) {
-        auto node = NonLeafNode(-1, meta.column, meta.bin, meta.threshold);
-        tree.add_nonleaf(node, true);
+        tree.add_root_nonleaf(meta.column, meta.bin, meta.threshold);
         cache.push(CacheInfo(-1, 0, meta, Train.Orders, Hist));
         build_tree_best();
     } else {
-        auto node = LeafNode(1);
-        node.Update(-1, Opt);
+        auto node = LeafNode(Opt);
         // TODO: (tree.leaf_num >= hp.max_leaves) check ??
-        tree.add_leaf(node, true);
+        tree.add_left_leaf(-1, node);
     }
 }
 
 void BoosterSingle::update() {
-    tree.shrinkage(hp.lr);
+    tree.shrink(hp.lr);
     tree.pred_value_single(Train.Features, Train.Preds, hp, Train.num);
     if (Eval.num > 0) {
         tree.pred_value_single(Eval.Features, Eval.Preds, hp, Eval.num);

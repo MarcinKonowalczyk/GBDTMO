@@ -42,8 +42,7 @@ uid = lambda: ''.join(sample(ascii_letters, 10))
 if __name__ == '__main__':
     booster_shape = (10, 2)
     seed = 42
-
-    booster_params = dict(max_depth=2, lr=0.1, loss="mse", early_stop=50, verbose=True, seed=seed)
+    booster_params = dict(max_depth=2, lr=0.1, loss="mse", early_stop=50, verbose=False, seed=seed)
     with seed_rng(seed):
         X_train, X_test = np.random.rand(10000, booster_shape[0]), np.random.rand(100, booster_shape[0])
         M = np.random.randn(5 * booster_shape[0], booster_shape[1])
@@ -70,8 +69,11 @@ if __name__ == '__main__':
     booster_multi.calc_train_maps()
     booster_multi.set_eval_data(X_test, y_test)
 
+    import time
+    t1 = time.monotonic()
     booster_single.train(10000)
     booster_multi.train(10000)
+    print(f"dt = {time.monotonic()-t1}")
 
     booster_single.dump('state_single.txt')
     state_single = booster_single.get_state()

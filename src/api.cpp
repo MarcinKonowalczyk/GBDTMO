@@ -67,7 +67,7 @@ void Load(BoosterBase* foo, const char* path) { foo->load(path); }
 
 // Define the default hyperparameters in the shared object itself, not on the python side
 HyperParameters DefaultHyperParameters() {
-    return (HyperParameters) {
+    return {
         1, // inp_dim
         1, // out_dim
         "mse", // loss

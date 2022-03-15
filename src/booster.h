@@ -25,6 +25,7 @@ struct CacheInfo {
     ) : node(n), depth(d), split(s), order(o), hist(h) {};
 
     bool operator>(const CacheInfo &x) const { return split.gain > x.split.gain; }
+    
 };
 
 struct boost_column_result {
@@ -145,7 +146,7 @@ private:
     boost_column_result boost_column(const Histogram& Hist, const size_t column);
     void boost_all(const std::vector<Histogram>& Hist) override;
 
-    void hist_column(const std::vector<size_t>& order, Histogram& Hist, const uint16_t* maps);
+    void hist_column(const std::vector<size_t>& order, Histogram& Hist, const uint16_t* maps) const;
     void hist_all(const std::vector<size_t>& order, std::vector<Histogram>& Hist) override;
 
     double Score_sum, Opt;
@@ -178,15 +179,28 @@ private:
     boost_column_result boost_column_topk_one_side(const Histogram& Hist, const size_t column);
     void boost_all(const std::vector<Histogram>& Hist) override;
 
-    void hist_column_multi(const std::vector<size_t>& order, Histogram& Hist, const uint16_t* maps);
+    void hist_column_multi(const std::vector<size_t>& order, Histogram& Hist, const uint16_t* maps) const;
     void hist_all(const std::vector<size_t>& order, std::vector<Histogram>& Hist) override;
 
     double Score_sum;
     std::vector<double> Score;
     std::vector<double> Opt;
     std::vector<std::pair<double, int>> OptPair;
-    void get_score_opt(Histogram&, std::vector<double>&, std::vector<double>&, double&);
-    void get_score_opt(Histogram&, std::vector<std::pair<double, int>>& , std::vector<double>&, double&);
+
+    void get_score_opt(
+        const Histogram& Hist,
+        std::vector<double>& opt,
+        std::vector<double>& score,
+        double& score_sum
+    ) const;
+
+    void get_score_opt(
+        const Histogram& Hist,
+        std::vector<std::pair<double, int>>& opt,
+        std::vector<double>& score,
+        double& score_sum
+    ) const;
+
     void build_tree_best();
 };
 

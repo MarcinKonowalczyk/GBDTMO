@@ -21,36 +21,42 @@ BoosterMulti::BoosterMulti(HyperParameters hp) : BoosterBase(hp) {
 }
 
 void BoosterMulti::get_score_opt(
-    Histogram& Hist,
+    const Histogram& Hist,
     std::vector<double>& opt,
     std::vector<double>& score,
     double& score_sum
-) {
-    double* gr = &Hist.g[Hist.g.size() - hp.out_dim];
-    double* hr = &Hist.h[Hist.h.size() - hp.out_dim];
-    CalWeight(opt, gr, hr, hp.reg_l1, hp.reg_l2);
-    CalScore(score, gr, hr, hp.reg_l1, hp.reg_l2);
-    score_sum = 0.0f;
+) const {
+    const double* gr = &Hist.g[Hist.g.size() - hp.out_dim];
+    const double* hr = &Hist.h[Hist.h.size() - hp.out_dim];
+    const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
+    const auto CalWeight = (hp.reg_l1 == 0) ? CalWeightNoL1 : CalWeightL1;
+    for (size_t i = 0; i < hp.out_dim; ++i) {
+        opt[i] = CalWeight(gr[i], hr[i], hp.reg_l1, hp.reg_l2);
+        score[i] = CalScore(gr[i], hr[i], hp.reg_l1, hp.reg_l2);
+    }
+    score_sum = 0.0;
     for (size_t i = 0; i < hp.out_dim; ++i) {
         score_sum += score[i];
     }
 }
 
 void BoosterMulti::get_score_opt(
-    Histogram& Hist,
+    const Histogram& Hist,
     std::vector<std::pair<double, int>>& opt,
     std::vector<double>& score,
     double& score_sum
-) {
-    double* gr = &Hist.g[Hist.g.size() - hp.out_dim];
-    double* hr = &Hist.h[Hist.h.size() - hp.out_dim];
+) const {
+    const double* gr = &Hist.g[Hist.g.size() - hp.out_dim];
+    const double* hr = &Hist.h[Hist.h.size() - hp.out_dim];
+    const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
+    const auto CalWeight = (hp.reg_l1 == 0) ? CalWeightNoL1 : CalWeightL1;
     TopkPriority<std::pair<double, int>> score_k(hp.topk);
     for (size_t i = 0; i < hp.out_dim; ++i) {
         score[i] = CalScore(gr[i], hr[i], hp.reg_l1, hp.reg_l2);
         score_k.push(std::make_pair(score[i], i));
     }
     opt.resize(0);
-    score_sum = 0.0f;
+    score_sum = 0.0;
     for (; !score_k.empty(); score_k.pop() ) {
         auto top = score_k.top();
         score_sum += std::get<0>(top);
@@ -73,7 +79,7 @@ void BoosterMulti::hist_column_multi(
     const std::vector<size_t>& order,
     Histogram& Hist,
     const uint16_t* maps
-) {
+) const {
     size_t out_dim = hp.out_dim;
     for (size_t i : order) {
         ++Hist.count[maps[i]];
@@ -123,6 +129,7 @@ BoosterMulti::boost_column_full(const Histogram& Hist, const size_t column) {
     const size_t max_bins = Hist.count.size() - 1; // TODO: Make sure Hist.count.size > 0 ?
 
     boost_column_result result;
+    const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
     for (size_t i = 0; i < max_bins; ++i) {
         size_t bo = i * hp.out_dim; // bin offset
         
@@ -149,6 +156,7 @@ BoosterMulti::boost_column_topk_two_side(const Histogram& Hist, const size_t col
     auto pq_r = TopkPriority<double>(hp.topk);
 
     boost_column_result result;
+    const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
     for (size_t i = 0; i < max_bins; ++i) {
         size_t bo = i * hp.out_dim; // bin offset
 
@@ -178,6 +186,7 @@ BoosterMulti::boost_column_topk_one_side(const Histogram& Hist, const size_t col
     auto pq = TopkPriority<double>(hp.topk);
 
     boost_column_result result;
+    const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
     for (size_t i = 0; i < max_bins; ++i) {
         size_t bo = i * hp.out_dim; // bin offset
         
@@ -272,14 +281,11 @@ void BoosterMulti::build_tree_best() {
         }
         boost_all(Hist_l);
         if (meta.isset && depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
-            auto node = NonLeafNode(parent, meta.column, meta.bin, meta.threshold);
-            tree.add_nonleaf(node, true);
+            tree.add_left_nonleaf(parent, meta.column, meta.bin, meta.threshold);
             cache.push(CacheInfo(tree.nonleaf_num, depth + 1, meta, order_l, Hist_l));
         } else {
-            auto node = LeafNode(hp.out_dim);
-            if (hp.topk > 0) { node.Update(parent, OptPair); }
-            else { node.Update(parent, Opt); }
-            tree.add_leaf(node, true);
+            auto node = (hp.topk > 0) ? LeafNode(hp.out_dim, OptPair) : LeafNode(Opt);
+            tree.add_left_leaf(parent, node);
         }
     }
     order_l.clear();
@@ -294,14 +300,11 @@ void BoosterMulti::build_tree_best() {
         }
         boost_all(Hist_r);
         if (meta.isset && depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
-            auto node = NonLeafNode(parent, meta.column, meta.bin, meta.threshold);
-            tree.add_nonleaf(node, false);
+            tree.add_right_nonleaf(parent, meta.column, meta.bin, meta.threshold);
             cache.push(CacheInfo(tree.nonleaf_num, depth + 1, meta, order_r, Hist_r));
         } else {
-            auto node = LeafNode(hp.out_dim);
-            if (hp.topk > 0) { node.Update(parent, OptPair); }
-            else { node.Update(parent, Opt); }
-            tree.add_leaf(node, false);
+            auto node = (hp.topk > 0) ? LeafNode(hp.out_dim, OptPair) : LeafNode(Opt);
+            tree.add_right_leaf(parent, node);
         }
     }
     order_r.clear();
@@ -321,7 +324,7 @@ void BoosterMulti::build_tree_best() {
 //===========================================================================
 
 void BoosterMulti::update() {
-    tree.shrinkage(hp.lr);
+    tree.shrink(hp.lr);
     tree.pred_value_multi(Train.Features, Train.Preds, hp, Train.num);
     if (Eval.num > 0) {
         tree.pred_value_multi(Eval.Features, Eval.Preds, hp, Eval.num);
@@ -343,15 +346,12 @@ void BoosterMulti::growth() {
     }
     boost_all(Hist);
     if (meta.isset && meta.gain > -10.0f) {
-        auto node = NonLeafNode(-1, meta.column, meta.bin, meta.threshold);
-        tree.add_nonleaf(node, true);
+        tree.add_root_nonleaf(meta.column, meta.bin, meta.threshold);
         cache.push(CacheInfo(-1, 0, meta, Train.Orders, Hist));
         build_tree_best();
     } else {
-        auto node = LeafNode(hp.out_dim);
-        if (hp.topk > 0) { node.Update(-1, OptPair); }
-        else { node.Update(-1, Opt); }
-        tree.add_leaf(node, true);
+        auto node = (hp.topk > 0) ? LeafNode(hp.out_dim, OptPair) : LeafNode(Opt);
+        tree.add_left_leaf(-1, node);
     }
 }
 
@@ -359,7 +359,7 @@ void BoosterMulti::train(int num_rounds) {
     G = malloc_G(Train.num * hp.out_dim);
     H = malloc_H(Train.num * hp.out_dim, obj.constHessian, obj.hessian);
 
-    int round = hp.early_stop == 0 ? num_rounds : hp.early_stop;
+    int round = (hp.early_stop == 0) ? num_rounds : hp.early_stop;
     auto early_stoper = EarlyStopper(round, obj.largerBetter);
 
     // start training
