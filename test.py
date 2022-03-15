@@ -54,7 +54,7 @@ if __name__ == '__main__':
     f = lambda X: np.apply_along_axis(lambda a: a - np.mean(a), 0, np.c_[X, X**2, X**(1 / 2), X**3, X**(1 / 3)] @ M)
     y_train, y_test = f(X_train), f(X_test)
 
-    # Convert to Ì
+    # Convert to 
     # y_train = y_train.astype(np.int32); y_train -= np.min(y_train);
     # y_test = y_test.astype(np.int32); y_test -= np.min(y_test);
 
