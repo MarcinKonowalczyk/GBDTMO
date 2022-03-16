@@ -49,79 +49,90 @@ void inplace_unique_with_count(
     vector.erase(++result, last); // Trim vector to length
 }
 
+//=======================================================================================
+//                                                                                       
+//  #####   ##  ##     ##         ####   #####   ##                                    
+//  ##  ##  ##  ####   ##        ##     ##   ##  ##                                    
+//  #####   ##  ##  ## ##        ##     ##   ##  ##                                    
+//  ##  ##  ##  ##    ###        ##     ##   ##  ##                                    
+//  #####   ##  ##     ##         ####   #####   ######                                
+//                                                                                       
+//=======================================================================================
+
 // Construt bin edges based on the column of the features matrix
 void construct_bin_column(
-    std::vector<double> feature, // Note: don't pass by reference. Copy. 'feature' is not modified outside of the function.
-    std::vector<double>& bins,
+    std::vector<double> features_column, // Note: don't pass by reference. Copy. 'feature' is not modified outside of the function.
+    std::vector<double>& bins_column,
     const uint16_t max_bins
 ) {
-    size_t n = feature.size();
+    size_t n = features_column.size();
     // Inplace find unique elements and their counts
     std::vector<size_t> counts;
-    inplace_unique_with_count(feature, counts);
+    inplace_unique_with_count(features_column, counts);
 
-    size_t N = feature.size();
+    size_t N = features_column.size();
     if (N <= 1) {
         // pass
     } else if (N == 2) {
-        double split = feature[0] * counts[0] + feature[1] * counts[1];
-        bins.push_back(split);
+        double split = features_column[0] * counts[0] + features_column[1] * counts[1];
+        bins_column.push_back(split);
     } else if (N <= max_bins) {
-        bins.resize(N-1);
-        for(auto it = feature.begin(); it < feature.end()-1; ++it) {
-            bins.push_back(*it*0.5 + *(it+1)*0.5);
+        bins_column.resize(N-1);
+        for(auto it = features_column.begin(); it < features_column.end()-1; ++it) {
+            bins_column.push_back(*it*0.5 + *(it+1)*0.5);
         }
     } else { // N > max_bins
         size_t bin_index = 0;
         double p = N / max_bins;
         size_t ccount = 0;
-        bins.resize(max_bins);
+        bins_column.resize(max_bins);
         for(size_t i = 0; i < N; ++i) {
             ccount += counts[i]; // Cumulative count
             if (ccount >= p) {
-                bins[bin_index++] = feature[i];
+                bins_column[bin_index++] = features_column[i];
                 p = ccount + (n - ccount) / float(max_bins - bin_index);
             }
             if (bin_index == max_bins - 1) break; // Stop at the penultimate bin
         }
-        bins[bin_index++] = feature[N-1]; // Assign last bin to last feature
+        bins_column[bin_index++] = features_column[N-1]; // Assign last bin to last feature
     }
 };
+
+//=============================================================================================
+//                                                                                             
+//  ###    ###    ###    #####          ####   #####   ##                                    
+//  ## #  # ##   ## ##   ##  ##        ##     ##   ##  ##                                    
+//  ##  ##  ##  ##   ##  #####         ##     ##   ##  ##                                    
+//  ##      ##  #######  ##            ##     ##   ##  ##                                    
+//  ##      ##  ##   ##  ##             ####   #####   ######                                
+//                                                                                             
+//=============================================================================================
 
 // Calculate binning of a single column of the features matrix
 void map_bin_column(
-    const std::vector<double> feature,
-    uint16_t* maps,
+    const std::vector<double> features_column,
+    std::vector<uint16_t>& map_column,
     std::vector<double>& bins
 ) {
-    for (size_t i = 0; i < feature.size(); ++i) {
-        auto it = std::lower_bound(bins.begin(), bins.end(), feature[i]);
-        maps[i] = it - bins.begin();
+    for (size_t i = 0; i < features_column.size(); ++i) {
+        auto it = std::lower_bound(bins.begin(), bins.end(), features_column[i]);
+        map_column[i] = static_cast<uint16_t>(it - bins.begin());
     }
 };
 
-// Calculate binning of each colum of the features matrix, and the corresponding histogram map
-void calculate_histogram_maps(
-    const double* features,
-    uint16_t* maps,
-    std::vector<std::vector<double>>& bins,
-    const size_t n,
-    const size_t inp_dim,
-    const uint16_t max_bins
-) {
-    for (size_t i = 0; i < inp_dim; ++i) {
-        // Get features column
-        std::vector<double> feature;
-        feature.reserve(n);
-        for (size_t j = 0; j < n; ++j) { feature.push_back(features[i + j*inp_dim]); }
+// // Calculate binning of each colum of the features matrix, and the corresponding histogram map
+// void calculate_histogram_map_column(
+//     const std::vector<double> features_column,
+//     std::vector<uint16_t>& map_column,
+//     std::vector<double>& bins_column,
+//     const size_t n,
+//     const size_t inp_dim,
+//     const uint16_t max_bins
+// ) {
+//     // Construct bins for the column
+//     construct_bin_column(features_column, bins_column, max_bins);
 
-        // Construct bins for the column
-        std::vector<double> bins_column;
-        construct_bin_column(feature, bins_column, max_bins);
-        bins.push_back(bins_column);
-
-        // Map features in the particular column
-        // NOTE: This means that maps are column-major
-        map_bin_column(feature, maps + i*n, bins_column);
-    }
-};
+//     // Map features in the particular column
+//     // NOTE: This means that maps are column-major
+//     map_bin_column(features_column, map_column, bins_column);
+// };

@@ -1,9 +1,9 @@
 #include "string_utils.h"
 
 std::string _do_strip(
-    const std::string &str,
+    const std::string& str,
     const int striptype,
-    const std::string &chars
+    const std::string& chars
 ) {
     size_t len = str.size(), i, j, charslen = chars.size();
     if (charslen == 0) {
@@ -39,8 +39,8 @@ std::string _do_strip(
 }
 
 void split_whitespace(
-    const std::string &str,
-    std::vector<std::string> &result,
+    const std::string& str,
+    std::vector<std::string>& result,
     int maxsplit
 ) {
     std::string::size_type i, j, len = str.size();
@@ -63,9 +63,9 @@ void split_whitespace(
 }
 
 void split(
-    const std::string &str,
-    std::vector<std::string> &result,
-    const std::string &sep,
+    const std::string& str,
+    std::vector<std::string>& result,
+    const std::string& sep,
     int maxsplit
 ) {
     result.clear();
@@ -89,7 +89,7 @@ void split(
     result.push_back(str.substr(j, len - j));
 }
 
-std::string zfill(const std::string &str, const int width) {
+std::string zfill(const std::string& str, const int width) {
     size_t len = str.size();
     if (len >= width) return str;
     std::string s(str);

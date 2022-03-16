@@ -48,6 +48,8 @@ class GBDTMO(BaseEstimator, RegressorMixin):
             topk=topk,
             one_side=one_side,
             max_bins=max_bins,
+            alpha=alpha,
+            eval_fraction=eval_fraction,
         )
         # print(set(params))
         # print(set(HP_NAMES))
@@ -69,8 +71,8 @@ class GBDTMO(BaseEstimator, RegressorMixin):
             self._booster.params = {name: value}
         super().__setattr__(name, value)
 
-    def set_eval(self, X, y):
-        self._booster.set_eval_data(X, y)
+    # def set_eval(self, X, y):
+    #     self._booster.set_eval_data(X, y)
 
     def fit(self, X, y):
         self._booster.reset()

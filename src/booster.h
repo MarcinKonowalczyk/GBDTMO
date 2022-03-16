@@ -7,7 +7,7 @@
 #include "loss.h"
 #include "io.h"
 #include "histogram.h"
-#include <algorithm>
+// #include <algorithm>
 
 struct CacheInfo {
     int node;
@@ -24,7 +24,7 @@ struct CacheInfo {
         std::vector<Histogram>& h
     ) : node(n), depth(d), split(s), order(o), hist(h) {};
 
-    bool operator>(const CacheInfo &x) const { return split.gain > x.split.gain; }
+    bool operator>(const CacheInfo& x) const { return split.gain > x.split.gain; }
     
 };
 
@@ -56,24 +56,25 @@ struct boost_column_result {
 class BoosterBase {
 public:
     BoosterBase(const HyperParameters hp);
-    virtual ~BoosterBase();
+    virtual ~BoosterBase() = default;
 
     void set_gh(double*, double*);
-    void set_train_data(double* features, double* preds, int n);
-    void set_eval_data(double* features, double* preds, int n);
+    void set_train_data(double* features, double* preds, size_t n);
+    // void set_eval_data(double* features, double* preds, size_t n);
     void set_train_label(double*);
     void set_train_label(int32_t*);
-    void set_eval_label(double*);
-    void set_eval_label(int32_t*);
+    // void set_eval_label(double*);
+    // void set_eval_label(int32_t*);
     void calc_train_maps();
+    void calc_eval_indices();
 
     void rebuild_order(
         const std::vector<size_t>& order,
         std::vector<size_t>& order_l,
         std::vector<size_t>& order_r,
-        const uint16_t* maps,
+        const size_t split_column,
         const uint16_t bin
-    );
+    ) const;
 
     // Print helpers
     inline void showloss(double score, double metric, int i) const { std::cout << "[" << i << "] train->" << std::setprecision(5) << std::fixed << score << "\teval->" << std::setprecision(5) << std::fixed << metric << std::endl; }
@@ -107,14 +108,24 @@ protected:
     double* malloc_H(size_t elements, bool constHessian, double constValue);
 
     virtual void boost_all(const std::vector<Histogram>& Hist) = 0;
-    virtual void hist_all(const std::vector<size_t>& order, std::vector<Histogram>& Hist) = 0;
+    virtual void hist_column(
+        const std::vector<size_t>& order,
+        Histogram& Hist,
+        const std::vector<uint16_t>& map_column
+    ) const = 0;
+    virtual void hist_all(
+        const std::vector<size_t>& order,
+        std::vector<Histogram>& Hist
+    ) const = 0;
 
     Tree tree;
     std::vector<uint16_t> bin_nums;
     std::vector<std::vector<double>> bin_values;
     SplitInfo meta;
     Dataset Train;
-    Dataset Eval;
+    // Dataset Eval;
+    std::vector<size_t> eval_indices;
+    std::vector<size_t> train_indices;
     double* G;
     double* H;
     TopkDeque<CacheInfo> cache;
@@ -146,8 +157,15 @@ private:
     boost_column_result boost_column(const Histogram& Hist, const size_t column);
     void boost_all(const std::vector<Histogram>& Hist) override;
 
-    void hist_column(const std::vector<size_t>& order, Histogram& Hist, const uint16_t* maps) const;
-    void hist_all(const std::vector<size_t>& order, std::vector<Histogram>& Hist) override;
+    void hist_column(
+        const std::vector<size_t>& order,
+        Histogram& Hist,
+        const std::vector<uint16_t>& map_column
+    ) const override;
+    void hist_all(
+        const std::vector<size_t>& order,
+        std::vector<Histogram>& Hist
+    ) const override;
 
     double Score_sum, Opt;
     void get_score_opt(Histogram&, double& , double& );
@@ -179,8 +197,16 @@ private:
     boost_column_result boost_column_topk_one_side(const Histogram& Hist, const size_t column);
     void boost_all(const std::vector<Histogram>& Hist) override;
 
-    void hist_column_multi(const std::vector<size_t>& order, Histogram& Hist, const uint16_t* maps) const;
-    void hist_all(const std::vector<size_t>& order, std::vector<Histogram>& Hist) override;
+    // void hist_column_multi(const std::vector<size_t>& order, Histogram& Hist, const uint16_t* maps) const;
+    void hist_column(
+        const std::vector<size_t>& order,
+        Histogram& Hist,
+        const std::vector<uint16_t>& map_column
+    ) const override;
+    void hist_all(
+        const std::vector<size_t>& order,
+        std::vector<Histogram>& Hist
+    ) const override;
 
     double Score_sum;
     std::vector<double> Score;

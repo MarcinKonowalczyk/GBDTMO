@@ -4,7 +4,7 @@
 #include <math.h>
 #include <queue>
 #include <iostream>
-#include <random>
+// #include <random>
 #include <utility>
 
 // #include <limits.h>
@@ -22,14 +22,15 @@
 //==========================================================================================
 
 struct Dataset {
-    int num = 0;
-    double* Features;
-    uint16_t* Maps;
-    double* Preds;
-    std::vector<size_t> Orders;
-    std::vector<size_t> LeafIndex;
-    double* Label_double;
-    int32_t* Label_int32;
+    size_t n = 0;
+    double* Features; // N x inp_dim
+    double* Preds; // N x out_dim
+    double* Label_double; // N
+    int32_t* Label_int32; // N
+    std::vector<size_t> train_order; // N
+    size_t n_train;
+    size_t n_eval;
+    std::vector<std::vector<uint16_t>> train_maps; // N_train x inp_dim
 };
 
 //===================================================
@@ -115,7 +116,7 @@ public:
     TopkDeque(int n = 8) : max_size(n) {};
 
     //binary search
-    inline int search(T const &x) {
+    inline int search(T const& x) {
         int l = 0, r = data.size();
         while (l < r) {
             int m = (r + l - 1) / 2;
@@ -128,7 +129,7 @@ public:
         return l;
     }
 
-    inline void push(T const &x) {
+    inline void push(T const& x) {
         if (data.size() == max_size) {
             if (x > data[max_size - 1]) {
                 int i = search(x);
@@ -168,7 +169,7 @@ public:
 
     TopkPriority(int n) : k(n) {};
 
-    inline void push(T const &x) {
+    inline void push(T const& x) {
         data.push(x);
         if (data.size() > k) {
             data.pop();

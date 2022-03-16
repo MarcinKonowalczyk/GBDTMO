@@ -11,12 +11,12 @@ struct SplitInfo {
     double gain = -1e16;
     size_t column = 0;
     size_t bin = 0;
-    double threshold = 0.0f;
-    bool isset = false;
+    double threshold = 0.0;
+    bool is_set = false;
 
     inline void reset() {
-        gain = -1e16, column = 0, bin = 0, threshold = 0.0f;
-        isset = false; 
+        gain = -1e16, column = 0, bin = 0, threshold = 0.0;
+        is_set = false; 
     }
 
     inline void update(double gain, int column, int bin, double threshold) {
@@ -24,10 +24,10 @@ struct SplitInfo {
         this->column = column;
         this->bin = bin;
         this->threshold = threshold;
-        this->isset = true;
+        this->is_set = true;
     }
 
-    inline void show() { std::cout << "SplitInfo = [\n .gain = " << this->gain << "\n .column = " << this->column << "\n .bin = " << this->bin << "\n .threshold = " << this->threshold << "\n .isset = " << this->isset << "\n]\n"; }
+    inline void show() { std::cout << "SplitInfo = [\n .gain = " << this->gain << "\n .column = " << this->column << "\n .bin = " << this->bin << "\n .threshold = " << this->threshold << "\n .is_set = " << this->is_set << "\n]\n"; }
 };
 
 struct NonLeafNode {
@@ -84,13 +84,13 @@ struct Tree {
         const double* features,
         double* preds,
         const HyperParameters& hp,
-        const int n
+        const size_t n
     ) const;
     void pred_value_multi(
         const double* features,
         double* preds,
         const HyperParameters& hp,
-        const int n
+        const size_t n
     ) const;
 
     // predict by bin maps
@@ -98,13 +98,13 @@ struct Tree {
         const uint16_t* features,
         double* preds,
         const HyperParameters& hp,
-        const int n
+        const size_t n
     ) const;
     void pred_value_multi(
         const uint16_t* features,
         double* preds,
         const HyperParameters& hp,
-        const int n
+        const size_t n
     ) const;
 
 };

@@ -13,11 +13,11 @@ extern "C" {
 //=======================================================================================
 
 void SetTrainData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_train_data(features, preds, n); }
-void SetEvalData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_eval_data(features, preds, n); }
+// void SetEvalData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_eval_data(features, preds, n); }
 void SetTrainLabelDouble(BoosterBase* foo, double* label) { foo->set_train_label(label); }
 void SetTrainLabelInt(BoosterBase* foo, int32_t* label) { foo->set_train_label(label); }
-void SetEvalLabelDouble(BoosterBase* foo, double* label) { foo->set_eval_label(label); }
-void SetEvalLabelInt(BoosterBase* foo, int32_t* label) { foo->set_eval_label(label); }
+// void SetEvalLabelDouble(BoosterBase* foo, double* label) { foo->set_eval_label(label); }
+// void SetEvalLabelInt(BoosterBase* foo, int32_t* label) { foo->set_eval_label(label); }
 
 //========================================================================
 //                                                                        

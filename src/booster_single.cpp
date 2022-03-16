@@ -14,12 +14,12 @@
 BoosterSingle::BoosterSingle(HyperParameters hp) : BoosterBase(hp) {};
 
 void BoosterSingle::get_score_opt(Histogram& Hist, double& opt, double& score_sum) {
-    double gr = Hist.g[Hist.g.size() - 1];
-    double hr = Hist.h[Hist.h.size() - 1];
+    double gx = Hist.g[Hist.g.size() - 1];
+    double hx = Hist.h[Hist.h.size() - 1];
     const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
     const auto CalWeight = (hp.reg_l1 == 0) ? CalWeightNoL1 : CalWeightL1;
-    opt = CalWeight(gr, hr, hp.reg_l1, hp.reg_l2);
-    score_sum = CalScore(gr, hr, hp.reg_l1, hp.reg_l2);
+    opt = CalWeight(gx, hx, hp.reg_l1, hp.reg_l2);
+    score_sum = CalScore(gx, hx, hp.reg_l1, hp.reg_l2);
 }
 
 //=============================================================================================
@@ -35,28 +35,28 @@ void BoosterSingle::get_score_opt(Histogram& Hist, double& opt, double& score_su
 void BoosterSingle::hist_column(
     const std::vector<size_t>& order,
     Histogram& Hist,
-    const uint16_t* maps
+    const std::vector<uint16_t>& map_column
 ) const {
-    for (size_t i : order) {
-        size_t bin = maps[i];
+    for (size_t o : order) {
+        size_t bin = map_column[o];
         ++Hist.count[bin];
-        Hist.g[bin] += G[i];
-        Hist.h[bin] += H[i];
+        Hist.g[bin] += this->G[o];
+        Hist.h[bin] += this->H[o];
     }
-    // integration
+    // Integrate histogram
     for (size_t i = 1; i < Hist.count.size(); ++i) {
-        Hist.count[i] += Hist.count[i - 1];
-        Hist.g[i] += Hist.g[i - 1];
-        Hist.h[i] += Hist.h[i - 1];
+        Hist.count[i] += Hist.count[i-1];
+        Hist.g[i]  += Hist.g[i-1];
+        Hist.h[i]  += Hist.h[i-1];
     }
 }
 
 void BoosterSingle::hist_all(
     const std::vector<size_t>& order,
     std::vector<Histogram>& Hist
-) {
+) const {
     for (size_t i = 0; i < hp.inp_dim; ++i) {
-        hist_column(order, Hist[i], Train.Maps + i*Train.num);
+        hist_column(order, Hist[i], Train.train_maps[i]);
     }
 }
 
@@ -87,9 +87,16 @@ boost_column_result BoosterSingle::boost_column(const Histogram& Hist, const siz
 }
 
 void BoosterSingle::boost_all(const std::vector<Histogram>& Hist) {
+    // Boost each column
+    std::vector<boost_column_result> results(0);
+    for (size_t i = 0; i < hp.inp_dim; ++i) {
+        results.push_back(boost_column(Hist[i], i));
+    }
+
+    // Update the meta
     meta.reset();
     for (size_t i = 0; i < hp.inp_dim; ++i) {
-        auto result = boost_column(Hist[i], i);
+        auto result = results[i];
         if (result.split_found()) {
             double overall_gain = (result.gain - Score_sum) * 0.5;
             if (overall_gain > meta.gain) {
@@ -113,12 +120,12 @@ void BoosterSingle::build_tree_best() {
     if (tree.leaf_num >= hp.max_leaves) { return; }
 
     auto info = cache.front(); cache.pop_front();
-    int this_node = info.node;
-    size_t rows_l = info.hist[info.split.column].count[info.split.bin];
-    size_t rows_r = info.order.size() - rows_l;
+    const int this_node = info.node;
+    const size_t rows_l = info.hist[info.split.column].count[info.split.bin];
+    const size_t rows_r = info.order.size() - rows_l;
 
     std::vector<size_t> order_l(rows_l), order_r(rows_r);
-    rebuild_order(info.order, order_l, order_r, Train.Maps + info.split.column * Train.num, info.split.bin);
+    rebuild_order(info.order, order_l, order_r, info.split.column, info.split.bin);
     std::vector<Histogram> Hist_l(hp.inp_dim), Hist_r(hp.inp_dim);
 
     if (rows_l >= rows_r) {
@@ -137,7 +144,7 @@ void BoosterSingle::build_tree_best() {
         get_score_opt(Hist_l[rand() % hp.inp_dim], Opt, Score_sum);
         boost_all(Hist_l);
 
-        if (meta.isset && info.depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
+        if (meta.is_set && info.depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
             tree.add_left_nonleaf(this_node, meta.column, meta.bin, meta.threshold);
             cache.push(CacheInfo(tree.nonleaf_num, info.depth + 1, meta, order_l, Hist_l));
         } else {
@@ -154,7 +161,7 @@ void BoosterSingle::build_tree_best() {
         get_score_opt(Hist_r[rand() % hp.inp_dim], Opt, Score_sum);
         boost_all(Hist_r);
 
-        if (meta.isset && info.depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
+        if (meta.is_set && info.depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
             tree.add_right_nonleaf(this_node, meta.column, meta.bin, meta.threshold);
             cache.push(CacheInfo(tree.nonleaf_num, info.depth + 1, meta, order_r, Hist_r));
         } else {
@@ -182,79 +189,85 @@ void BoosterSingle::growth() {
     tree.clear();
     cache.clear();
 
-    std::vector<Histogram> Hist(hp.inp_dim);
-    for (size_t i = 0; i < hp.inp_dim; ++i) { Hist[i] = Histogram(bin_nums[i], 1); }
-    hist_all(Train.Orders, Hist);
-    get_score_opt(Hist[rand() % hp.inp_dim], Opt, Score_sum);
-    boost_all(Hist);
-    
+    std::vector<Histogram> Hists(hp.inp_dim);
+    for (size_t i = 0; i < hp.inp_dim; ++i) { Hists[i] = Histogram(bin_nums[i], 1); }
+    hist_all(Train.train_order, Hists);
+    get_score_opt(Hists[rand() % hp.inp_dim], Opt, Score_sum);
+    boost_all(Hists);
     // TODO: Parametrise the -10.0??
     //       Also, what is it actually doing here...? Like, what is the meaning
     //       of this parameter? 
-    if (meta.isset && meta.gain > -10.0) {
+    if (meta.is_set && meta.gain > -10.0) {
         tree.add_root_nonleaf(meta.column, meta.bin, meta.threshold);
-        cache.push(CacheInfo(-1, 0, meta, Train.Orders, Hist));
+        cache.push(CacheInfo(-1, 0, meta, Train.train_order, Hists));
         build_tree_best();
     } else {
         auto node = LeafNode(Opt);
         // TODO: (tree.leaf_num >= hp.max_leaves) check ??
         tree.add_left_leaf(-1, node);
     }
+    // Finally shrink by the learning rate
+    tree.shrink(hp.learning_rate);
 }
 
 void BoosterSingle::update() {
     tree.shrink(hp.learning_rate);
-    tree.pred_value_single(Train.Features, Train.Preds, hp, Train.num);
-    if (Eval.num > 0) {
-        tree.pred_value_single(Eval.Features, Eval.Preds, hp, Eval.num);
-    }
+    tree.pred_value_single(Train.Features, Train.Preds, hp, Train.n);
+    // if (Eval.num > 0) {
+    //     tree.pred_value_single(Eval.Features, Eval.Preds, hp, Eval.num);
+    // }
     trees.push_back(tree);
 }
 
 void BoosterSingle::train(int num_rounds) {
+    srand(hp.seed);
+    G = malloc_G(Train.n * hp.out_dim);
+    H = malloc_H(Train.n * hp.out_dim, obj.constHessian, obj.hessian);
+    // auto early_stoper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
+    calc_eval_indices();
 
-    int out_dim = hp.out_dim;
-    G = malloc_G(Train.num * out_dim);
-    H = malloc_H(Train.num * out_dim, obj.constHessian, obj.hessian);
-    auto early_stoper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
+    const int out_dim = hp.out_dim;
 
     // start training
     for (size_t i = 0; i < num_rounds; ++i) {
         // Calculate the gradeint and the hessian for all the trees (columns of )
-        obj.f_grad(Train, Train.num, out_dim, G, H);
+        obj.f_grad(Train, Train.n, out_dim, G, H);
         for (size_t j = 0; j < out_dim; ++j) {
             growth();
-            update();
+            
+            tree.pred_value_single(Train.Features, Train.Preds, hp, Train.n);
+            trees.push_back(tree);
+
             if (j < out_dim - 1) {
-                G += Train.num;
-                H += Train.num;
-                Train.Preds += Train.num;
-                Eval.Preds += Eval.num;
+                G += Train.n;
+                H += Train.n;
+                Train.Preds += Train.n;
+                // Eval.Preds += Eval.num;
             } else {
-                int pos = (out_dim - 1) * Train.num;
+                const int pos = (out_dim - 1) * Train.n;
                 G -= pos;
                 H -= pos;
                 Train.Preds -= pos;
-                Eval.Preds -= (out_dim - 1) * Eval.num;
+                // Eval.Preds -= (out_dim - 1) * Eval.num;
             }
         }
-        double score = obj.f_score(Train, Train.num, out_dim);
-        if (Eval.num > 0) {
-            double metric = obj.f_metric(Eval, Eval.num, out_dim);
-            if (hp.verbose) { showloss(score, metric, i); }
-            early_stoper.push(std::make_pair(metric, i));
-            if (!early_stoper.is_continue) {
-                auto info = early_stoper.info;
-                int round = std::get<1>(info);
-                showbest(std::get<0>(info), round);
-                trees.resize(hp.out_dim * round);
-                break;
-            }
-        } else {
-            if (hp.verbose) { showloss(score, i); }
-        }
+        double score = obj.f_score(Train, Train.n, out_dim);
+        // if (Eval.num > 0) {
+        //     double metric = obj.f_metric(Eval, Eval.num, out_dim);
+        //     if (hp.verbose) { showloss(score, metric, i); }
+        //     early_stoper.push(std::make_pair(metric, i));
+        //     if (!early_stoper.is_continue) {
+        //         auto info = early_stoper.info;
+        //         int round = std::get<1>(info);
+        //         showbest(std::get<0>(info), round);
+        //         trees.resize(hp.out_dim * round);
+        //         break;
+        //     }
+        // } else {
+        if (hp.verbose) { showloss(score, i); }
+        // }
     }
-    if (early_stoper.is_continue && Eval.num > 0) { showbest(early_stoper.info); }
+    // if (early_stoper.is_continue && Eval.num > 0) { showbest(early_stoper.info); }
     free(G);
     free(H);
 }

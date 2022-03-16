@@ -79,10 +79,10 @@ class GBDTBase:
         _f = self.lib.SetTrainLabelDouble if is_float else self.lib.SetTrainLabelInt
         _f(self._booster, y)
 
-    def _set_eval_label(self, y: np.ndarray):
-        is_float = self._check_label(y)
-        _f = self.lib.SetEvalLabelDouble if is_float else self.lib.SetEvalLabelInt
-        _f(self._booster, y)
+    # def _set_eval_label(self, y: np.ndarray):
+    #     is_float = self._check_label(y)
+    #     _f = self.lib.SetEvalLabelDouble if is_float else self.lib.SetEvalLabelInt
+    #     _f(self._booster, y)
 
     def boost(self):
         self.lib.Boost(self._booster)
@@ -182,15 +182,15 @@ class GBDTBase:
             self.label = np.ascontiguousarray(label)
             self._set_train_label(self.label)
 
-    def set_eval_data(self, data, label=None):
-        """ """
-        self.data_eval = np.ascontiguousarray(data)
-        self.preds_eval = np.full((len(self.data_eval), self.out_dim), BASE_SCORE, dtype=np.float64)
-        self.lib.SetEvalData(self._booster, self.data_eval, self.preds_eval, len(self.data_eval))
+    # def set_eval_data(self, data, label=None):
+    #     """ """
+    #     self.data_eval = np.ascontiguousarray(data)
+    #     self.preds_eval = np.full((len(self.data_eval), self.out_dim), BASE_SCORE, dtype=np.float64)
+    #     self.lib.SetEvalData(self._booster, self.data_eval, self.preds_eval, len(self.data_eval))
 
-        if label is not None:
-            self.label_eval = np.ascontiguousarray(label)
-            self._set_eval_label(self.label_eval)
+    #     if label is not None:
+    #         self.label_eval = np.ascontiguousarray(label)
+    #         self._set_eval_label(self.label_eval)
 
     def calc_train_maps(self):
         self.lib.CalcTrainMaps(self._booster)
@@ -217,9 +217,9 @@ class GBDTSingle(GBDTBase):
         if label is not None: label = label.transpose()
         return super().set_train_data(data, label)
 
-    def set_eval_data(self, data, label=None):
-        if label is not None: label = label.transpose()
-        return super().set_eval_data(data, label)
+    # def set_eval_data(self, data, label=None):
+    #     if label is not None: label = label.transpose()
+    #     return super().set_eval_data(data, label)
 
     @staticmethod
     def transpose_memory(array):
@@ -228,7 +228,7 @@ class GBDTSingle(GBDTBase):
     def train(self, num):
         super().train(num)
         self.preds_train = self.transpose_memory(self.preds_train)
-        self.preds_eval = self.transpose_memory(self.preds_eval)
+        # self.preds_eval = self.transpose_memory(self.preds_eval)
 
     def predict(self, X, num_trees=0):
         preds = super().predict(X, num_trees)

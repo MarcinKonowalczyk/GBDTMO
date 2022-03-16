@@ -27,7 +27,7 @@ void bce_grad(const Dataset& data, const int n, const int out_dim, double* g, do
     auto labels = data.Label_int32;
     int N = n * out_dim;
     for (size_t i = 0; i < N; ++i) {
-        const double t = 1.0f / (1.0f + exp(-preds[i]));
+        const double t = 1.0 / (1.0 + exp(-preds[i]));
         g[i] = t - labels[i];
         h[i] = t * (1 - t);
     }

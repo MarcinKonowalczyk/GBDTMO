@@ -58,13 +58,12 @@ GBDTMulti
       - g(numpy.array): gradient
       - h(numpy.array): hessian
                    
-  :_set_label(x, is_train):
+  :_set_label(x):
       
     Reset label. Sometimes it avoids the re-construction of histogram.
       
     Parameters
       - x(numpy.array): labels.
-      - is_train(bool): if true, set labels for train_set else for eval_set.
     
   :boost():
     

@@ -75,22 +75,24 @@ void BoosterMulti::get_score_opt(
 //                                                                                             
 //=============================================================================================
 
-void BoosterMulti::hist_column_multi(
+void BoosterMulti::hist_column(
     const std::vector<size_t>& order,
     Histogram& Hist,
-    const uint16_t* maps
+    const std::vector<uint16_t>& map_column
 ) const {
     size_t out_dim = hp.out_dim;
-    for (size_t i : order) {
-        ++Hist.count[maps[i]];
-        size_t bin = maps[i] * out_dim;
-        size_t ind = i * out_dim;
+    std::cout << "order.size() = " << order.size() << std::endl;
+    for (size_t o : order) {
+        ++Hist.count[map_column[o]];
+        size_t bin = map_column[o] * out_dim; // TODO: What?
+        // size_t bin = map_column[o]; // TODO: What?
+        size_t ind = o * out_dim;
         for (size_t j = 0; j < out_dim; ++j) {
             Hist.g[bin+j] += G[ind+j];
             Hist.h[bin+j] += H[ind+j];
         }
     }
-    // integration
+    // Integrate histogram
     size_t ind = 0;
     for (size_t i = 1; i < Hist.count.size(); ++i) {
         Hist.count[i] += Hist.count[i - 1];
@@ -104,10 +106,10 @@ void BoosterMulti::hist_column_multi(
 
 void BoosterMulti::hist_all(
     const std::vector<size_t>& order,
-    std::vector<Histogram>& Hist
-) {
+    std::vector<Histogram>& Hists
+) const {
     for (size_t i = 0; i < hp.inp_dim; ++i) {
-        hist_column_multi(order, Hist[i], Train.Maps + i*Train.num);
+        hist_column(order, Hists[i], Train.train_maps[i]);
     }
 }
 
@@ -248,28 +250,28 @@ void BoosterMulti::boost_all(const std::vector<Histogram>& Hist) {
 
 void BoosterMulti::build_tree_best() {
     if (tree.leaf_num >= hp.max_leaves) { return; }
-
-    auto info = &cache.data[0];
-    int parent = info->node;
-    int depth = info->depth;
-
-    int rows_l = info->hist[info->split.column].count[info->split.bin];
-    int rows_r = info->order.size() - rows_l;
+    
+    auto info = cache.front(); cache.pop_front();
+    const int parent = info.node;
+    const int depth = info.depth;
+    const size_t rows_l = info.hist[info.split.column].count[info.split.bin];
+    const size_t rows_r = info.order.size() - rows_l;
 
     std::vector<size_t> order_l(rows_l), order_r(rows_r);
-    rebuild_order(info->order, order_l, order_r, Train.Maps + info->split.column * Train.num, info->split.bin);
+    rebuild_order(info.order, order_l, order_r, info.split.column, info.split.bin);
     std::vector<Histogram> Hist_l(hp.inp_dim), Hist_r(hp.inp_dim);
+    std::cout << "and here!\n";
 
     if (rows_l >= rows_r) {
         for (size_t i = 0; i < hp.inp_dim; ++i) { Hist_r[i] = Histogram(bin_nums[i], hp.out_dim); }
         hist_all(order_r, Hist_r);
-        for (size_t i = 0; i < hp.inp_dim; ++i) { info->hist[i] - Hist_r[i]; }
-        Hist_l.assign(info->hist.begin(), info->hist.end());
+        for (size_t i = 0; i < hp.inp_dim; ++i) { info.hist[i] - Hist_r[i]; }
+        Hist_l.assign(info.hist.begin(), info.hist.end());
     } else {
         for (size_t i = 0; i < hp.inp_dim; ++i) { Hist_l[i] = Histogram(bin_nums[i], hp.out_dim); }
         hist_all(order_l, Hist_l);
-        for (size_t i = 0; i < hp.inp_dim; ++i) { info->hist[i] - Hist_l[i]; }
-        Hist_r.assign(info->hist.begin(), info->hist.end());
+        for (size_t i = 0; i < hp.inp_dim; ++i) { info.hist[i] - Hist_l[i]; }
+        Hist_r.assign(info.hist.begin(), info.hist.end());
     }
     cache.pop_front();
 
@@ -280,7 +282,7 @@ void BoosterMulti::build_tree_best() {
             get_score_opt(Hist_l[rand() % hp.inp_dim], OptPair, Score, Score_sum);
         }
         boost_all(Hist_l);
-        if (meta.isset && depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
+        if (meta.is_set && depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
             tree.add_left_nonleaf(parent, meta.column, meta.bin, meta.threshold);
             cache.push(CacheInfo(tree.nonleaf_num, depth + 1, meta, order_l, Hist_l));
         } else {
@@ -299,7 +301,7 @@ void BoosterMulti::build_tree_best() {
             get_score_opt(Hist_r[rand() % hp.inp_dim], OptPair, Score, Score_sum);
         }
         boost_all(Hist_r);
-        if (meta.isset && depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
+        if (meta.is_set && depth + 1 < hp.max_depth && meta.gain > hp.gamma) {
             tree.add_right_nonleaf(parent, meta.column, meta.bin, meta.threshold);
             cache.push(CacheInfo(tree.nonleaf_num, depth + 1, meta, order_r, Hist_r));
         } else {
@@ -324,14 +326,8 @@ void BoosterMulti::build_tree_best() {
 //===========================================================================
 
 void BoosterMulti::update() {
-    // std::cout << "hp.learning_rate = " << hp.learning_rate << "\n";
-    // std::cout << "leaf pre = " << tree.leafs.at(1).values[0] << "\n";
     tree.shrink(hp.learning_rate);
-    // std::cout << "leaf post = " << tree.leafs.at(1).values[0] << "\n";
-    tree.pred_value_multi(Train.Features, Train.Preds, hp, Train.num);
-    if (Eval.num > 0) {
-        tree.pred_value_multi(Eval.Features, Eval.Preds, hp, Eval.num);
-    }
+    tree.pred_value_multi(Train.Features, Train.Preds, hp, Train.n);
     trees.push_back(tree);
 }
 
@@ -341,16 +337,16 @@ void BoosterMulti::growth() {
 
     std::vector<Histogram> Hist(hp.inp_dim);
     for (size_t i = 0; i < hp.inp_dim; ++i) { Hist[i] = Histogram(bin_nums[i], hp.out_dim); }
-    hist_all(Train.Orders, Hist);
+    hist_all(Train.train_order, Hist);
     if (hp.topk == 0) {
         get_score_opt(Hist[rand() % hp.inp_dim], Opt, Score, Score_sum);
     } else {
         get_score_opt(Hist[rand() % hp.inp_dim], OptPair, Score, Score_sum);
     }
     boost_all(Hist);
-    if (meta.isset && meta.gain > -10.0) {
+    if (meta.is_set && meta.gain > -10.0) {
         tree.add_root_nonleaf(meta.column, meta.bin, meta.threshold);
-        cache.push(CacheInfo(-1, 0, meta, Train.Orders, Hist));
+        cache.push(CacheInfo(-1, 0, meta, Train.train_order, Hist));
         build_tree_best();
     } else {
         auto node = (hp.topk > 0) ? LeafNode(hp.out_dim, OptPair) : LeafNode(Opt);
@@ -359,32 +355,33 @@ void BoosterMulti::growth() {
 }
 
 void BoosterMulti::train(int num_rounds) {
-    G = malloc_G(Train.num * hp.out_dim);
-    H = malloc_H(Train.num * hp.out_dim, obj.constHessian, obj.hessian);
-
-    int round = (hp.early_stop == 0) ? num_rounds : hp.early_stop;
-    auto early_stoper = EarlyStopper(round, obj.largerBetter);
+    srand(hp.seed);
+    G = malloc_G(Train.n * hp.out_dim);
+    H = malloc_H(Train.n * hp.out_dim, obj.constHessian, obj.hessian);
+    // auto early_stoper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
+    calc_eval_indices();
+    
     for (size_t i = 0; i < num_rounds; ++i) {
-        obj.f_grad(Train, Train.num, hp.out_dim, G, H);
+        obj.f_grad(Train, Train.n, hp.out_dim, G, H);
         growth();
         update();
-        double score = obj.f_score(Train, Train.num, hp.out_dim);
-        if (Eval.num > 0) {
-            double metric = obj.f_metric(Eval, Eval.num, hp.out_dim);
-            if (hp.verbose) { showloss(score, metric, i); }
-            early_stoper.push(std::make_pair(metric, i));
-            if (!early_stoper.is_continue) {
-                auto info = early_stoper.info;
-                int round = std::get<1>(info);
-                showbest(std::get<0>(info), round);
-                trees.resize(round);
-                break;
-            }
-        } else {
-            if (hp.verbose) { showloss(score, i); }
-        }
+        double score = obj.f_score(Train, Train.n, hp.out_dim);
+        // if (Eval.num > 0) {
+        //     double metric = obj.f_metric(Eval, Eval.num, hp.out_dim);
+        //     if (hp.verbose) { showloss(score, metric, i); }
+        //     early_stoper.push(std::make_pair(metric, i));
+        //     if (!early_stoper.is_continue) {
+        //         auto info = early_stoper.info;
+        //         int round = std::get<1>(info);
+        //         showbest(std::get<0>(info), round);
+        //         trees.resize(round);
+        //         break;
+        //     }
+        // } else {
+        if (hp.verbose) { showloss(score, i); }
+        // }
     }
-    if (early_stoper.is_continue && Eval.num > 0) { showbest(early_stoper.info); }
+    // if (early_stoper.is_continue && Eval.num > 0) { showbest(early_stoper.info); }
     free(G);
     free(H);
 }
