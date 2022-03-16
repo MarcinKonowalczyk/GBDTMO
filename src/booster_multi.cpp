@@ -81,7 +81,6 @@ void BoosterMulti::hist_column(
     const std::vector<uint16_t>& map_column
 ) const {
     size_t out_dim = hp.out_dim;
-    std::cout << "order.size() = " << order.size() << std::endl;
     for (size_t o : order) {
         ++Hist.count[map_column[o]];
         size_t bin = map_column[o] * out_dim; // TODO: What?
@@ -273,7 +272,6 @@ void BoosterMulti::build_tree_best() {
         for (size_t i = 0; i < hp.inp_dim; ++i) { info.hist[i] - Hist_l[i]; }
         Hist_r.assign(info.hist.begin(), info.hist.end());
     }
-    cache.pop_front();
 
     if (rows_l >= hp.min_samples) {
         if (hp.topk == 0) {

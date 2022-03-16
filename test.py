@@ -61,7 +61,7 @@ if __name__ == '__main__':
         early_stop=10,
         verbose=True,
         seed=seed,
-        eval_fraction=0.12345
+        # eval_fraction=0.12345
     )
     with seed_rng(seed):
         X_train, X_test = np.random.rand(10000, booster_shape[0]), np.random.rand(100, booster_shape[0])
@@ -90,8 +90,8 @@ if __name__ == '__main__':
     booster_multi.calc_train_maps()
     # booster_multi.set_eval_data(X_test, y_test)
 
-    # with Timer("booster_single.train"):
-    #     booster_single.train(10)
+    with Timer("booster_single.train"):
+        booster_single.train(10)
     with Timer("booster_multi.train"):
         booster_multi.train(10)
 
