@@ -25,11 +25,15 @@ BoosterBase::~BoosterBase() {
     }
 }
 
-// Set gradient and Hessian matrices
-// void BoosterBase::set_gh(double* G, double* H) {
-//     this->G = G;
-//     this->H = H;
-// }
+//=======================================================================================
+//                                                                                       
+//   ####  #####  ######  ######  #####  #####     ####                                
+//  ##     ##       ##      ##    ##     ##  ##   ##                                   
+//   ###   #####    ##      ##    #####  #####     ###                                 
+//     ##  ##       ##      ##    ##     ##  ##      ##                                
+//  ####   #####    ##      ##    #####  ##   ##  ####                                 
+//                                                                                       
+//=======================================================================================
 
 void BoosterBase::set_train_data(double* features, double* preds, int n) {
     Train.Features = features;
@@ -50,6 +54,21 @@ void BoosterBase::set_eval_data(double* features, double* preds, int n) {
     Eval.Maps = (uint16_t*) nullptr;
 }
 
+void BoosterBase::set_train_label(double* label) { Train.Label_double = label; }
+void BoosterBase::set_train_label(int32_t* label) { Train.Label_int32 = label; }
+void BoosterBase::set_eval_label(double* label) { Eval.Label_double = label; }
+void BoosterBase::set_eval_label(int32_t* label) { Eval.Label_int32 = label; }
+
+//===========================================================================================================
+//                                                                                                           
+//   ####    ###    ##       ####        ###    ###    ###    #####    ####                                
+//  ##      ## ##   ##      ##           ## #  # ##   ## ##   ##  ##  ##                                   
+//  ##     ##   ##  ##      ##           ##  ##  ##  ##   ##  #####    ###                                 
+//  ##     #######  ##      ##           ##      ##  #######  ##         ##                                
+//   ####  ##   ##  ######   ####        ##      ##  ##   ##  ##      ####                                 
+//                                                                                                           
+//===========================================================================================================
+
 void BoosterBase::calc_train_maps() {
     // Calculate Train.Maps and bins
     std::vector<std::vector<double>> bins;
@@ -66,11 +85,6 @@ void BoosterBase::calc_train_maps() {
         bin_values.push_back(tmp);
     }
 }
-
-void BoosterBase::set_train_label(double* label) { Train.Label_double = label; }
-void BoosterBase::set_train_label(int32_t* label) { Train.Label_int32 = label; }
-void BoosterBase::set_eval_label(double* label) { Eval.Label_double = label; }
-void BoosterBase::set_eval_label(int32_t* label) { Eval.Label_int32 = label; }
 
 void BoosterBase::rebuild_order(
     const std::vector<size_t>& order,
@@ -111,8 +125,8 @@ void BoosterBase::reset() {
     // TODO: test? should this be Train.num * hp.out_dim???
     //       also, when is this actually used? what's the purpose here?
     //       retrain? then should have a way to set the parameters(!)
-    std::fill_n(Train.Preds, Train.num, hp.base_score);
-    std::fill_n(Eval.Preds, Eval.num, hp.base_score);
+    // std::fill_n(Train.Preds, Train.num * hp.out_dim, 0.0);
+    // std::fill_n(Eval.Preds, Eval.num * hp.out_dim, 0.0);
 }
 
 //===============================================
@@ -140,7 +154,7 @@ void BoosterBase::dump_leaf_sizes(uint16_t* leaf_sizes) const {
 void BoosterBase::dump_nonleaf_nodes(int* trees, double* thresholds) const {
     int i = 0, j = 0;
     for(auto& tree : this->trees) {
-        for (auto it : tree.nonleafs) {
+        for (auto& it : tree.nonleafs) {
             auto node = it.second;
             trees[i++] = it.first;
             trees[i++] = node.parent;
@@ -155,7 +169,7 @@ void BoosterBase::dump_nonleaf_nodes(int* trees, double* thresholds) const {
 void BoosterBase::dump_leaf_nodes(double* leaves) const {
     int k = 0;
     for(auto& tree : trees ) {
-        for (auto leaf : tree.leafs) {
+        for (auto& leaf : tree.leafs) {
             auto node = leaf.second;
             for (auto& value : node.values) {
                 leaves[k++] = value;

@@ -4,7 +4,8 @@ from contextlib import contextmanager
 sys.path.append(os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
 
 import numpy as np
-from gbdtmo import GBDTMulti, GBDTSingle
+from gbdtmo import GBDTMulti, GBDTSingle, Loss
+
 
 @contextmanager
 def seed_rng(random_state):
@@ -29,7 +30,7 @@ uid = lambda: ''.join(sample(ascii_letters, 10))
 
 # def classification():
 #     inp_dim, out_dim = 10, 5
-#     params = dict(max_depth=args.depth, lr=args.lr, loss="ce")
+#     params = dict(max_depth=args.depth, learning_rate=args.learning_rate, loss="ce")
 #     booster = GBDTMulti(LIB, out_dim=out_dim, params=params)
 #     X_train = np.random.rand(10000, inp_dim)
 #     y_train = np.random.randint(0, out_dim, size=(10000, )).astype("int32")
@@ -42,7 +43,7 @@ uid = lambda: ''.join(sample(ascii_letters, 10))
 if __name__ == '__main__':
     booster_shape = (10, 2)
     seed = 42
-    booster_params = dict(max_depth=2, lr=0.1, loss="mse", early_stop=50, verbose=False, seed=seed)
+    booster_params = dict(max_depth=2, learning_rate=0.8, loss=Loss.mse, early_stop=10, verbose=False, seed=seed)
     with seed_rng(seed):
         X_train, X_test = np.random.rand(10000, booster_shape[0]), np.random.rand(100, booster_shape[0])
         M = np.random.randn(5 * booster_shape[0], booster_shape[1])
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     f = lambda X: np.apply_along_axis(lambda a: a - np.mean(a), 0, np.c_[X, X**2, X**(1 / 2), X**3, X**(1 / 3)] @ M)
     y_train, y_test = f(X_train), f(X_test)
 
-    # Convert to 
+    # Convert to
     # y_train = y_train.astype(np.int32); y_train -= np.min(y_train);
     # y_test = y_test.astype(np.int32); y_test -= np.min(y_test);
 

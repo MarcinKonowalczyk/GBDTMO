@@ -324,7 +324,10 @@ void BoosterMulti::build_tree_best() {
 //===========================================================================
 
 void BoosterMulti::update() {
-    tree.shrink(hp.lr);
+    // std::cout << "hp.learning_rate = " << hp.learning_rate << "\n";
+    // std::cout << "leaf pre = " << tree.leafs.at(1).values[0] << "\n";
+    tree.shrink(hp.learning_rate);
+    // std::cout << "leaf post = " << tree.leafs.at(1).values[0] << "\n";
     tree.pred_value_multi(Train.Features, Train.Preds, hp, Train.num);
     if (Eval.num > 0) {
         tree.pred_value_multi(Eval.Features, Eval.Preds, hp, Eval.num);
@@ -345,7 +348,7 @@ void BoosterMulti::growth() {
         get_score_opt(Hist[rand() % hp.inp_dim], OptPair, Score, Score_sum);
     }
     boost_all(Hist);
-    if (meta.isset && meta.gain > -10.0f) {
+    if (meta.isset && meta.gain > -10.0) {
         tree.add_root_nonleaf(meta.column, meta.bin, meta.threshold);
         cache.push(CacheInfo(-1, 0, meta, Train.Orders, Hist));
         build_tree_best();
@@ -361,8 +364,6 @@ void BoosterMulti::train(int num_rounds) {
 
     int round = (hp.early_stop == 0) ? num_rounds : hp.early_stop;
     auto early_stoper = EarlyStopper(round, obj.largerBetter);
-
-    // start training
     for (size_t i = 0; i < num_rounds; ++i) {
         obj.f_grad(Train, Train.num, hp.out_dim, G, H);
         growth();

@@ -6,6 +6,7 @@
 #include <iostream>
 #include <random>
 #include <utility>
+
 // #include <limits.h>
 
 // TODO: ?? typedef Maps uint16_t*
@@ -41,25 +42,55 @@ struct Dataset {
 //                                                   
 //===================================================
 
+enum Loss { mse, ce, ce_column, bce };
+
+constexpr static unsigned int hash(const char* s, int off = 0) {                        
+    return !s[off] ? 5381 : (hash(s, off+1)*33) ^ s[off];                           
+} 
+
 struct HyperParameters {
-    const int inp_dim;
-    const int out_dim;
-    const char* loss;
-    const int max_depth;
-    const int max_leaves;
-    const int seed;
-    const int min_samples;
-    const double lr;
-    const double reg_l1;
-    const double reg_l2;
-    const double gamma;
-    const double base_score;
-    const int early_stop;
-    const bool verbose;
-    const int max_caches;
-    const int topk;
-    const bool one_side;
-    const int max_bins;
+    int inp_dim;
+    int out_dim;
+    Loss loss;
+    int max_depth;
+    int max_leaves;
+    int seed;
+    int min_samples;
+    double learning_rate;
+    double reg_l1;
+    double reg_l2;
+    double gamma;
+    int early_stop;
+    bool verbose;
+    int max_caches;
+    int topk;
+    bool one_side;
+    int max_bins;
+    double alpha;
+    double eval_fraction;
+
+
+    void init_default() {
+        inp_dim = 1;
+        out_dim = 1;
+        loss = Loss::mse;
+        max_depth = 5;
+        max_leaves = 32;
+        seed = 0;
+        min_samples = 5;
+        learning_rate = 0.1;
+        reg_l1 = 0.0;
+        reg_l2 = 0.1;
+        gamma = 1e-3;
+        early_stop = 0;
+        verbose = true;
+        max_caches = 16;
+        topk = 0;
+        one_side = true;
+        max_bins = 32;
+        alpha = 0.0;
+        eval_fraction = 0.0;
+    }
 };
 
 //=================================================================================================

@@ -191,7 +191,7 @@ void BoosterSingle::growth() {
     // TODO: Parametrise the -10.0??
     //       Also, what is it actually doing here...? Like, what is the meaning
     //       of this parameter? 
-    if (meta.isset && meta.gain > -10.0f) {
+    if (meta.isset && meta.gain > -10.0) {
         tree.add_root_nonleaf(meta.column, meta.bin, meta.threshold);
         cache.push(CacheInfo(-1, 0, meta, Train.Orders, Hist));
         build_tree_best();
@@ -203,7 +203,7 @@ void BoosterSingle::growth() {
 }
 
 void BoosterSingle::update() {
-    tree.shrink(hp.lr);
+    tree.shrink(hp.learning_rate);
     tree.pred_value_single(Train.Features, Train.Preds, hp, Train.num);
     if (Eval.num > 0) {
         tree.pred_value_single(Eval.Features, Eval.Preds, hp, Eval.num);

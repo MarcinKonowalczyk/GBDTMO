@@ -8,7 +8,7 @@
 template<typename T>
 inline static T Sum(std::vector<T> x) {
     T s = 0;
-    for (auto &i : x) { s += i; }
+    for (auto& i : x) { s += i; }
     return s;
 }
 

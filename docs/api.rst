@@ -132,7 +132,4 @@ GBDTSO is our own implementation of GBDT for single output. It is used to compar
       
     Parameters
       - num(int): number of boost round. In each round, ``out_dim`` of trees will be constructed. They correspond to output variables in order.
-      
-  :reset():
-    
-    clear the learned trees and re-initialize the predictions to ``base_score``.
+

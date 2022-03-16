@@ -96,7 +96,7 @@ void Tree::add_right_nonleaf(const int parent, const int column, const int bin, 
 };
 
 void Tree::shrink(const double learning_rate) {
-    for (auto leaf : leafs) {
+    for (auto& leaf : leafs) {
         for (auto& value : leaf.second.values) {
             value *= learning_rate;
         }

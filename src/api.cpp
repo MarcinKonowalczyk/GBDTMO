@@ -12,7 +12,6 @@ extern "C" {
 //                                                                                       
 //=======================================================================================
 
-// void SetGH(BoosterBase* foo, double* x, double* y) { foo->set_gh(x, y); }
 void SetTrainData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_train_data(features, preds, n); }
 void SetEvalData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_eval_data(features, preds, n); }
 void SetTrainLabelDouble(BoosterBase* foo, double* label) { foo->set_train_label(label); }
@@ -66,30 +65,17 @@ void Load(BoosterBase* foo, const char* path) { foo->load(path); }
 //=============================================================
 
 // Define the default hyperparameters in the shared object itself, not on the python side
-HyperParameters DefaultHyperParameters() {
-    return {
-        1, // inp_dim
-        1, // out_dim
-        "mse", // loss
-        5, // max_depth
-        32, // max_leaves
-        0, // seed
-        5, // min_samples
-        0.2, // lr
-        0.0, // reg_l1
-        1.0, // reg_l2
-        1e-3, // gamma
-        0.0f, // base_score
-        0, // early_stop
-        true, // verbose
-        16, // max_caches
-        0, // topk
-        true, // one_side
-        32, // max_bins
-    };
+HyperParameters GetDefaultParameters() {
+    auto hp = HyperParameters();
+    hp.init_default();
+    return hp;
 }
+
+HyperParameters GetCurrentParameters(BoosterBase* foo) { return foo->hp; }
+void SetParameters(BoosterBase* foo, HyperParameters hp) { foo->hp = hp; }
 
 BoosterMulti* MultiNew(HyperParameters hp) { return new(std::nothrow) BoosterMulti(hp); }
 BoosterSingle* SingleNew(HyperParameters hp) { return new(std::nothrow) BoosterSingle(hp); }
 void Delete(BoosterBase* foo) { delete foo; }
+
 }

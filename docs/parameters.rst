@@ -48,11 +48,8 @@ Tree
 
 Learning
 --------
-
-- ``base_score``: default = 0.0, type = double.
-    - Initial value of prediction.
   
-- ``lr``: default = 0.2, type = double.
+- ``learning_rate``: default = 0.2, type = double.
     - Learning rate.
   
 - ``reg_l1``: default = 0.0, type = double.
@@ -66,5 +63,4 @@ Learning
     - Minimum objective gain to split.
   
 - ``loss``:  default = 'mse', type = string.
-    - **Must be binary coding**. For example, b'mse' in Python.
     - Must be one of 'mse' (mean square error), 'bce' (binary cross entropy), 'ce' (cross entropy), and 'ce_column' ( only for ``GBDTSingle``).

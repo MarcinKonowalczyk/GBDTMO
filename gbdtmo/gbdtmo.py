@@ -11,6 +11,7 @@ from .lib_utils import *
 #
 #=================================================================
 
+BASE_SCORE = 0.0
 
 class GBDTBase:
 
@@ -25,16 +26,33 @@ class GBDTBase:
         self.lib = load_lib(LIB)
         self.inp_dim, self.out_dim = shape
 
-        self.params = dict(self.lib.DefaultHyperParameters())
-        self.params.update(dict(inp_dim=self.inp_dim, out_dim=self.out_dim))
-        self.params.update(params)
-        self.params['loss'] = self._ensure_bytes(self.params['loss'])
-
-        # self.__dict__.update(self.params)
+        _params = dict(self.lib.GetDefaultParameters())
+        _params.update(dict(inp_dim=self.inp_dim, out_dim=self.out_dim))
+        _params.update(params)
 
         # Get pointer to the C object
         lib_init = getattr(self.lib, self._lib_init)
-        self._booster = lib_init(HyperParameters(**self.params))
+        self._booster = lib_init(HyperParameters(**_params))
+
+    @property
+    def params(self):
+        return dict(self.lib.GetCurrentParameters(self._booster))
+    
+    @params.setter
+    def params(self, value):
+        if isinstance(value, HyperParameters):
+            pass
+        elif isinstance(value, dict):
+            # Update the existing params with the suplied dict
+            _params = self.params
+            for key in value:
+                if key not in _params: 
+                    raise KeyError(f"Unknown key '{key}'")
+            _params.update(value)
+            value = HyperParameters(**_params)
+        else:
+            raise TypeError(f"'value' must be of type 'HyperParameters' or 'dict', not '{type(value)}'")
+        self.lib.SetParameters(self._booster, value)
 
     def __del__(self):
         self.lib.Delete(self._booster)
@@ -118,9 +136,10 @@ class GBDTBase:
         threshold_array = np.full(N_nonleaf, 0, dtype=np.double)
         self.lib.GetNonleafNodes(self._booster, tree_array, threshold_array)
 
-        threshold_array = np.squeeze(self._splitter_combiner(threshold_array, tree_sizes))
-        tree_array = self._splitter_combiner(tree_array, tree_sizes, pad_value=0)
-        
+        if n_trees > 0:
+            threshold_array = np.squeeze(self._splitter_combiner(threshold_array, tree_sizes))
+            tree_array = self._splitter_combiner(tree_array, tree_sizes, pad_value=0)
+
         return tree_array, threshold_array
 
     def _get_leaf_sizes(self, n_trees=None):
@@ -137,11 +156,13 @@ class GBDTBase:
         N_leaf = np.sum(leaf_sizes)
         leaf_array = np.full((N_leaf, _out_dim), 0, dtype=np.double)
         self.lib.GetLeafNodes(self._booster, leaf_array)
-        return self._splitter_combiner(leaf_array, leaf_sizes)
+        if n_trees > 0:
+            leaf_array = self._splitter_combiner(leaf_array, leaf_sizes)
+        return leaf_array
 
     def predict(self, X, num_trees=0):
         """ """
-        preds = np.full((len(X), self.out_dim), self.params['base_score'], dtype=np.float64)
+        preds = np.full((len(X), self.out_dim), BASE_SCORE, dtype=np.float64)
         self.lib.Predict(self._booster, X, preds, len(X), num_trees)
         return preds
 
@@ -154,7 +175,7 @@ class GBDTBase:
     def set_train_data(self, data, label=None):
         """ """
         self.data_train = np.ascontiguousarray(data)
-        self.preds_train = np.full((len(self.data_train), self.out_dim), self.params['base_score'], dtype=np.float64)
+        self.preds_train = np.full((len(self.data_train), self.out_dim), BASE_SCORE, dtype=np.float64)
         self.lib.SetTrainData(self._booster, self.data_train, self.preds_train, len(self.data_train))
 
         if label is not None:
@@ -164,7 +185,7 @@ class GBDTBase:
     def set_eval_data(self, data, label=None):
         """ """
         self.data_eval = np.ascontiguousarray(data)
-        self.preds_eval = np.full((len(self.data_eval), self.out_dim), self.params['base_score'], dtype=np.float64)
+        self.preds_eval = np.full((len(self.data_eval), self.out_dim), BASE_SCORE, dtype=np.float64)
         self.lib.SetEvalData(self._booster, self.data_eval, self.preds_eval, len(self.data_eval))
 
         if label is not None:
@@ -220,7 +241,7 @@ class GBDTSingle(GBDTBase):
         tree_array = tree_array.reshape(*_reshape, *tree_array.shape[1:])
         threshold_array = threshold_array.reshape(*_reshape, *threshold_array.shape[1:])
         return tree_array, threshold_array
-        
+
     def _get_leaf_nodes(self, n_trees=None):
         """Get the array describing the values at the leaves"""
         leaf_array = super()._get_leaf_nodes(n_trees, _out_dim=1)

@@ -55,7 +55,7 @@ struct boost_column_result {
 
 class BoosterBase {
 public:
-    BoosterBase(const HyperParameters p);
+    BoosterBase(const HyperParameters hp);
     virtual ~BoosterBase();
 
     void set_gh(double*, double*);
@@ -65,7 +65,6 @@ public:
     void set_train_label(int32_t*);
     void set_eval_label(double*);
     void set_eval_label(int32_t*);
-
     void calc_train_maps();
 
     void rebuild_order(
@@ -100,6 +99,8 @@ public:
     void dump_nonleaf_nodes(int* trees, double* thresholds) const;
     void dump_leaf_nodes(double* leaves) const;
     
+    HyperParameters hp;
+
 protected:
 
     double* malloc_G(size_t elements);
@@ -116,7 +117,6 @@ protected:
     Dataset Eval;
     double* G;
     double* H;
-    const HyperParameters hp;
     TopkDeque<CacheInfo> cache;
     Objective obj;
 };

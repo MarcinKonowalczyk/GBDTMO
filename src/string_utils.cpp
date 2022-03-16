@@ -1,36 +1,32 @@
 #include "string_utils.h"
 
-std::string _do_strip(const std::string &str, int striptype, const std::string &chars) {
+std::string _do_strip(
+    const std::string &str,
+    const int striptype,
+    const std::string &chars
+) {
     size_t len = str.size(), i, j, charslen = chars.size();
     if (charslen == 0) {
         i = 0;
         if (striptype != RIGHTSTRIP) {
-            while (i < len && ::isspace(str[i])) {
-                ++i;
-            }
+            while (i < len && ::isspace(str[i])) ++i;
         }
 
         j = len;
         if (striptype != LEFTSTRIP) {
-            do {
-                --j;
-            } while (j >= i && ::isspace(str[j]));
+            do --j; while (j >= i && ::isspace(str[j]));
             ++j;
         }
     } else {
         const char *sep = chars.c_str();
         i = 0;
         if (striptype != RIGHTSTRIP) {
-            while (i < len && memchr(sep, str[i], charslen)) {
-                ++i;
-            }
+            while (i < len && memchr(sep, str[i], charslen)) ++i;
         }
 
         j = len;
         if (striptype != LEFTSTRIP) {
-            do {
-                --j;
-            } while (j >= i && memchr(sep, str[j], charslen));
+            do --j; while (j >= i && memchr(sep, str[j], charslen));
             ++j;
         }
     }
@@ -42,18 +38,22 @@ std::string _do_strip(const std::string &str, int striptype, const std::string &
     }
 }
 
-void split_whitespace(const std::string &str, std::vector<std::string> &result, int maxsplit) {
+void split_whitespace(
+    const std::string &str,
+    std::vector<std::string> &result,
+    int maxsplit
+) {
     std::string::size_type i, j, len = str.size();
     for (i = j = 0; i < len;) {
-        while (i < len && ::isspace(str[i])) i++;
+        while (i < len && ::isspace(str[i])) ++i;
         j = i;
 
-        while (i < len && !::isspace(str[i])) i++;
+        while (i < len && !::isspace(str[i])) ++i;
 
         if (j < i) {
             if (maxsplit-- <= 0) break;
             result.push_back(str.substr(j, i - j));
-            while (i < len && ::isspace(str[i])) i++;
+            while (i < len && ::isspace(str[i])) ++i;
             j = i;
         }
     }
@@ -89,7 +89,7 @@ void split(
     result.push_back(str.substr(j, len - j));
 }
 
-std::string zfill(const std::string &str, int width) {
+std::string zfill(const std::string &str, const int width) {
     size_t len = str.size();
     if (len >= width) return str;
     std::string s(str);

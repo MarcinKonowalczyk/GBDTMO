@@ -40,33 +40,34 @@ struct Objective {
 
     Objective() {};
 
-    Objective(const char* name) {
-        if (strcmp(name, "mse") == 0) {
-            f_grad = mse_grad;
-            f_score = mse_score;
-            f_metric = mse_score;
-        } else if (strcmp(name, "ce") == 0) {
-            constHessian = false;
-            largerBetter = true;
-            f_grad = ce_grad;
-            f_score = ce_score;
-            f_metric = acc_multiclass;
-        } else if (strcmp(name, "ce_column") == 0) {
-            constHessian = false;
-            largerBetter = true;
-            f_grad = ce_grad_column;
-            f_score = ce_score_column;
-            f_metric = acc_multiclass_column;
-        } else if (strcmp(name, "bce") == 0) {
-            constHessian = false;
-            largerBetter = true;
-            f_grad = bce_grad;
-            f_score = bce_score;
-            f_metric = acc_binary;
-        } else {
-            std::string s = "Objective type name must be in [mse, bce, ce, ce_column]";
-            std::cout << s << std::endl;
-            throw std::runtime_error(s);
+    Objective(const Loss name) {
+        switch (name) {
+            case mse : {
+                f_grad = mse_grad;
+                f_score = mse_score;
+                f_metric = mse_score;
+            } break;
+            case ce : {
+                constHessian = false;
+                largerBetter = true;
+                f_grad = ce_grad;
+                f_score = ce_score;
+                f_metric = acc_multiclass;
+            } break;
+            case ce_column : {
+                constHessian = false;
+                largerBetter = true;
+                f_grad = ce_grad_column;
+                f_score = ce_score_column;
+                f_metric = acc_multiclass_column;
+            } break;
+            case bce : {
+                constHessian = false;
+                largerBetter = true;
+                f_grad = bce_grad;
+                f_score = bce_score;
+                f_metric = acc_binary;
+            } break;
         }
     }
 };

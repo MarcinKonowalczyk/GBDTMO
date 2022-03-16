@@ -29,7 +29,7 @@ Load from ``gbdtmo.so``
 Build an instance of GBDTMO. Here the ``out_dim`` is set to 10 and MSE loss is used.
 
   >>> inp_dim, out_dim = 10, 5
-  >>> params = {"max_depth": 5, "lr": 0.1, 'loss': b"mse"}
+  >>> params = {"max_depth": 5, "learning_rate": 0.1, 'loss': b"mse"}
   >>> booster = GBDTMulti(LIB, out_dim=out_dim, params=params)
   
 Set the training and eval datasets.

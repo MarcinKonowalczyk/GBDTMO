@@ -27,7 +27,7 @@ void DumpTrees(std::vector<Tree>& trees, const char* path) {
     size_t t = 0;
     for (auto& tree : trees) {
         outfile << "Booster[" << t << "]:\n";
-        for (auto it : tree.nonleafs) {
+        for (auto& it : tree.nonleafs) {
             auto v = it.second;
             outfile << "\t" << it.first << "," << v.parent << "," << v.left << "," << v.right << ","
                     << v.column << ",";
