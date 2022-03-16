@@ -212,8 +212,8 @@ void BoosterSingle::growth() {
 
 void BoosterSingle::train(int num_rounds) {
     srand(hp.seed);
-    G = malloc_G(Data.n * hp.out_dim);
-    H = malloc_H(Data.n * hp.out_dim, obj.constHessian, obj.hessian);
+    G = malloc_G();
+    H = malloc_H(obj.constHessian, obj.hessian);
     // auto early_stoper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
 
     const int out_dim = hp.out_dim;
@@ -221,7 +221,7 @@ void BoosterSingle::train(int num_rounds) {
     // start training
     for (size_t i = 0; i < num_rounds; ++i) {
         // Calculate the gradeint and the hessian for all the trees (columns of )
-        obj.f_grad(Data, Data.n, out_dim, G, H);
+        obj.f_grad(Data, out_dim, G, H);
         for (size_t j = 0; j < out_dim; ++j) {
             growth();
             
@@ -239,7 +239,7 @@ void BoosterSingle::train(int num_rounds) {
                 Data.preds -= pos;
             }
         }
-        double score = obj.f_score(Data, Data.n, out_dim);
+        double score = obj.f_score(Data, out_dim);
         // if (Eval.num > 0) {
         //     double metric = obj.f_metric(Eval, Eval.num, out_dim);
         //     if (hp.verbose) { showloss(score, metric, i); }

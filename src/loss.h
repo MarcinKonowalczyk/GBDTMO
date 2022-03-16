@@ -14,21 +14,21 @@
 // score function: dataset, rows, columns
 // function with "column": only used for multiple predictions one by one
 
-typedef void   (*func_grad)   (const Dataset& data, const int n, const int out_dim, double* g, double* h);
-typedef double (*func_score)  (const Dataset& data, const int n, const int out_dim);
-typedef double (*func_metric) (const Dataset& data, const int n, const int out_dim);
+typedef void   (*func_grad)   (const Dataset& data, const size_t out_dim, double* g, double* h);
+typedef double (*func_score)  (const Dataset& data, const size_t out_dim);
+typedef double (*func_metric) (const Dataset& data, const size_t out_dim);
 
-void   mse_grad              (const Dataset&, const int, const int, double*, double*);
-double mse_score             (const Dataset&, const int, const int);
-void   bce_grad              (const Dataset&, const int, const int, double*, double*);
-double bce_score             (const Dataset&, const int, const int);
-void   ce_grad               (const Dataset&, const int, const int, double*, double*);
-double ce_score              (const Dataset&, const int, const int);
-void   ce_grad_column        (const Dataset&, const int, const int, double*, double*);
-double ce_score_column       (const Dataset&, const int, const int);
-double acc_binary            (const Dataset&, const int, const int);
-double acc_multiclass        (const Dataset&, const int, const int);
-double acc_multiclass_column (const Dataset&, const int, const int);
+void   mse_grad              (const Dataset&, const size_t, double*, double*);
+double mse_score             (const Dataset&, const size_t);
+void   bce_grad              (const Dataset&, const size_t, double*, double*);
+double bce_score             (const Dataset&, const size_t);
+void   ce_grad               (const Dataset&, const size_t, double*, double*);
+double ce_score              (const Dataset&, const size_t);
+void   ce_grad_column        (const Dataset&, const size_t, double*, double*);
+double ce_score_column       (const Dataset&, const size_t);
+double acc_binary            (const Dataset&, const size_t);
+double acc_multiclass        (const Dataset&, const size_t);
+double acc_multiclass_column (const Dataset&, const size_t);
 
 struct Objective {
     bool constHessian = true;

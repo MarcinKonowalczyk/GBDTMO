@@ -349,18 +349,18 @@ void BoosterMulti::growth() {
 
 void BoosterMulti::train(int num_rounds) {
     srand(hp.seed);
-    G = malloc_G(Data.n * hp.out_dim);
-    H = malloc_H(Data.n * hp.out_dim, obj.constHessian, obj.hessian);
+    G = malloc_G();
+    H = malloc_H(obj.constHessian, obj.hessian);
     // auto early_stoper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
 
     for (size_t i = 0; i < num_rounds; ++i) {
-        obj.f_grad(Data, Data.n, hp.out_dim, G, H);
+        obj.f_grad(Data, hp.out_dim, G, H);
         growth();
 
         tree.pred_value_multi(Data.Features, Data.preds, hp, Data.n);
         trees.push_back(tree);
 
-        double score = obj.f_score(Data, Data.n, hp.out_dim);
+        double score = obj.f_score(Data, hp.out_dim);
         // if (Eval.num > 0) {
         //     double metric = obj.f_metric(Eval, Eval.num, hp.out_dim);
         //     if (hp.verbose) { showloss(score, metric, i); }

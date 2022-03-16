@@ -1,16 +1,17 @@
 #include "loss.h"
 
 // Mean square error
-void mse_grad(const Dataset& data, const int n, const int out_dim, double* g, double* h) {
-    auto preds = data.preds;
-    auto labels = data.Label_double;
-    int N = n * out_dim;
+void mse_grad(const Dataset& data, const size_t out_dim, double* g, double* h) {
+    const auto preds = data.preds;
+    const auto labels = data.Label_double;
+    const size_t N = data.n * out_dim;
     for (size_t i = 0; i < N; ++i) {
         g[i] = preds[i] - labels[i];
     }
 }
 
-double mse_score(const Dataset& data, const int n, const int out_dim) {
+double mse_score(const Dataset& data, const size_t out_dim) {
+    const size_t n = data.n;
     auto preds = data.preds;
     auto labels = data.Label_double;
     int N = n * out_dim;
@@ -22,7 +23,8 @@ double mse_score(const Dataset& data, const int n, const int out_dim) {
 }
 
 // Binary cross-entropy
-void bce_grad(const Dataset& data, const int n, const int out_dim, double* g, double* h) {
+void bce_grad(const Dataset& data, const size_t out_dim, double* g, double* h) {
+    const size_t n = data.n;
     auto preds = data.preds;
     auto labels = data.Label_int32;
     int N = n * out_dim;
@@ -33,7 +35,8 @@ void bce_grad(const Dataset& data, const int n, const int out_dim, double* g, do
     }
 }
 
-double bce_score(const Dataset& data, const int n, const int out_dim) {
+double bce_score(const Dataset& data, const size_t out_dim) {
+    const size_t n = data.n;
     auto preds = data.preds;
     auto labels = data.Label_int32;
     int N = n * out_dim;
@@ -48,7 +51,8 @@ double bce_score(const Dataset& data, const int n, const int out_dim) {
 
 // Cross-entropy
 // TODO: Precompute rec??
-void ce_grad(const Dataset& data, const int n, const int out_dim, double* g, double* h) {
+void ce_grad(const Dataset& data, const size_t out_dim, double* g, double* h) {
+    const size_t n = data.n;
     auto preds = data.preds;
     auto labels = data.Label_int32;
     std::vector<double> rec(out_dim);
@@ -65,7 +69,8 @@ void ce_grad(const Dataset& data, const int n, const int out_dim, double* g, dou
     }
 }
 
-double ce_score(const Dataset& data, const int n, const int out_dim) {
+double ce_score(const Dataset& data, const size_t out_dim) {
+    const size_t n = data.n;
     auto preds = data.preds;
     auto labels = data.Label_int32;
     int i, j, idx = 0;
@@ -80,7 +85,8 @@ double ce_score(const Dataset& data, const int n, const int out_dim) {
 }
 
 // ----------
-void ce_grad_column(const Dataset& data, const int n, const int out_dim, double* g, double* h) {
+void ce_grad_column(const Dataset& data, const size_t out_dim, double* g, double* h) {
+    const size_t n = data.n;
     auto preds = data.preds;
     auto labels = data.Label_int32;
     int i, j;
@@ -102,7 +108,8 @@ void ce_grad_column(const Dataset& data, const int n, const int out_dim, double*
     }
 }
 
-double ce_score_column(const Dataset& data, const int n, const int out_dim) {
+double ce_score_column(const Dataset& data, const size_t out_dim) {
+    const size_t n = data.n;
     auto preds = data.preds;
     auto labels = data.Label_int32;
     int i, j;
@@ -123,7 +130,8 @@ double ce_score_column(const Dataset& data, const int n, const int out_dim) {
 }
 
 // ----------
-double acc_multiclass(const Dataset& data, const int n, const int out_dim) {
+double acc_multiclass(const Dataset& data, const size_t out_dim) {
+    const size_t n = data.n;
     auto preds = data.preds;
     auto labels = data.Label_int32;
     int acc = 0;
@@ -143,7 +151,8 @@ double acc_multiclass(const Dataset& data, const int n, const int out_dim) {
     return static_cast<double> (acc) / n;
 }
 
-double acc_multiclass_column(const Dataset& data, const int n, const int out_dim) {
+double acc_multiclass_column(const Dataset& data, const size_t out_dim) {
+    const size_t n = data.n;
     auto preds = data.preds;
     auto labels = data.Label_int32;
     int acc = 0;
@@ -163,7 +172,8 @@ double acc_multiclass_column(const Dataset& data, const int n, const int out_dim
     return static_cast<double> (acc) / n;
 }
 
-double acc_binary(const Dataset& data, const int n, const int out_dim) {
+double acc_binary(const Dataset& data, const size_t out_dim) {
+    const size_t n = data.n;
     auto preds = data.preds;
     auto labels = data.Label_int32;
     int acc = 0, N = n * out_dim;

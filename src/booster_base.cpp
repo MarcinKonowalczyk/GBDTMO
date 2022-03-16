@@ -83,13 +83,11 @@ void BoosterBase::calc_maps() {
 }
 
 void BoosterBase::calc_eval_fraction() {
-    Data.n_train = Data.n;
-    Data.train_order.resize(Data.n_train);
+    Data.train_order.resize(Data.n);
     std::iota(Data.train_order.begin(), Data.train_order.end(), 0);
 
     if (hp.eval_fraction >= 0.0) {
         size_t n_eval = static_cast<size_t>(hp.eval_fraction * Data.n);
-        Data.n_train -= n_eval;
 
         // TODO: this can be done so much better!!
         std::vector<size_t> perm(Data.n);
@@ -125,15 +123,14 @@ void BoosterBase::rebuild_order(
     }
 }
 
-double* BoosterBase::malloc_G(size_t elements) {
-    return (double*) malloc(elements * sizeof(double));
+double* BoosterBase::malloc_G() const {
+    return (double*) malloc(Data.n * hp.out_dim * sizeof(double));
 }
 
-double* BoosterBase::malloc_H(size_t elements, bool constHessian = true, double constValue = 0.0) {
-    double* H = (double*) malloc(elements * sizeof(double));
-    if (constHessian) {
-        std::fill_n(H, elements, constValue);
-    }
+double* BoosterBase::malloc_H(const bool constHessian = true, const double constValue = 0.0) const {
+    const size_t n = Data.n * hp.out_dim;
+    double* H = (double*) malloc(n * sizeof(double));
+    if (constHessian) { std::fill_n(H, n, constValue); }
     return H;
 }
 

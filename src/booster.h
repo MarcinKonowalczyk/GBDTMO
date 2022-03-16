@@ -100,8 +100,8 @@ public:
 
 protected:
 
-    double* malloc_G(size_t elements);
-    double* malloc_H(size_t elements, bool constHessian, double constValue);
+    double* malloc_G() const;
+    double* malloc_H(const bool constHessian, const double constValue) const;
 
     virtual void boost_all(const std::vector<Histogram>& Hist) = 0;
     virtual void hist_column(

@@ -28,7 +28,6 @@ struct Dataset {
     double* Label_double; // N
     int32_t* Label_int32; // N
     std::vector<size_t> train_order; // N
-    size_t n_train;
     std::vector<std::vector<uint16_t>> train_maps; // N_train x inp_dim
 };
 
