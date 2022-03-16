@@ -56,12 +56,12 @@ if __name__ == '__main__':
     seed = 42
     booster_params = dict(
         max_depth=2,
-        learning_rate=0.8,
+        learning_rate=0.5,
         loss=Loss.mse,
         early_stop=10,
-        verbose=True,
+        verbose=False,
         seed=seed,
-        # eval_fraction=0.12345
+        eval_fraction=0.2
     )
     with seed_rng(seed):
         X_train, X_test = np.random.rand(10000, booster_shape[0]), np.random.rand(100, booster_shape[0])
@@ -88,9 +88,9 @@ if __name__ == '__main__':
     booster_multi.calc()
 
     with Timer("booster_single.train"):
-        booster_single.train(10)
+        booster_single.train(1000)
     with Timer("booster_multi.train"):
-        booster_multi.train(10)
+        booster_multi.train(1000)
 
     booster_single.dump('state_single.txt')
     state_single = booster_single.get_state()

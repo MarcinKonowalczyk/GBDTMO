@@ -10,6 +10,7 @@ CPP_FLAGS = -std=c++11
 CPP_FLAGS += -fPIC -Ofast
 CPP_FLAGS += -Wall -Wfatal-errors -pedantic
 CPP_FLAGS += -m64
+# CPP_FLAGS += -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize
 
 BUILD_DIR = build
 SOURCES_DIR = src

@@ -49,21 +49,6 @@ inline static double CalWeightL1(
     return -ThresholdL1(g_sum, reg_l1) / (h_sum + reg_l2);
 }
 
-
-// inline static void CalWeight(
-//     std::vector<double>& value,
-//     const double* g_sum,
-//     const double* h_sum,
-//     const double reg_l1,
-//     const double reg_l2
-// ) {
-//     if (reg_l1 == 0) {
-//         for (int i = 0; i < value.size(); ++i) { value[i] = -g_sum[i] / (h_sum[i] + reg_l2); }
-//     } else {
-//         for (int i = 0; i < value.size(); ++i) { value[i] = -ThresholdL1(g_sum[i], reg_l1) / (h_sum[i] + reg_l2); }
-//     }
-// }
-
 //=========================================================================
 //                                                                         
 //   ####   ####   #####   #####    #####                                
@@ -91,6 +76,16 @@ inline static double CalScoreL1(
 ) {
     return Sqr(ThresholdL1(g_sum, reg_l1)) / (h_sum + reg_l2);
 };
+
+//================================================================================================
+//                                                                                                
+//   ####   #####   #####  ######  ###    ###    ###    ##    ##                                
+//  ##     ##   ##  ##       ##    ## #  # ##   ## ##    ##  ##                                 
+//   ###   ##   ##  #####    ##    ##  ##  ##  ##   ##    ####                                  
+//     ##  ##   ##  ##       ##    ##      ##  #######   ##  ##                                 
+//  ####    #####   ##       ##    ##      ##  ##   ##  ##    ##                                
+//                                                                                                
+//================================================================================================
 
 inline static void Softmax(std::vector<double>& rec) {
     double wmax = rec[0];

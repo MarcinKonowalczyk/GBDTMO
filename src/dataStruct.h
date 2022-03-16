@@ -27,7 +27,8 @@ struct Dataset {
     double* preds; // N x out_dim
     double* Label_double; // N
     int32_t* Label_int32; // N
-    std::vector<size_t> train_order; // N
+    std::vector<size_t> train_order; // N_train
+    std::vector<size_t> eval_order; // N_eval
     std::vector<std::vector<uint16_t>> train_maps; // N_train x inp_dim
 };
 

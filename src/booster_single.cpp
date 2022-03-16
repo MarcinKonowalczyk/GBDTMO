@@ -214,7 +214,7 @@ void BoosterSingle::train(int num_rounds) {
     srand(hp.seed);
     G = malloc_G();
     H = malloc_H(obj.constHessian, obj.hessian);
-    // auto early_stoper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
+    auto early_stoper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
 
     const int out_dim = hp.out_dim;
 
@@ -239,23 +239,25 @@ void BoosterSingle::train(int num_rounds) {
                 Data.preds -= pos;
             }
         }
-        double score = obj.f_score(Data, out_dim);
-        // if (Eval.num > 0) {
-        //     double metric = obj.f_metric(Eval, Eval.num, out_dim);
-        //     if (hp.verbose) { showloss(score, metric, i); }
-        //     early_stoper.push(std::make_pair(metric, i));
-        //     if (!early_stoper.is_continue) {
-        //         auto info = early_stoper.info;
-        //         int round = std::get<1>(info);
-        //         showbest(std::get<0>(info), round);
-        //         trees.resize(hp.out_dim * round);
-        //         break;
-        //     }
-        // } else {
-        if (hp.verbose) { showloss(score, i); }
-        // }
+        double train_score = obj.f_partial_score(Data, out_dim, G, true);
+        if (hp.eval_fraction > 0.0) {
+            // double eval_score = obj.f_partial_score(Data, out_dim, G, false);
+            double metric = obj.f_metric(Data, out_dim, G, false);
+            if (hp.verbose) { showloss(train_score, metric, i); }
+            early_stoper.push(std::make_pair(metric, i));
+            if (!early_stoper.is_continue) {
+                auto info = early_stoper.info;
+                int round = std::get<1>(info);
+                showbest(std::get<0>(info), round);
+                trees.resize(hp.out_dim * round);
+                break;
+            }
+        } else {
+            if (hp.verbose) { showloss(train_score, i); }
+        }
+
     }
-    // if (early_stoper.is_continue && Eval.num > 0) { showbest(early_stoper.info); }
+    if (early_stoper.is_continue && hp.eval_fraction > 0.0) { showbest(early_stoper.info); }
     free(G);
     free(H);
 }

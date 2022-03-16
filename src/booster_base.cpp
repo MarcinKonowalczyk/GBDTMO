@@ -85,21 +85,24 @@ void BoosterBase::calc_maps() {
 void BoosterBase::calc_eval_fraction() {
     Data.train_order.resize(Data.n);
     std::iota(Data.train_order.begin(), Data.train_order.end(), 0);
+    Data.eval_order.clear();
 
     if (hp.eval_fraction >= 0.0) {
         size_t n_eval = static_cast<size_t>(hp.eval_fraction * Data.n);
 
-        // TODO: this can be done so much better!!
         std::vector<size_t> perm(Data.n);
         std::iota(perm.begin(), perm.end(), 0);
-
         std::random_shuffle(perm.begin(), perm.end());
 
         // Trim order to the train_subset
-        Data.train_order.erase(std::remove_if(
+        // TODO: Could use just std::partition, no?
+        //       I don't think the order matters, except for, maybe, the cache access.
+        auto it = std::stable_partition(
             Data.train_order.begin(), Data.train_order.end(),
-            [&perm, n_eval](size_t o) { return perm[o] < n_eval; }
-        ), Data.train_order.end());
+            [&perm, n_eval](size_t o) { return perm[o] >= n_eval; }
+        );
+        Data.eval_order.assign(it, Data.train_order.end());
+        Data.train_order.erase(it, Data.train_order.end());
     }
 }
 
