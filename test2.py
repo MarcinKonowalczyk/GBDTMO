@@ -30,7 +30,6 @@ common_params = dict(shape=(history, future), verbose=True, max_iter=100)
 search_params = dict(seed=(0,1))
 
 booster = GBDTMO(**common_params)
-booster.set_eval(X_test, y_test)
 # booster.fit(X_train, y_train)
 
 clf = GridSearchCV(booster, search_params)

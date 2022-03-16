@@ -90,10 +90,10 @@ def load_lib(path):
     _s(lib.Boost, [c_void_p])
     _s(lib.Train, [c_void_p, c_int])
     _s(lib.Reset, [c_void_p])
-    _s(lib.SetTrainData, [c_void_p, array_2d_double, array_2d_double, c_int])
+    _s(lib.SetData, [c_void_p, array_2d_double, array_2d_double, c_int])
     # _s(lib.SetEvalData, [c_void_p, array_2d_double, array_2d_double, c_int])
-    _s(lib.SetTrainLabelDouble, [c_void_p, array_2d_double])
-    _s(lib.SetTrainLabelInt, [c_void_p, array_2d_int])
+    _s(lib.SetLabelDouble, [c_void_p, array_2d_double])
+    _s(lib.SetLabelInt, [c_void_p, array_2d_int])
     # _s(lib.SetEvalLabelDouble, [c_void_p, array_2d_double])
     # _s(lib.SetEvalLabelInt, [c_void_p, array_2d_int])
 
@@ -101,7 +101,7 @@ def load_lib(path):
     _s(lib.GetCurrentParameters, [c_void_p], HyperParameters)
     _s(lib.SetParameters, [c_void_p, HyperParameters])
 
-    _s(lib.CalcTrainMaps, [c_void_p])
+    _s(lib.Calc, [c_void_p])
     _s(lib.Predict, [c_void_p, array_2d_double, array_2d_double, c_int, c_int])
     _s(lib.SingleNew, [HyperParameters], c_void_p)
     _s(lib.MultiNew, [HyperParameters], c_void_p)

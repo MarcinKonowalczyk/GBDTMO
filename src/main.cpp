@@ -25,8 +25,8 @@ void test(int inp_dim, int out_dim, int N, const char* mode) {
     int t_in = 0, t_out = 0;
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < out_dim; ++j) {
-            preds[t_out + j] = 0.0f;
-            preds_eval[t_out + j] = 0.0f;
+            preds[t_out + j] = 0.0;
+            preds_eval[t_out + j] = 0.0;
         }
         if (data[t_in] + data[t_in + 1] > 1.0) {
             lables[i] = 1;
@@ -44,43 +44,37 @@ void test(int inp_dim, int out_dim, int N, const char* mode) {
     for (int i = 0; i < inp_dim; ++i) {
         bins[i] = 19;
         for (int j = 0; j < 19; ++j) {
-            values[i * 19 + j] = (j + 1) / 20.0f;
+            values[i * 19 + j] = (j + 1) / 20.0;
         }
     }
 
     if (mode == "single") {
         BoosterSingle m = BoosterSingle(inp_dim, "ce_column", 3, 32, 0, 2, 2, 0.5, 0.0, 1.0, 1e-3, 0.0, 0, true, 16);
         
-        m.set_train_data(data, preds, N);
-        m.set_eval_data(data_eval, preds_eval, N);
-        m.calc_train_maps();
+        m.set_data(data, preds, N);
+        m.calc_maps();
 
-        m.set_train_label(lables);
-        m.set_eval_label(lables_eval);
+        m.set_label(lables);
         m.train(30);
         m.dump("single.txt");
     }
     if (mode == "multi") {
         BoosterMulti m = BoosterMulti(inp_dim, out_dim, 0, "ce", 3, 32, 0, 2, 2, 0.5, 0.0, 1.0, 1e-3, 0.0, 0, true, true, 16);
         
-        m.set_train_data(data, preds, N);
-        m.set_eval_data(data_eval, preds_eval, N);
-        m.calc_train_maps();
+        m.set_data(data, preds, N);
+        m.calc_maps();
 
-        m.set_train_label(lables);
-        m.set_eval_label(lables_eval);
+        m.set_label(lables);
         m.train(30);
         m.dump("multi.txt");
     }
     if (mode == "sparse") {
         BoosterMulti m = BoosterMulti(inp_dim, out_dim, out_dim / 2, "ce", 3, 32, 0, 2, 2, 0.5, 0.0, 1.0, 1e-3, 0.0, 0, true, true, 16);
         
-        m.set_train_data(data, preds, N);
-        m.set_eval_data(data_eval, preds_eval, N);
-        m.calc_train_maps();
+        m.set_data(data, preds, N);
+        m.calc_maps();
 
-        m.set_train_label(lables);
-        m.set_eval_label(lables_eval);
+        m.set_label(lables);
         m.train(30);
         m.dump("sparse.txt");
     }

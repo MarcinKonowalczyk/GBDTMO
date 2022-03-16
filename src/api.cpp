@@ -12,12 +12,9 @@ extern "C" {
 //                                                                                       
 //=======================================================================================
 
-void SetTrainData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_train_data(features, preds, n); }
-// void SetEvalData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_eval_data(features, preds, n); }
-void SetTrainLabelDouble(BoosterBase* foo, double* label) { foo->set_train_label(label); }
-void SetTrainLabelInt(BoosterBase* foo, int32_t* label) { foo->set_train_label(label); }
-// void SetEvalLabelDouble(BoosterBase* foo, double* label) { foo->set_eval_label(label); }
-// void SetEvalLabelInt(BoosterBase* foo, int32_t* label) { foo->set_eval_label(label); }
+void SetData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_data(features, preds, n); }
+void SetLabelDouble(BoosterBase* foo, double* label) { foo->set_label(label); }
+void SetLabelInt(BoosterBase* foo, int32_t* label) { foo->set_label(label); }
 
 //========================================================================
 //                                                                        
@@ -29,7 +26,7 @@ void SetTrainLabelInt(BoosterBase* foo, int32_t* label) { foo->set_train_label(l
 //                                                                        
 //========================================================================
 
-void CalcTrainMaps(BoosterBase* foo) { foo->calc_train_maps(); }
+void Calc(BoosterBase* foo) { foo->calc_maps(); foo->calc_eval_fraction(); }
 void Boost(BoosterBase* foo) { foo->growth(); foo->update(); }
 void Train(BoosterBase* foo, int num_rounds) { foo->train(num_rounds); }
 void Predict(BoosterBase* foo, double* features, double* preds, int n, int num_trees) { foo->predict(features, preds, n, num_trees); }

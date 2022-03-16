@@ -32,7 +32,7 @@ double acc_multiclass_column (const Dataset&, const int, const int);
 
 struct Objective {
     bool constHessian = true;
-    double hessian = 1.0f;
+    double hessian = 1.0;
     double largerBetter = false;
     func_grad f_grad;
     func_score f_score;

@@ -81,14 +81,11 @@ if __name__ == '__main__':
     booster_single = GBDTSingle(shape=booster_shape, params=booster_params)
     booster_multi = GBDTMulti(shape=booster_shape, params=booster_params)
 
-    booster_single.set_train_data(X_train, y_train)
-    # with Timer("booster_single.calc_train_maps()"):
-    booster_single.calc_train_maps()
-    # booster_single.set_eval_data(X_test, y_test)
+    booster_single.set_data(X_train, y_train)
+    booster_single.calc()
 
-    booster_multi.set_train_data(X_train, y_train)
-    booster_multi.calc_train_maps()
-    # booster_multi.set_eval_data(X_test, y_test)
+    booster_multi.set_data(X_train, y_train)
+    booster_multi.calc()
 
     with Timer("booster_single.train"):
         booster_single.train(10)

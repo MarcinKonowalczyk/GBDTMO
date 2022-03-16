@@ -71,13 +71,10 @@ class GBDTMO(BaseEstimator, RegressorMixin):
             self._booster.params = {name: value}
         super().__setattr__(name, value)
 
-    # def set_eval(self, X, y):
-    #     self._booster.set_eval_data(X, y)
-
     def fit(self, X, y):
         self._booster.reset()
-        self._booster.set_train_data(X, y)
-        self._booster.calc_train_maps()
+        self._booster.set_data(X, y)
+        self._booster.calc()
         self._booster.train(self.max_iter)
 
     def predict(self, X):

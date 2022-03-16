@@ -108,7 +108,7 @@ void BoosterMulti::hist_all(
     std::vector<Histogram>& Hists
 ) const {
     for (size_t i = 0; i < hp.inp_dim; ++i) {
-        hist_column(order, Hists[i], Train.train_maps[i]);
+        hist_column(order, Hists[i], Data.train_maps[i]);
     }
 }
 
@@ -259,7 +259,6 @@ void BoosterMulti::build_tree_best() {
     std::vector<size_t> order_l(rows_l), order_r(rows_r);
     rebuild_order(info.order, order_l, order_r, info.split.column, info.split.bin);
     std::vector<Histogram> Hist_l(hp.inp_dim), Hist_r(hp.inp_dim);
-    std::cout << "and here!\n";
 
     if (rows_l >= rows_r) {
         for (size_t i = 0; i < hp.inp_dim; ++i) { Hist_r[i] = Histogram(bin_nums[i], hp.out_dim); }
@@ -325,7 +324,7 @@ void BoosterMulti::build_tree_best() {
 
 void BoosterMulti::update() {
     tree.shrink(hp.learning_rate);
-    tree.pred_value_multi(Train.Features, Train.Preds, hp, Train.n);
+    tree.pred_value_multi(Data.Features, Data.Preds, hp, Data.n);
     trees.push_back(tree);
 }
 
@@ -335,7 +334,7 @@ void BoosterMulti::growth() {
 
     std::vector<Histogram> Hist(hp.inp_dim);
     for (size_t i = 0; i < hp.inp_dim; ++i) { Hist[i] = Histogram(bin_nums[i], hp.out_dim); }
-    hist_all(Train.train_order, Hist);
+    hist_all(Data.train_order, Hist);
     if (hp.topk == 0) {
         get_score_opt(Hist[rand() % hp.inp_dim], Opt, Score, Score_sum);
     } else {
@@ -344,7 +343,7 @@ void BoosterMulti::growth() {
     boost_all(Hist);
     if (meta.is_set && meta.gain > -10.0) {
         tree.add_root_nonleaf(meta.column, meta.bin, meta.threshold);
-        cache.push(CacheInfo(-1, 0, meta, Train.train_order, Hist));
+        cache.push(CacheInfo(-1, 0, meta, Data.train_order, Hist));
         build_tree_best();
     } else {
         auto node = (hp.topk > 0) ? LeafNode(hp.out_dim, OptPair) : LeafNode(Opt);
@@ -354,16 +353,15 @@ void BoosterMulti::growth() {
 
 void BoosterMulti::train(int num_rounds) {
     srand(hp.seed);
-    G = malloc_G(Train.n * hp.out_dim);
-    H = malloc_H(Train.n * hp.out_dim, obj.constHessian, obj.hessian);
+    G = malloc_G(Data.n * hp.out_dim);
+    H = malloc_H(Data.n * hp.out_dim, obj.constHessian, obj.hessian);
     // auto early_stoper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
-    calc_eval_indices();
-    
+
     for (size_t i = 0; i < num_rounds; ++i) {
-        obj.f_grad(Train, Train.n, hp.out_dim, G, H);
+        obj.f_grad(Data, Data.n, hp.out_dim, G, H);
         growth();
         update();
-        double score = obj.f_score(Train, Train.n, hp.out_dim);
+        double score = obj.f_score(Data, Data.n, hp.out_dim);
         // if (Eval.num > 0) {
         //     double metric = obj.f_metric(Eval, Eval.num, hp.out_dim);
         //     if (hp.verbose) { showloss(score, metric, i); }

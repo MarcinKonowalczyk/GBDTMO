@@ -59,14 +59,11 @@ public:
     virtual ~BoosterBase() = default;
 
     void set_gh(double*, double*);
-    void set_train_data(double* features, double* preds, size_t n);
-    // void set_eval_data(double* features, double* preds, size_t n);
-    void set_train_label(double*);
-    void set_train_label(int32_t*);
-    // void set_eval_label(double*);
-    // void set_eval_label(int32_t*);
-    void calc_train_maps();
-    void calc_eval_indices();
+    void set_data(double* features, double* preds, size_t n);
+    void set_label(double*);
+    void set_label(int32_t*);
+    void calc_maps();
+    void calc_eval_fraction();
 
     void rebuild_order(
         const std::vector<size_t>& order,
@@ -122,8 +119,7 @@ protected:
     std::vector<uint16_t> bin_nums;
     std::vector<std::vector<double>> bin_values;
     SplitInfo meta;
-    Dataset Train;
-    // Dataset Eval;
+    Dataset Data;
     std::vector<size_t> eval_indices;
     std::vector<size_t> train_indices;
     double* G;
