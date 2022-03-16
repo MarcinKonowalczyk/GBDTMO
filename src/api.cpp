@@ -27,7 +27,6 @@ void SetLabelInt(BoosterBase* foo, int32_t* label) { foo->set_label(label); }
 //========================================================================
 
 void Calc(BoosterBase* foo) { foo->calc_maps(); foo->calc_eval_fraction(); }
-void Boost(BoosterBase* foo) { foo->growth(); foo->update(); }
 void Train(BoosterBase* foo, int num_rounds) { foo->train(num_rounds); }
 void Predict(BoosterBase* foo, double* features, double* preds, int n, int num_trees) { foo->predict(features, preds, n, num_trees); }
 void Reset(BoosterBase* foo) { foo->reset(); }

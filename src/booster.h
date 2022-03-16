@@ -84,7 +84,6 @@ public:
     void dump(const char* path) { DumpTrees(trees, path); }
 
     // API
-    virtual void update() = 0;
     virtual void growth() = 0;
     virtual void train(int) = 0;
     virtual void predict(const double* features, double* preds, const size_t n, int num_trees) = 0;
@@ -141,7 +140,6 @@ protected:
 class BoosterSingle : public BoosterBase {
 public:
     BoosterSingle(const HyperParameters hp);
-    void update() override;
     void growth() override;
     void train(int) override;
     void predict(const double* features, double* preds, const size_t n, int num_trees) override;
@@ -181,7 +179,6 @@ private:
 class BoosterMulti : public BoosterBase {
 public:
     BoosterMulti(const HyperParameters hp);
-    void update() override;
     void growth() override;
     void train(int) override;
     void predict(const double* features, double* preds, const size_t n, int num_trees) override;

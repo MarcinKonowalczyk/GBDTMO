@@ -87,15 +87,11 @@ def load_lib(path):
         fun.argtypes = argtypes
         fun.restype = restype
 
-    _s(lib.Boost, [c_void_p])
     _s(lib.Train, [c_void_p, c_int])
     _s(lib.Reset, [c_void_p])
     _s(lib.SetData, [c_void_p, array_2d_double, array_2d_double, c_int])
-    # _s(lib.SetEvalData, [c_void_p, array_2d_double, array_2d_double, c_int])
     _s(lib.SetLabelDouble, [c_void_p, array_2d_double])
     _s(lib.SetLabelInt, [c_void_p, array_2d_int])
-    # _s(lib.SetEvalLabelDouble, [c_void_p, array_2d_double])
-    # _s(lib.SetEvalLabelInt, [c_void_p, array_2d_int])
 
     _s(lib.GetDefaultParameters, None, HyperParameters)
     _s(lib.GetCurrentParameters, [c_void_p], HyperParameters)
@@ -114,7 +110,6 @@ def load_lib(path):
     _s(lib.GetNonleafNodes, [c_void_p, array_2d_int, array_1d_double])
     _s(lib.GetLeafNodes, [c_void_p, array_2d_double])
 
-    # _s(lib.GetState, [c_void_p])
     _s(lib.Dump, [c_void_p, c_char_p])
     _s(lib.Load, [c_void_p, c_char_p])
 

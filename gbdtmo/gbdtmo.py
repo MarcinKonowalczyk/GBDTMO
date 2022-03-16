@@ -79,9 +79,6 @@ class GBDTBase:
         _f = self.lib.SetLabelDouble if is_float else self.lib.SetLabelInt
         _f(self._booster, y)
 
-    def boost(self):
-        self.lib.Boost(self._booster)
-
     def dump(self, path):
         path = self._ensure_bytes(path)
         self.lib.Dump(self._booster, path)

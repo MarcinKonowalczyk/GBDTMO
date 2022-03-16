@@ -210,15 +210,6 @@ void BoosterSingle::growth() {
     tree.shrink(hp.learning_rate);
 }
 
-void BoosterSingle::update() {
-    tree.shrink(hp.learning_rate);
-    tree.pred_value_single(Data.Features, Data.Preds, hp, Data.n);
-    // if (Eval.num > 0) {
-    //     tree.pred_value_single(Eval.Features, Eval.Preds, hp, Eval.num);
-    // }
-    trees.push_back(tree);
-}
-
 void BoosterSingle::train(int num_rounds) {
     srand(hp.seed);
     G = malloc_G(Data.n * hp.out_dim);
@@ -234,20 +225,18 @@ void BoosterSingle::train(int num_rounds) {
         for (size_t j = 0; j < out_dim; ++j) {
             growth();
             
-            tree.pred_value_single(Data.Features, Data.Preds, hp, Data.n);
+            tree.pred_value_single(Data.Features, Data.preds, hp, Data.n);
             trees.push_back(tree);
 
             if (j < out_dim - 1) {
                 G += Data.n;
                 H += Data.n;
-                Data.Preds += Data.n;
-                // Eval.Preds += Eval.num;
+                Data.preds += Data.n;
             } else {
                 const int pos = (out_dim - 1) * Data.n;
                 G -= pos;
                 H -= pos;
-                Data.Preds -= pos;
-                // Eval.Preds -= (out_dim - 1) * Eval.num;
+                Data.preds -= pos;
             }
         }
         double score = obj.f_score(Data, Data.n, out_dim);

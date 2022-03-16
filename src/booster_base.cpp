@@ -31,7 +31,7 @@ BoosterBase::BoosterBase(HyperParameters p) : hp(p) {
 
 void BoosterBase::set_data(double* features, double* preds, size_t n) {
     Data.Features = features;
-    Data.Preds = preds;
+    Data.preds = preds;
     Data.n = n;
 }
 

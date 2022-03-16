@@ -24,7 +24,7 @@
 struct Dataset {
     size_t n = 0;
     double* Features; // N x inp_dim
-    double* Preds; // N x out_dim
+    double* preds; // N x out_dim
     double* Label_double; // N
     int32_t* Label_int32; // N
     std::vector<size_t> train_order; // N

@@ -322,12 +322,6 @@ void BoosterMulti::build_tree_best() {
 //                                                                           
 //===========================================================================
 
-void BoosterMulti::update() {
-    tree.shrink(hp.learning_rate);
-    tree.pred_value_multi(Data.Features, Data.Preds, hp, Data.n);
-    trees.push_back(tree);
-}
-
 void BoosterMulti::growth() {
     tree.clear();
     cache.clear();
@@ -349,6 +343,8 @@ void BoosterMulti::growth() {
         auto node = (hp.topk > 0) ? LeafNode(hp.out_dim, OptPair) : LeafNode(Opt);
         tree.add_left_leaf(-1, node);
     }
+    // Finally shrink by the learning rate
+    tree.shrink(hp.learning_rate);
 }
 
 void BoosterMulti::train(int num_rounds) {
@@ -360,7 +356,10 @@ void BoosterMulti::train(int num_rounds) {
     for (size_t i = 0; i < num_rounds; ++i) {
         obj.f_grad(Data, Data.n, hp.out_dim, G, H);
         growth();
-        update();
+
+        tree.pred_value_multi(Data.Features, Data.preds, hp, Data.n);
+        trees.push_back(tree);
+
         double score = obj.f_score(Data, Data.n, hp.out_dim);
         // if (Eval.num > 0) {
         //     double metric = obj.f_metric(Eval, Eval.num, hp.out_dim);

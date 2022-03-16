@@ -2,7 +2,7 @@
 
 // Mean square error
 void mse_grad(const Dataset& data, const int n, const int out_dim, double* g, double* h) {
-    auto preds = data.Preds;
+    auto preds = data.preds;
     auto labels = data.Label_double;
     int N = n * out_dim;
     for (size_t i = 0; i < N; ++i) {
@@ -11,7 +11,7 @@ void mse_grad(const Dataset& data, const int n, const int out_dim, double* g, do
 }
 
 double mse_score(const Dataset& data, const int n, const int out_dim) {
-    auto preds = data.Preds;
+    auto preds = data.preds;
     auto labels = data.Label_double;
     int N = n * out_dim;
     double s = 0.0;
@@ -23,7 +23,7 @@ double mse_score(const Dataset& data, const int n, const int out_dim) {
 
 // Binary cross-entropy
 void bce_grad(const Dataset& data, const int n, const int out_dim, double* g, double* h) {
-    auto preds = data.Preds;
+    auto preds = data.preds;
     auto labels = data.Label_int32;
     int N = n * out_dim;
     for (size_t i = 0; i < N; ++i) {
@@ -34,7 +34,7 @@ void bce_grad(const Dataset& data, const int n, const int out_dim, double* g, do
 }
 
 double bce_score(const Dataset& data, const int n, const int out_dim) {
-    auto preds = data.Preds;
+    auto preds = data.preds;
     auto labels = data.Label_int32;
     int N = n * out_dim;
     double score = 0.0;
@@ -49,7 +49,7 @@ double bce_score(const Dataset& data, const int n, const int out_dim) {
 // Cross-entropy
 // TODO: Precompute rec??
 void ce_grad(const Dataset& data, const int n, const int out_dim, double* g, double* h) {
-    auto preds = data.Preds;
+    auto preds = data.preds;
     auto labels = data.Label_int32;
     std::vector<double> rec(out_dim);
     int i, j, idx = 0;
@@ -66,7 +66,7 @@ void ce_grad(const Dataset& data, const int n, const int out_dim, double* g, dou
 }
 
 double ce_score(const Dataset& data, const int n, const int out_dim) {
-    auto preds = data.Preds;
+    auto preds = data.preds;
     auto labels = data.Label_int32;
     int i, j, idx = 0;
     double score_sum = 0.0;
@@ -81,7 +81,7 @@ double ce_score(const Dataset& data, const int n, const int out_dim) {
 
 // ----------
 void ce_grad_column(const Dataset& data, const int n, const int out_dim, double* g, double* h) {
-    auto preds = data.Preds;
+    auto preds = data.preds;
     auto labels = data.Label_int32;
     int i, j;
     std::vector<int> idx(out_dim);
@@ -103,7 +103,7 @@ void ce_grad_column(const Dataset& data, const int n, const int out_dim, double*
 }
 
 double ce_score_column(const Dataset& data, const int n, const int out_dim) {
-    auto preds = data.Preds;
+    auto preds = data.preds;
     auto labels = data.Label_int32;
     int i, j;
     std::vector<int> idx(out_dim);
@@ -124,7 +124,7 @@ double ce_score_column(const Dataset& data, const int n, const int out_dim) {
 
 // ----------
 double acc_multiclass(const Dataset& data, const int n, const int out_dim) {
-    auto preds = data.Preds;
+    auto preds = data.preds;
     auto labels = data.Label_int32;
     int acc = 0;
     for (size_t i = 0; i < n; ++i) {
@@ -144,7 +144,7 @@ double acc_multiclass(const Dataset& data, const int n, const int out_dim) {
 }
 
 double acc_multiclass_column(const Dataset& data, const int n, const int out_dim) {
-    auto preds = data.Preds;
+    auto preds = data.preds;
     auto labels = data.Label_int32;
     int acc = 0;
     for (size_t i = 0; i < n; ++i) {
@@ -164,7 +164,7 @@ double acc_multiclass_column(const Dataset& data, const int n, const int out_dim
 }
 
 double acc_binary(const Dataset& data, const int n, const int out_dim) {
-    auto preds = data.Preds;
+    auto preds = data.preds;
     auto labels = data.Label_int32;
     int acc = 0, N = n * out_dim;
     for (size_t i = 0; i < N; ++i) {
