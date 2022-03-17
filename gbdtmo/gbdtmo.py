@@ -19,11 +19,10 @@ class GBDTBase(BoosterLibWrapper):
         super().__init__()
         self.inp_dim, self.out_dim = shape
         _params = dict(self._lib.GetDefaultParameters())
-        _params.update(dict(inp_dim=self.inp_dim, out_dim=self.out_dim))
         _params.update(params)
 
         lib_init = getattr(self._lib, self._lib_init_name)
-        self._booster = lib_init(self.inp_dim, self.out_dim, HyperParameters(**_params))
+        self._booster = lib_init(Shape(*shape), HyperParameters(**_params))
 
     @property
     def params(self):

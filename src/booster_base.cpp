@@ -15,6 +15,8 @@
 //=================================================================
 
 BoosterBase::BoosterBase(const Shape s, HyperParameters p) : shape(s), hp(p) {
+    std::cout << "hello from BoosterBase initaliser!\n";
+    std::cout << s.inp_dim << " " << s.out_dim << "\n";
     cache = TopkDeque<CacheInfo>(hp.max_caches);
     obj = Objective(hp.loss);
 }

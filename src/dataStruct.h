@@ -54,20 +54,20 @@ constexpr static unsigned int hash(const char* s, int off = 0) {
 
 struct HyperParameters {
     Loss loss;
-    int max_depth;
-    int max_leaves;
+    unsigned int max_depth;
+    unsigned int max_leaves;
     int seed;
-    int min_samples;
+    unsigned int min_samples;
     double learning_rate;
     double reg_l1;
     double reg_l2;
     double gamma;
-    int early_stop;
+    unsigned int early_stop;
     bool verbose;
-    int max_caches;
-    int topk;
+    unsigned int max_caches;
+    unsigned int topk;
     bool one_side;
-    int max_bins;
+    unsigned int max_bins;
     double alpha;
     double eval_fraction;
 

@@ -55,33 +55,38 @@ array_2d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=2, flags='C_CONTIGUOUS')
 class Loss(Enumeration):
     _members_ = [("mse", 0), ("ce", 1), ("ce_column", 2), ("bce", 3)]
 
-
-class HyperParameters(Structure):
-    _fields_ = [
-        ("loss", Loss),
-        ("max_depth", c_int),
-        ("max_leaves", c_int),
-        ("seed", c_int),
-        ("min_samples", c_int),
-        ("learning_rate", c_double),
-        ("reg_l1", c_double),
-        ("reg_l2", c_double),
-        ("gamma", c_double),
-        ("early_stop", c_int),
-        ("verbose", c_bool),
-        ("max_caches", c_int),
-        ("topk", c_int),
-        ("one_side", c_bool),
-        ("max_bins", c_int),
-        ("alpha", c_double),
-        ("eval_fraction", c_double),
-    ]
-
+class IterStructureMixin:
     def __iter__(self):
         """Iterate through fields of self. This allows calls like `dict(hp)`"""
         for field in self._fields_:
             yield (field[0], getattr(self, field[0]))
 
+class HyperParameters(Structure, IterStructureMixin):
+    _fields_ = [
+        ("loss", Loss),
+        ("max_depth", c_uint),
+        ("max_leaves", c_uint),
+        ("seed", c_uint),
+        ("min_samples", c_uint),
+        ("learning_rate", c_double),
+        ("reg_l1", c_double),
+        ("reg_l2", c_double),
+        ("gamma", c_double),
+        ("early_stop", c_uint),
+        ("verbose", c_bool),
+        ("max_caches", c_uint),
+        ("topk", c_uint),
+        ("one_side", c_bool),
+        ("max_bins", c_uint),
+        ("alpha", c_double),
+        ("eval_fraction", c_double),
+    ]
+
+class Shape(Structure, IterStructureMixin):
+    _fields_ = [
+        ("inp_dim", c_size_t),
+        ("out_dim", c_size_t),
+    ]
 
 class c_BoosterBase_p(c_void_p):
     pass
@@ -115,8 +120,8 @@ def load_lib(path: str) -> CDLL:
 
     _s(lib.Calc, [c_BoosterBase_p])
     _s(lib.Predict, [c_BoosterBase_p, array_2d_double, array_2d_double, c_int, c_int])
-    _s(lib.SingleNew, [c_int, c_int, HyperParameters], c_BoosterBase_p)
-    _s(lib.MultiNew, [c_int, c_int, HyperParameters], c_BoosterBase_p)
+    _s(lib.SingleNew, [Shape, HyperParameters], c_BoosterBase_p)
+    _s(lib.MultiNew, [Shape, HyperParameters], c_BoosterBase_p)
     _s(lib.Delete, [c_BoosterBase_p])
 
     # Functions to get the state of the booster
