@@ -7,8 +7,10 @@ import numpy as np
 from gbdtmo import GBDTMulti, GBDTSingle, Loss
 
 import time
+
+
 @contextmanager
-def Timer(message = None):
+def Timer(message=None):
     t1 = time.monotonic()
     try:
         yield
@@ -17,6 +19,7 @@ def Timer(message = None):
         if message:
             print(f"{message} : ", end='')
         print(f"dt = {t2-t1} s")
+
 
 @contextmanager
 def seed_rng(random_state):
@@ -54,15 +57,13 @@ uid = lambda: ''.join(sample(ascii_letters, 10))
 if __name__ == '__main__':
     booster_shape = (10, 2)
     seed = 42
-    booster_params = dict(
-        max_depth=2,
-        learning_rate=0.5,
-        loss=Loss.mse,
-        early_stop=10,
-        verbose=False,
-        seed=seed,
-        eval_fraction=0.2
-    )
+    booster_params = dict(max_depth=2,
+                          learning_rate=0.9,
+                          loss=Loss.mse,
+                          early_stop=10,
+                          verbose=False,
+                          seed=seed,
+                          eval_fraction=0.2)
     with seed_rng(seed):
         X_train, X_test = np.random.rand(10000, booster_shape[0]), np.random.rand(100, booster_shape[0])
         M = np.random.randn(5 * booster_shape[0], booster_shape[1])
@@ -81,11 +82,8 @@ if __name__ == '__main__':
     booster_single = GBDTSingle(shape=booster_shape, params=booster_params)
     booster_multi = GBDTMulti(shape=booster_shape, params=booster_params)
 
-    booster_single.set_data(X_train, y_train)
-    booster_single.calc()
-
-    booster_multi.set_data(X_train, y_train)
-    booster_multi.calc()
+    booster_single.set_data_regression(X_train, y_train)
+    booster_multi.set_data_regression(X_train, y_train)
 
     with Timer("booster_single.train"):
         booster_single.train(1000)

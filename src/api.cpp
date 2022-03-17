@@ -12,9 +12,8 @@ extern "C" {
 //                                                                                       
 //=======================================================================================
 
-void SetData(BoosterBase* foo, double* features, double* preds, int n) { foo->set_data(features, preds, n); }
-void SetLabelDouble(BoosterBase* foo, double* label) { foo->set_label(label); }
-void SetLabelInt(BoosterBase* foo, int32_t* label) { foo->set_label(label); }
+void SetDataRegression(BoosterBase* foo, double* features, double* preds, double* label, int n) { foo->set_data(features, preds, n); foo->set_label(label); }
+void SetDataClassification(BoosterBase* foo, double* features, double* preds, int32_t* label, int n) { foo->set_data(features, preds, n); foo->set_label(label); }
 
 //========================================================================
 //                                                                        

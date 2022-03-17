@@ -4,6 +4,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 
 HP_NAMES = list(zip(*HyperParameters._fields_))[0]
 
+
 class GBDTMO(BaseEstimator, RegressorMixin):
     def __init__(
         self,
@@ -57,7 +58,7 @@ class GBDTMO(BaseEstimator, RegressorMixin):
         # assert set(params) == set(HP_NAMES)
         self.__dict__.update(params)
         self._booster = (GBDTMulti if self.correlated else GBDTSingle)(shape, params)
-        
+
     def __getstate__(self):
         state = super().__getstate__()
         del state['_booster']

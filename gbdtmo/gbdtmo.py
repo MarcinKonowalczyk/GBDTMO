@@ -13,31 +13,22 @@ from .lib_utils import *
 
 BASE_SCORE = 0.0
 
-class GBDTBase:
 
-    _lib_init = None
-
+class GBDTBase(BoosterLibWrapper):
     def __init__(self, shape, params={}):
-        # Make sure the required parameters are set in the children classes
-        for required_attr in ('_lib_init', ):
-            if getattr(self, required_attr) is None:
-                raise NotImplementedError(f"Attribute '{required_attr}' not set")
-
-        self.lib = load_lib(LIB)
+        super().__init__()
         self.inp_dim, self.out_dim = shape
-
-        _params = dict(self.lib.GetDefaultParameters())
+        _params = dict(self._lib.GetDefaultParameters())
         _params.update(dict(inp_dim=self.inp_dim, out_dim=self.out_dim))
         _params.update(params)
 
-        # Get pointer to the C object
-        lib_init = getattr(self.lib, self._lib_init)
+        lib_init = getattr(self._lib, self._lib_init_name)
         self._booster = lib_init(HyperParameters(**_params))
 
     @property
     def params(self):
-        return dict(self.lib.GetCurrentParameters(self._booster))
-    
+        return dict(self._lib_GetCurrentParameters())
+
     @params.setter
     def params(self, value):
         if isinstance(value, HyperParameters):
@@ -46,67 +37,31 @@ class GBDTBase:
             # Update the existing params with the suplied dict
             _params = self.params
             for key in value:
-                if key not in _params: 
+                if key not in _params:
                     raise KeyError(f"Unknown key '{key}'")
             _params.update(value)
             value = HyperParameters(**_params)
         else:
             raise TypeError(f"'value' must be of type 'HyperParameters' or 'dict', not '{type(value)}'")
-        self.lib.SetParameters(self._booster, value)
-
-    def __del__(self):
-        self.lib.Delete(self._booster)
-
-    @staticmethod
-    def _ensure_bytes(string):
-        if isinstance(string, str):
-            return string.encode()
-        elif isinstance(string, bytes):
-            return string
-        else:
-            raise TypeError(
-                f"Strings passed to C must be byte arrays. Type '{type(string)}' is not convertible to a byte array.")
-
-    @staticmethod
-    def _check_label(y: np.ndarray):
-        is_float = (y.dtype == np.float64)
-        if not (is_float or y.dtype == np.int32):
-            raise TypeError(f"label must be float64 or int32 (not {y.dtype})")
-        return is_float
-
-    def _set_label(self, y: np.ndarray):
-        is_float = self._check_label(y)
-        _f = self.lib.SetLabelDouble if is_float else self.lib.SetLabelInt
-        _f(self._booster, y)
+        self._lib_SetParameters(value)
 
     def dump(self, path):
-        path = self._ensure_bytes(path)
-        self.lib.Dump(self._booster, path)
+        self._lib_Dump(path)
 
     def load(self, path):
-        path = self._ensure_bytes(path)
-        self.lib.Load(self._booster, path)
-
-    def train(self, num):
-        self.lib.Train(self._booster, num)
-
-    def reset(self):
-        self.lib.Reset(self._booster)
-
-    def _get_n_trees(self):
-        return self.lib.GetNTrees(self._booster)
+        self._lib_Load(path)
 
     def get_state(self):
-        N = self._get_n_trees()
+        N = self._lib_GetNTrees()
         tree_array, threshold_array = self._get_nonleaf_nodes(N)
         leaf_array = self._get_leaf_nodes(N)
         return tree_array, threshold_array, leaf_array
 
     def _get_nonleaf_sizes(self, n_trees=None):
         """ Get the array describing the sizes of each of the trees in the nonleaf array """
-        n_trees = self._get_n_trees() if not n_trees else n_trees
+        n_trees = self._lib_GetNTrees() if not n_trees else n_trees
         nonleaf_sizes = np.zeros(n_trees, dtype=np.uint16)
-        self.lib.GetNonleafSizes(self._booster, nonleaf_sizes)
+        self._lib_GetNonleafSizes(nonleaf_sizes)
         return nonleaf_sizes
 
     @staticmethod
@@ -126,7 +81,7 @@ class GBDTBase:
         N_nonleaf = np.sum(tree_sizes)
         tree_array = np.full((N_nonleaf, 5), 0, dtype=np.int32)
         threshold_array = np.full(N_nonleaf, 0, dtype=np.double)
-        self.lib.GetNonleafNodes(self._booster, tree_array, threshold_array)
+        self._lib_GetNonleafNodes(tree_array, threshold_array)
 
         if n_trees > 0:
             threshold_array = np.squeeze(self._splitter_combiner(threshold_array, tree_sizes))
@@ -136,9 +91,9 @@ class GBDTBase:
 
     def _get_leaf_sizes(self, n_trees=None):
         """Get the array describing the sizes of each of the trees in the leaf array"""
-        n_trees = self._get_n_trees() if not n_trees else n_trees
+        n_trees = self._lib_GetNTrees() if not n_trees else n_trees
         leaf_sizes = np.zeros(n_trees, dtype=np.uint16)
-        self.lib.GetLeafSizes(self._booster, leaf_sizes)
+        self._lib_GetLeafSizes(leaf_sizes)
         return leaf_sizes
 
     def _get_leaf_nodes(self, n_trees=None, _out_dim=None):
@@ -147,7 +102,7 @@ class GBDTBase:
         leaf_sizes = self._get_leaf_sizes(n_trees)
         N_leaf = np.sum(leaf_sizes)
         leaf_array = np.full((N_leaf, _out_dim), 0, dtype=np.double)
-        self.lib.GetLeafNodes(self._booster, leaf_array)
+        self._lib_GetLeafNodes(leaf_array)
         if n_trees > 0:
             leaf_array = self._splitter_combiner(leaf_array, leaf_sizes)
         return leaf_array
@@ -155,27 +110,39 @@ class GBDTBase:
     def predict(self, X, num_trees=0):
         """ """
         preds = np.full((len(X), self.out_dim), BASE_SCORE, dtype=np.float64)
-        self.lib.Predict(self._booster, X, preds, len(X), num_trees)
+        self._lib_Predict(X, preds, len(X), num_trees)
         return preds
 
     @staticmethod
-    def _check_data(X):
+    def _check_data(X: np.ndarray):
         if not X.dtype == np.float64:
             raise TypeError(f"X must be a float64 (not {X.dtype})")
-        raise NotImplementedError("work in progress")
+        return np.ascontiguousarray(X)
 
-    def set_data(self, data, label=None):
+    @staticmethod
+    def _check_label(y: np.ndarray):
+        if not (y.dtype == np.float64) or (y.dtype == np.int32):
+            raise TypeError(f"label must be float64 or int32 (not {y.dtype})")
+        return np.ascontiguousarray(y)
+        
+    def set_data_regression(self, X, y):
         """ """
-        self.data_train = np.ascontiguousarray(data)
-        self.preds_train = np.full((len(self.data_train), self.out_dim), BASE_SCORE, dtype=np.float64)
-        self.lib.SetData(self._booster, self.data_train, self.preds_train, len(self.data_train))
+        self._X, self._y = self._check_data(X), self._check_label(y)
+        self._yp = np.full((len(self._X), self.out_dim), BASE_SCORE, dtype=np.float64)
+        self._lib_SetDataRegression(self._X, self._yp, self._y, len(self._X))
+        self._lib_Calc()
 
-        if label is not None:
-            self.label = np.ascontiguousarray(label)
-            self._set_label(self.label)
+    def set_data_classification(self, X, y):
+        """ """
+        raise NotImplementedError
+        # self._lib_SetDataClassification(self._X, self._yp, self._y, len(self.data_train))
 
-    def calc(self):
-        self.lib.Calc(self._booster)
+    def train(self, num):
+        self._lib_Train(num)
+
+    # def fit(self, X, y):
+    #     self._set_data_regression(X, y)
+    #     self._lib_Train(num)
 
 
 #================================================================================
@@ -191,13 +158,12 @@ class GBDTBase:
 
 class GBDTSingle(GBDTBase):
 
-    _lib_init = "SingleNew"
+    _lib_init_name = "SingleNew"
 
     # TODO: think about the array ordering
 
-    def set_data(self, data, label=None):
-        if label is not None: label = label.transpose()
-        return super().set_data(data, label)
+    def set_data_regression(self, X, y):
+        return super().set_data_regression(X, y.transpose())
 
     @staticmethod
     def transpose_memory(array):
@@ -205,11 +171,11 @@ class GBDTSingle(GBDTBase):
 
     def train(self, num):
         super().train(num)
-        self.preds_train = self.transpose_memory(self.preds_train)
+        self._yp = self.transpose_memory(self._yp)
 
     def predict(self, X, num_trees=0):
-        preds = super().predict(X, num_trees)
-        return self.transpose_memory(preds)
+        yp = super().predict(X, num_trees)
+        return self.transpose_memory(yp)
 
     def _get_nonleaf_nodes(self, n_trees=None):
         """Get the array describing the tree structure and the corresponding thresholds"""
@@ -239,7 +205,7 @@ class GBDTSingle(GBDTBase):
 
 class GBDTMulti(GBDTBase):
 
-    _lib_init = "MultiNew"
+    _lib_init_name = "MultiNew"
 
     def _get_leaf_nodes(self, n_trees=None):
         return super()._get_leaf_nodes(n_trees, _out_dim=None)
