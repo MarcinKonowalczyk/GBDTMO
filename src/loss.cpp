@@ -250,9 +250,10 @@ double acc_multiclass_column(const Dataset& data, const size_t out_dim, const do
 //     return static_cast<double> (acc) / N;
 // }
 
+// Accuracy score for binary labels
 double acc_binary(const Dataset& data, const size_t out_dim, const double* const g, const bool score_train) {
     auto order = score_train ? data.train_order : data.eval_order;
-    const size_t N = data.n * out_dim;
+    // const size_t N = data.n * out_dim;
     size_t acc = 0;
     for (size_t o : order) {
         const size_t row_offset = o*out_dim;

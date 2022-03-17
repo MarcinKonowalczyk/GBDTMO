@@ -4,12 +4,16 @@
 #include <math.h>
 #include <queue>
 #include <iostream>
-// #include <random>
 #include <utility>
 
-// #include <limits.h>
-
 // TODO: ?? typedef Maps uint16_t*
+
+struct Shape {
+    size_t inp_dim;
+    size_t out_dim;
+
+    Shape(size_t i, size_t o) : inp_dim(i), out_dim(o) {};
+};
 
 //==========================================================================================
 //                                                                                          
@@ -49,8 +53,6 @@ constexpr static unsigned int hash(const char* s, int off = 0) {
 } 
 
 struct HyperParameters {
-    int inp_dim;
-    int out_dim;
     Loss loss;
     int max_depth;
     int max_leaves;
@@ -71,8 +73,6 @@ struct HyperParameters {
 
 
     void init_default() {
-        inp_dim = 1;
-        out_dim = 1;
         loss = Loss::mse;
         max_depth = 5;
         max_leaves = 32;

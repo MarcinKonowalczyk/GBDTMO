@@ -23,7 +23,7 @@ class GBDTBase(BoosterLibWrapper):
         _params.update(params)
 
         lib_init = getattr(self._lib, self._lib_init_name)
-        self._booster = lib_init(HyperParameters(**_params))
+        self._booster = lib_init(self.inp_dim, self.out_dim, HyperParameters(**_params))
 
     @property
     def params(self):

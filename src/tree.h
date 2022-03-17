@@ -83,13 +83,13 @@ struct Tree {
     void pred_value_single(
         const double* features,
         double* preds,
-        const HyperParameters& hp,
+        const Shape& shape,
         const size_t n
     ) const;
     void pred_value_multi(
         const double* features,
         double* preds,
-        const HyperParameters& hp,
+        const Shape& shape,
         const size_t n
     ) const;
 
@@ -97,13 +97,13 @@ struct Tree {
     void pred_value_single(
         const uint16_t* features,
         double* preds,
-        const HyperParameters& hp,
+        const Shape& shape,
         const size_t n
     ) const;
     void pred_value_multi(
         const uint16_t* features,
         double* preds,
-        const HyperParameters& hp,
+        const Shape& shape,
         const size_t n
     ) const;
 

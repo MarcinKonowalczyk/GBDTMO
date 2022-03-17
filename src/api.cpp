@@ -69,8 +69,8 @@ HyperParameters GetDefaultParameters() {
 HyperParameters GetCurrentParameters(BoosterBase* foo) { return foo->hp; }
 void SetParameters(BoosterBase* foo, HyperParameters hp) { foo->hp = hp; }
 
-BoosterMulti* MultiNew(HyperParameters hp) { return new(std::nothrow) BoosterMulti(hp); }
-BoosterSingle* SingleNew(HyperParameters hp) { return new(std::nothrow) BoosterSingle(hp); }
+BoosterMulti* MultiNew(const size_t inp_dim, const size_t out_dim, const HyperParameters hp) { return new(std::nothrow) BoosterMulti(Shape(inp_dim, out_dim), hp); }
+BoosterSingle* SingleNew(const size_t inp_dim, const size_t out_dim, const HyperParameters hp) { return new(std::nothrow) BoosterSingle(Shape(inp_dim, out_dim), hp); }
 void Delete(BoosterBase* foo) { delete foo; }
 
 }

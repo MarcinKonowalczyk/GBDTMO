@@ -116,4 +116,26 @@ inline static double Log_sum_exp(const std::vector<double>& rec) {
     return log(wsum) + wmax;
 }
 
+//==============================================================================
+//                                                                              
+//   ####  ##        ###    ###    ###  #####                                 
+//  ##     ##       ## ##   ## #  # ##  ##  ##                                
+//  ##     ##      ##   ##  ##  ##  ##  #####                                 
+//  ##     ##      #######  ##      ##  ##                                    
+//   ####  ######  ##   ##  ##      ##  ##                                    
+//                                                                              
+//==============================================================================
+
+
+// constexpr const T& clamp( const T& v, const T& lo, const T& hi, Compare comp )
+// {
+//     return comp(v, lo) ? lo : comp(hi, v) ? hi : v;
+// }
+
+// template<class T>
+// T clamp(const T& v, const T& lo, const T& hi) {
+//     return std::max(lo, std::min(v, hi));
+// }
+
+
 #endif /* GBDTMO_MATH_H */

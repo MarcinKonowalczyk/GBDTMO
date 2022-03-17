@@ -55,7 +55,7 @@ struct boost_column_result {
 
 class BoosterBase {
 public:
-    BoosterBase(const HyperParameters hp);
+    BoosterBase(const Shape, HyperParameters);
     virtual ~BoosterBase() = default;
 
     void set_gh(double*, double*);
@@ -86,7 +86,12 @@ public:
     // API
     virtual void growth() = 0;
     virtual void train(int) = 0;
-    virtual void predict(const double* features, double* preds, const size_t n, int num_trees) = 0;
+    virtual void predict(
+        const double* const features,
+        double* const preds,
+        const size_t n,
+        size_t num_trees // NOTE: num_trees can change inside of the function. If num_trees = 0, num_trees == max_trees
+    ) = 0;
     void reset();
     std::vector<Tree> trees;
 
@@ -96,6 +101,7 @@ public:
     void dump_nonleaf_nodes(int* trees, double* thresholds) const;
     void dump_leaf_nodes(double* leaves) const;
     
+    const Shape shape;
     HyperParameters hp;
 
 protected:
@@ -139,13 +145,16 @@ protected:
 
 class BoosterSingle : public BoosterBase {
 public:
-    BoosterSingle(const HyperParameters hp);
+    BoosterSingle(const Shape, HyperParameters);
     void growth() override;
     void train(int) override;
-    void predict(const double* features, double* preds, const size_t n, int num_trees) override;
+    void predict(
+        const double* const features,
+        double* const preds,
+        const size_t n,
+        size_t num_trees // NOTE: num_trees can change inside of the function. If num_trees = 0, num_trees == max_trees
+    ) override;
     void reset();
-    void predict_multi(const double* features, double* preds, const size_t n, const int out_dim, int num_trees);
-
 private:
 
     boost_column_result boost_column(const Histogram& Hist, const size_t column);
@@ -178,10 +187,15 @@ private:
 
 class BoosterMulti : public BoosterBase {
 public:
-    BoosterMulti(const HyperParameters hp);
+    BoosterMulti(const Shape, const HyperParameters);
     void growth() override;
     void train(int) override;
-    void predict(const double* features, double* preds, const size_t n, int num_trees) override;
+    void predict(
+        const double* const features,
+        double* const preds,
+        const size_t n,
+        size_t num_trees // NOTE: num_trees can change inside of the function. If num_trees = 0, num_trees == max_trees
+    ) override;
 
 private:
     

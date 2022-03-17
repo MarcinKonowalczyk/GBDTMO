@@ -58,8 +58,6 @@ class Loss(Enumeration):
 
 class HyperParameters(Structure):
     _fields_ = [
-        ("inp_dim", c_int),
-        ("out_dim", c_int),
         ("loss", Loss),
         ("max_depth", c_int),
         ("max_leaves", c_int),
@@ -117,8 +115,8 @@ def load_lib(path: str) -> CDLL:
 
     _s(lib.Calc, [c_BoosterBase_p])
     _s(lib.Predict, [c_BoosterBase_p, array_2d_double, array_2d_double, c_int, c_int])
-    _s(lib.SingleNew, [HyperParameters], c_BoosterBase_p)
-    _s(lib.MultiNew, [HyperParameters], c_BoosterBase_p)
+    _s(lib.SingleNew, [c_int, c_int, HyperParameters], c_BoosterBase_p)
+    _s(lib.MultiNew, [c_int, c_int, HyperParameters], c_BoosterBase_p)
     _s(lib.Delete, [c_BoosterBase_p])
 
     # Functions to get the state of the booster

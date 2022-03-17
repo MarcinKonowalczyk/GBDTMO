@@ -5,7 +5,7 @@
 void Tree::pred_value_single(
     const double* features,
     double* preds,
-    const HyperParameters& hp,
+    const Shape& shape,
     const size_t n
 ) const {
     size_t t_inp = 0;
@@ -16,14 +16,14 @@ void Tree::pred_value_single(
             node_index = features[t_inp + node.column] > node.threshold ? node.right : node.left;
         } while (node_index < 0);
         if (node_index != 0) preds[i] += leafs.at(node_index).values[0];
-        t_inp += hp.inp_dim;
+        t_inp += shape.inp_dim;
     }
 }
 
 void Tree::pred_value_multi(
     const double* features,
     double* preds,
-    const HyperParameters& hp,
+    const Shape& shape,
     const size_t n
 ) const {
     size_t t_inp = 0;
@@ -34,10 +34,10 @@ void Tree::pred_value_multi(
             node_index = features[t_inp + node.column] > node.threshold ? node.right : node.left;
         } while (node_index < 0);
         if (node_index != 0) {
-            int t_out = i * hp.out_dim;
+            int t_out = i * shape.out_dim;
             for (double p : leafs.at(node_index).values) { preds[t_out++] += p; }
         }
-        t_inp += hp.inp_dim;
+        t_inp += shape.inp_dim;
     }
 }
 
@@ -45,7 +45,7 @@ void Tree::pred_value_multi(
 void Tree::pred_value_single(
     const uint16_t* features,
     double* preds,
-    const HyperParameters& hp,
+    const Shape& shape,
     const size_t n
 ) const {
     for (int i = 0; i < n; ++i) {
@@ -61,7 +61,7 @@ void Tree::pred_value_single(
 void Tree::pred_value_multi(
     const uint16_t* features,
     double* preds,
-    const HyperParameters& hp,
+    const Shape& shape,
     const size_t n
 ) const {
     for (int i = 0; i < n; ++i) {
@@ -71,7 +71,7 @@ void Tree::pred_value_multi(
             node_index = features[i + n * node.column] > node.bin ? node.right : node.left;
         } while (node_index < 0);
         if (node_index != 0) {
-            int t_out = i * hp.out_dim;
+            int t_out = i * shape.out_dim;
             for (double p : leafs.at(node_index).values) { preds[t_out++] += p; }
         }
     }

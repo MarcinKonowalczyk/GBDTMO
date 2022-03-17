@@ -14,7 +14,7 @@
 //                                                                 
 //=================================================================
 
-BoosterBase::BoosterBase(HyperParameters p) : hp(p) {
+BoosterBase::BoosterBase(const Shape s, HyperParameters p) : shape(s), hp(p) {
     cache = TopkDeque<CacheInfo>(hp.max_caches);
     obj = Objective(hp.loss);
 }
@@ -52,12 +52,12 @@ void BoosterBase::calc_maps() {
     // Calculate Data.Maps and bins
     std::vector<std::vector<double>> bins;
 
-    Data.train_maps.resize(hp.inp_dim);
-    for (size_t i = 0; i < hp.inp_dim; ++i) {
+    Data.train_maps.resize(shape.inp_dim);
+    for (size_t i = 0; i < shape.inp_dim; ++i) {
         // Get features column
         std::vector<double> features_column;
         features_column.reserve(Data.n);
-        for (size_t j = 0; j < Data.n; ++j) { features_column.push_back(Data.Features[i + j*hp.inp_dim]); }
+        for (size_t j = 0; j < Data.n; ++j) { features_column.push_back(Data.Features[i + j*shape.inp_dim]); }
 
         // Construct bins for the column
         std::vector<double> bins_column;
@@ -127,11 +127,11 @@ void BoosterBase::rebuild_order(
 }
 
 double* BoosterBase::malloc_G() const {
-    return (double*) malloc(Data.n * hp.out_dim * sizeof(double));
+    return (double*) malloc(Data.n * shape.out_dim * sizeof(double));
 }
 
 double* BoosterBase::malloc_H(const bool constHessian = true, const double constValue = 0.0) const {
-    const size_t n = Data.n * hp.out_dim;
+    const size_t n = Data.n * shape.out_dim;
     double* H = (double*) malloc(n * sizeof(double));
     if (constHessian) { std::fill_n(H, n, constValue); }
     return H;
@@ -141,10 +141,10 @@ void BoosterBase::reset() {
     cache.clear();
     tree.clear();
     trees.clear();
-    // TODO: test? should this be Data.n * hp.out_dim???
+    // TODO: test? should this be Data.n * shape.out_dim???
     //       also, when is this actually used? what's the purpose here?
     //       retrain? then should have a way to set the parameters(!)
-    // std::fill_n(Data.Preds, Data.n * hp.out_dim, 0.0);
+    // std::fill_n(Data.Preds, Data.n * shape.out_dim, 0.0);
 }
 
 //===============================================
