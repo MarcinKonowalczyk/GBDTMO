@@ -1,1 +1,1 @@
-from .base import GBDTMO
+from .base import GBDTRegressor

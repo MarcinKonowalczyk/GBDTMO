@@ -57,6 +57,8 @@ class BoosterBase {
 public:
     BoosterBase(const Shape, HyperParameters);
     virtual ~BoosterBase() = default;
+    
+    void sigint_handler(int signum);
 
     void set_gh(double*, double*);
     void set_data(double* features, double* preds, size_t n);
@@ -155,6 +157,7 @@ public:
         size_t num_trees // NOTE: num_trees can change inside of the function. If num_trees = 0, num_trees == max_trees
     ) override;
     void reset();
+
 private:
 
     boost_column_result boost_column(const Histogram& Hist, const size_t column);

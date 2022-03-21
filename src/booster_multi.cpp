@@ -339,10 +339,11 @@ void BoosterMulti::growth() {
         tree.add_root_nonleaf(meta.column, meta.bin, meta.threshold);
         cache.push(CacheInfo(-1, 0, meta, Data.train_order, Hist));
         build_tree_best();
-    } else {
-        auto node = (hp.topk > 0) ? LeafNode(shape.out_dim, OptPair) : LeafNode(Opt);
-        tree.add_left_leaf(-1, node);
     }
+    // else {
+    //     // auto node = (hp.topk > 0) ? LeafNode(shape.out_dim, OptPair) : LeafNode(Opt);
+    //     // tree.add_left_leaf(-1, node);
+    // }
     // Finally shrink by the learning rate
     tree.shrink(hp.learning_rate);
 }
@@ -363,20 +364,23 @@ void BoosterMulti::train(int num_rounds) {
         double train_score = obj.f_score(Data, shape.out_dim, G);
         if (hp.eval_fraction > 0.0) {
             double metric = obj.f_metric(Data, shape.out_dim, G, false);
-            if (hp.verbose) { showloss(train_score, metric, i); }
+            if (hp.verbose) showloss(train_score, metric, i);
             early_stoper.push(std::make_pair(metric, i));
             if (!early_stoper.is_continue) {
                 auto info = early_stoper.info;
                 int round = std::get<1>(info);
-                showbest(std::get<0>(info), round);
+                if (hp.verbose) showbest(std::get<0>(info), round);
                 trees.resize(round);
                 break;
             }
         } else {
-            if (hp.verbose) { showloss(train_score, i); }
+            if (hp.verbose) showloss(train_score, i);
         }
     }
-    if (early_stoper.is_continue && hp.eval_fraction > 0.0) { showbest(early_stoper.info); }
+    if (early_stoper.is_continue && hp.eval_fraction > 0.0 && hp.verbose) {
+        std::cout << "Warning. Terminated at bound\n";
+        showbest(early_stoper.info);
+    }
 
     free(G);
     free(H);

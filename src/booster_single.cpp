@@ -196,18 +196,13 @@ void BoosterSingle::growth() {
     hist_all(Data.train_order, Hists);
     get_score_opt(Hists[rand() % shape.inp_dim], Opt, Score_sum);
     boost_all(Hists);
-
     // TODO: Parametrise the -10.0??
     //       Also, what is it actually doing here...? Like, what is the meaning
-    //       of this parameter? 
+    //       of this parameter?
     if (meta.is_set && meta.gain > -10.0) {
         tree.add_root_nonleaf(meta.column, meta.bin, meta.threshold);
         cache.push(CacheInfo(-1, 0, meta, Data.train_order, Hists));
         build_tree_best();
-    } else {
-        auto node = LeafNode(Opt);
-        // TODO: (tree.leaf_num >= hp.max_leaves) check ??
-        tree.add_left_leaf(-1, node);
     }
     // Finally shrink by the learning rate
     tree.shrink(hp.learning_rate);
@@ -227,42 +222,39 @@ void BoosterSingle::train(int num_rounds) {
         obj.f_grad(Data, out_dim, G, H);
         for (size_t j = 0; j < out_dim; ++j) {
             growth();
-
-            // for (int j = 0; j < 30; j++){ std::cout << Data.Features[j] << " "; }; std::cout << "\n";
             tree.pred_value_single(Data.Features, Data.preds, shape, Data.n);
-            // for (int j = 0; j < 30; j++){ std::cout << Data.preds[j] << " "; }; std::cout << "\n";
             trees.push_back(tree);
 
             if (j < out_dim - 1) {
-                G += Data.n;
-                H += Data.n;
-                Data.preds += Data.n;
+                G += Data.n; H += Data.n; Data.preds += Data.n;
             } else {
                 const int pos = (out_dim - 1) * Data.n;
-                G -= pos;
-                H -= pos;
-                Data.preds -= pos;
+                G -= pos; H -= pos; Data.preds -= pos;
             }
         }
+
         double train_score = obj.f_partial_score(Data, out_dim, G, true);
         if (hp.eval_fraction > 0.0) {
             // double eval_score = obj.f_partial_score(Data, out_dim, G, false);
             double metric = obj.f_metric(Data, out_dim, G, false);
-            if (hp.verbose) { showloss(train_score, metric, i); }
+            if (hp.verbose) showloss(train_score, metric, i);
             early_stoper.push(std::make_pair(metric, i));
             if (!early_stoper.is_continue) {
                 auto info = early_stoper.info;
                 int round = std::get<1>(info);
-                showbest(std::get<0>(info), round);
+                if (hp.verbose) showbest(std::get<0>(info), round);
                 trees.resize(shape.out_dim * round);
                 break;
             }
         } else {
-            if (hp.verbose) { showloss(train_score, i); }
+            if (hp.verbose) showloss(train_score, i);
         }
-
     }
-    if (early_stoper.is_continue && hp.eval_fraction > 0.0) { showbest(early_stoper.info); }
+    if (early_stoper.is_continue && hp.eval_fraction > 0.0 && hp.verbose) {
+        std::cout << "Warning. Terminated at bound\n";
+        showbest(early_stoper.info);
+    }
+
     free(G);
     free(H);
 }

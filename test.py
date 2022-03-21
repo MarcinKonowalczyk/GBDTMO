@@ -60,11 +60,11 @@ if __name__ == '__main__':
     booster_params = dict(max_depth=2,
                           learning_rate=0.8,
                           loss=Loss.mse,
-                          early_stop=10,
+                          early_stop=50,
                           verbose=False,
                           seed=seed,
-                          eval_fraction=0.2
-                    )
+                        #   eval_fraction=0.2
+                          )
     with seed_rng(seed):
         X_train, X_test = np.random.rand(10000, booster_shape[0]), np.random.rand(100, booster_shape[0])
         M = np.random.randn(5 * booster_shape[0], booster_shape[1])

@@ -13,6 +13,14 @@ struct Shape {
     size_t out_dim;
 
     Shape(size_t i, size_t o) : inp_dim(i), out_dim(o) {};
+
+    inline void show() const {
+        std::cout << "Shape = [\n";
+        std::cout << " .inp_dim = " << inp_dim << "\n";
+        std::cout << " .out_dim = " << out_dim << "\n";
+        std::cout << "]\n";
+    };
+
 };
 
 //==========================================================================================
@@ -90,6 +98,28 @@ struct HyperParameters {
         max_bins = 32;
         alpha = 0.0;
         eval_fraction = 0.0;
+    }
+
+    inline void show() const {
+        std::cout << "HyperParameters = [...\n";
+        // std::cout << " .loss = " << loss << "\n";
+        std::cout << " .max_depth = " << max_depth << "\n";
+        // std::cout << " .max_leaves = " << max_leaves << "\n";
+        // std::cout << " .seed = " << seed << "\n";
+        // std::cout << " .min_samples = " << min_samples << "\n";
+        std::cout << " .learning_rate = " << learning_rate << "\n";
+        std::cout << " .reg_l1 = " << reg_l1 << "\n";
+        std::cout << " .reg_l2 = " << reg_l2 << "\n";
+        // std::cout << " .gamma = " << gamma << "\n";
+        // std::cout << " .early_stop = " << early_stop << "\n";
+        // std::cout << " .verbose = " << verbose << "\n";
+        // std::cout << " .max_caches = " << max_caches << "\n";
+        std::cout << " .topk = " << topk << "\n";
+        // std::cout << " .one_side = " << one_side << "\n";
+        // std::cout << " .max_bins = " << max_bins << "\n";
+        // std::cout << " .alpha = " << alpha << "\n";
+        // std::cout << " .eval_fraction = " << eval_fraction << "\n";
+        std::cout << "]\n";
     }
 };
 
@@ -205,9 +235,11 @@ public:
         info = std::make_pair(lb ? -1e10 : 1e10, 0);
     };
 
+    inline void stop() { is_continue = false; }
+
     inline void push(const std::pair<double, int>& x) {
         if (larger_better == x > info) { info = x; } // xnor(larger_better, x > info)
-        is_continue = (std::get<1>(x) < std::get<1>(info) + k);
+        is_continue = is_continue && (std::get<1>(x) < std::get<1>(info) + k);
     }
 };
 

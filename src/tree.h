@@ -79,34 +79,21 @@ struct Tree {
     void add_left_leaf(const int parent, const LeafNode& node);
     void add_right_leaf(const int parent, const LeafNode& node);
 
-    // predict by original features
+    // predict
+    inline int traverse_tree(const double* const feature) const;
+
     void pred_value_single(
-        const double* features,
-        double* preds,
+        const double* const features,
+        double* const preds,
         const Shape& shape,
         const size_t n
     ) const;
     void pred_value_multi(
-        const double* features,
-        double* preds,
+        const double* const features,
+        double* const preds,
         const Shape& shape,
         const size_t n
     ) const;
-
-    // predict by bin maps
-    void pred_value_single(
-        const uint16_t* features,
-        double* preds,
-        const Shape& shape,
-        const size_t n
-    ) const;
-    void pred_value_multi(
-        const uint16_t* features,
-        double* preds,
-        const Shape& shape,
-        const size_t n
-    ) const;
-
 };
 
 #endif /* GBDTMO_TREE_H */

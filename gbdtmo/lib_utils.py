@@ -35,13 +35,13 @@ class Enumeration(c_uint, metaclass=EnumerationMeta):
 
 
 #==================================================================================
-#                                                                                  
-#  ####    ######  ##    ##  #####   #####   ####                                
-#  ##  ##    ##     ##  ##   ##  ##  ##     ##                                   
-#  ##  ##    ##      ####    #####   #####   ###                                 
-#  ##  ##    ##       ##     ##      ##        ##                                
-#  ####      ##       ##     ##      #####  ####                                 
-#                                                                                  
+#
+#  ####    ######  ##    ##  #####   #####   ####
+#  ##  ##    ##     ##  ##   ##  ##  ##     ##
+#  ##  ##    ##      ####    #####   #####   ###
+#  ##  ##    ##       ##     ##      ##        ##
+#  ####      ##       ##     ##      #####  ####
+#
 #==================================================================================
 
 array_1d_double = npct.ndpointer(dtype=np.double, ndim=1, flags='C_CONTIGUOUS')
@@ -55,11 +55,13 @@ array_2d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=2, flags='C_CONTIGUOUS')
 class Loss(Enumeration):
     _members_ = [("mse", 0), ("ce", 1), ("ce_column", 2), ("bce", 3)]
 
+
 class IterStructureMixin:
     def __iter__(self):
         """Iterate through fields of self. This allows calls like `dict(hp)`"""
         for field in self._fields_:
             yield (field[0], getattr(self, field[0]))
+
 
 class HyperParameters(Structure, IterStructureMixin):
     _fields_ = [
@@ -82,24 +84,28 @@ class HyperParameters(Structure, IterStructureMixin):
         ("eval_fraction", c_double),
     ]
 
+
 class Shape(Structure, IterStructureMixin):
     _fields_ = [
         ("inp_dim", c_size_t),
         ("out_dim", c_size_t),
     ]
 
+
 class c_BoosterBase_p(c_void_p):
     pass
 
+
 #==============================================================================================
-#                                                                                              
-#  ##       #####     ###    ####          ##      ##  #####                                 
-#  ##      ##   ##   ## ##   ##  ##        ##      ##  ##  ##                                
-#  ##      ##   ##  ##   ##  ##  ##        ##      ##  #####                                 
-#  ##      ##   ##  #######  ##  ##        ##      ##  ##  ##                                
-#  ######   #####   ##   ##  ####          ######  ##  #####                                 
-#                                                                                              
+#
+#  ##       #####     ###    ####          ##      ##  #####
+#  ##      ##   ##   ## ##   ##  ##        ##      ##  ##  ##
+#  ##      ##   ##  ##   ##  ##  ##        ##      ##  #####
+#  ##      ##   ##  #######  ##  ##        ##      ##  ##  ##
+#  ######   #####   ##   ##  ####          ######  ##  #####
+#
 #==============================================================================================
+
 
 def load_lib(path: str) -> CDLL:
     """ Load GBDTMO library from path, and set the API types """
@@ -133,18 +139,20 @@ def load_lib(path: str) -> CDLL:
 
     _s(lib.Dump, [c_BoosterBase_p, c_char_p])
     _s(lib.Load, [c_BoosterBase_p, c_char_p])
-
+    
     return lib
 
+
 #================================================================================================
-#                                                                                                
-#  ##      ##  #####      ###    #####   #####   #####  #####                                  
-#  ##      ##  ##  ##    ## ##   ##  ##  ##  ##  ##     ##  ##                                 
-#  ##  ##  ##  #####    ##   ##  #####   #####   #####  #####                                  
-#  ##  ##  ##  ##  ##   #######  ##      ##      ##     ##  ##                                 
-#   ###  ###   ##   ##  ##   ##  ##      ##      #####  ##   ##                                
-#                                                                                                
+#
+#  ##      ##  #####      ###    #####   #####   #####  #####
+#  ##      ##  ##  ##    ## ##   ##  ##  ##  ##  ##     ##  ##
+#  ##  ##  ##  #####    ##   ##  #####   #####   #####  #####
+#  ##  ##  ##  ##  ##   #######  ##      ##      ##     ##  ##
+#   ###  ###   ##   ##  ##   ##  ##      ##      #####  ##   ##
+#
 #================================================================================================
+
 
 class BoosterLibWrapper:
     """ Wrapper for the GBDTMO shared library"""

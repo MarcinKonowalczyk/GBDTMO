@@ -5,15 +5,20 @@
 #include <math.h>
 #include <unordered_set>
 
+// __attribute__ ((pure)
+#define GBDTMO_MATH_FUNC [[gnu::pure]] inline static
+
 template<typename T>
-inline static T Sum(std::vector<T> x) {
+GBDTMO_MATH_FUNC
+T Sum(std::vector<T> x) {
     T s = 0;
     for (auto& i : x) { s += i; }
     return s;
 }
 
 template<typename T>
-inline static T Sqr(T x) { return x * x; }
+GBDTMO_MATH_FUNC
+T Sqr(T x) { return x * x; }
 
 inline static double ThresholdL1(double w, double reg_l1) {
     if (w > +reg_l1) return w - reg_l1;
@@ -31,7 +36,8 @@ inline static double ThresholdL1(double w, double reg_l1) {
 //                                                                                   
 //===================================================================================
 
-inline static double CalWeightNoL1(
+GBDTMO_MATH_FUNC
+double CalWeightNoL1(
     const double g_sum,
     const double h_sum,
     const double reg_l1,
@@ -40,7 +46,8 @@ inline static double CalWeightNoL1(
     return -g_sum / (h_sum + reg_l2);
 }
 
-inline static double CalWeightL1(
+GBDTMO_MATH_FUNC
+double CalWeightL1(
     const double g_sum,
     const double h_sum,
     const double reg_l1,
@@ -59,7 +66,8 @@ inline static double CalWeightL1(
 //                                                                         
 //=========================================================================
 
-inline static double CalScoreNoL1(
+GBDTMO_MATH_FUNC
+double CalScoreNoL1(
     const double g_sum,
     const double h_sum,
     const double reg_l1, // unused
@@ -68,7 +76,8 @@ inline static double CalScoreNoL1(
     return Sqr(g_sum) / (h_sum + reg_l2);
 };
 
-inline static double CalScoreL1(
+GBDTMO_MATH_FUNC
+double CalScoreL1(
     const double g_sum, 
     const double h_sum, 
     const double reg_l1, 
@@ -87,7 +96,8 @@ inline static double CalScoreL1(
 //                                                                                                
 //================================================================================================
 
-inline static void Softmax(std::vector<double>& rec) {
+GBDTMO_MATH_FUNC
+void Softmax(std::vector<double>& rec) {
     double wmax = rec[0];
     for (size_t i = 1; i < rec.size(); ++i) {
         wmax = std::max(rec[i], wmax);
@@ -104,7 +114,8 @@ inline static void Softmax(std::vector<double>& rec) {
     }
 }
 
-inline static double Log_sum_exp(const std::vector<double>& rec) {
+GBDTMO_MATH_FUNC
+double Log_sum_exp(const std::vector<double>& rec) {
     double wmax = rec[0];
     for (size_t i = 1; i < rec.size(); ++i) {
         wmax = std::max(rec[i], wmax);

@@ -123,7 +123,7 @@ class GBDTBase(BoosterLibWrapper):
         if not (y.dtype == np.float64) or (y.dtype == np.int32):
             raise TypeError(f"label must be float64 or int32 (not {y.dtype})")
         return np.ascontiguousarray(y)
-        
+
     def set_data_regression(self, X, y):
         """ """
         self._X, self._y = self._check_data(X), self._check_label(y)
