@@ -61,8 +61,8 @@ void inplace_unique_with_count(
 
 // Construt bin edges based on the column of the features matrix
 void construct_bin_column(
-    std::vector<double> features_column, // Note: don't pass by reference. Copy. 'feature' is not modified outside of the function.
-    std::vector<double>& bins_column,
+    std::vector<float> features_column, // Note: don't pass by reference. Copy. 'feature' is not modified outside of the function.
+    std::vector<float>& bins_column,
     const uint16_t max_bins
 ) {
     size_t n = features_column.size();
@@ -74,7 +74,7 @@ void construct_bin_column(
     if (N <= 1) {
         // pass
     } else if (N == 2) {
-        double split = features_column[0] * counts[0] + features_column[1] * counts[1];
+        float split = features_column[0] * counts[0] + features_column[1] * counts[1];
         bins_column.push_back(split);
     } else if (N <= max_bins) {
         bins_column.resize(N-1);
@@ -83,7 +83,7 @@ void construct_bin_column(
         }
     } else { // N > max_bins
         size_t bin_index = 0;
-        double p = N / max_bins;
+        float p = N / max_bins;
         size_t ccount = 0;
         bins_column.resize(max_bins);
         for(size_t i = 0; i < N; ++i) {
@@ -110,9 +110,9 @@ void construct_bin_column(
 
 // Calculate binning of a single column of the features matrix
 void map_bin_column(
-    const std::vector<double> features_column,
+    const std::vector<float> features_column,
     std::vector<uint16_t>& map_column,
-    std::vector<double>& bins
+    std::vector<float>& bins
 ) {
     for (size_t i = 0; i < features_column.size(); ++i) {
         auto it = std::lower_bound(bins.begin(), bins.end(), features_column[i]);
@@ -122,9 +122,9 @@ void map_bin_column(
 
 // // Calculate binning of each colum of the features matrix, and the corresponding histogram map
 // void calculate_histogram_map_column(
-//     const std::vector<double> features_column,
+//     const std::vector<float> features_column,
 //     std::vector<uint16_t>& map_column,
-//     std::vector<double>& bins_column,
+//     std::vector<float>& bins_column,
 //     const size_t n,
 //     const size_t inp_dim,
 //     const uint16_t max_bins

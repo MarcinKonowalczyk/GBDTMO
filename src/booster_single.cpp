@@ -14,9 +14,9 @@
 
 BoosterSingle::BoosterSingle(const Shape s, HyperParameters hp) : BoosterBase(s, hp) {};
 
-void BoosterSingle::get_score_opt(Histogram& Hist, double& opt, double& score_sum) {
-    double gx = Hist.g[Hist.g.size() - 1];
-    double hx = Hist.h[Hist.h.size() - 1];
+void BoosterSingle::get_score_opt(Histogram& Hist, float& opt, float& score_sum) {
+    float gx = Hist.g[Hist.g.size() - 1];
+    float hx = Hist.h[Hist.h.size() - 1];
     const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
     const auto CalWeight = (hp.reg_l1 == 0) ? CalWeightNoL1 : CalWeightL1;
     opt = CalWeight(gx, hx, hp.reg_l1, hp.reg_l2);
@@ -73,15 +73,15 @@ void BoosterSingle::hist_all(
 
 boost_column_result BoosterSingle::boost_column(const Histogram& Hist, const size_t column) {
     const size_t max_bins = Hist.count.size() - 1;
-    const double gx = Hist.g[max_bins];
-    const double hx = Hist.h[max_bins];
+    const float gx = Hist.g[max_bins];
+    const float hx = Hist.h[max_bins];
 
     boost_column_result result;
     const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
     for (size_t i = 0; i < max_bins; ++i) {
-        double score_l = CalScore(Hist.g[i], Hist.h[i], hp.reg_l1, hp.reg_l2);
-        double score_r = CalScore(gx - Hist.g[i], hx - Hist.h[i], hp.reg_l1, hp.reg_l2);
-        double bin_gain = score_l + score_r;
+        float score_l = CalScore(Hist.g[i], Hist.h[i], hp.reg_l1, hp.reg_l2);
+        float score_r = CalScore(gx - Hist.g[i], hx - Hist.h[i], hp.reg_l1, hp.reg_l2);
+        float bin_gain = score_l + score_r;
         result.update(bin_gain, i);
     }
     return result;
@@ -99,7 +99,7 @@ void BoosterSingle::boost_all(const std::vector<Histogram>& Hist) {
     for (size_t i = 0; i < shape.inp_dim; ++i) {
         auto result = results[i];
         if (result.split_found()) {
-            double overall_gain = (result.gain - Score_sum) * 0.5;
+            float overall_gain = (result.gain - Score_sum) * 0.5;
             if (overall_gain > meta.gain) {
                 meta.update(overall_gain, i, result.bin_index, bin_values[i][result.bin_index]);
             }
@@ -212,7 +212,7 @@ void BoosterSingle::train(int num_rounds) {
     srand(hp.seed);
     G = malloc_G();
     H = malloc_H(obj.constHessian, obj.hessian);
-    auto early_stoper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
+    auto early_stopper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
 
     const int out_dim = shape.out_dim;
 
@@ -233,14 +233,14 @@ void BoosterSingle::train(int num_rounds) {
             }
         }
 
-        double train_score = obj.f_partial_score(Data, out_dim, G, true);
+        float train_score = obj.f_partial_score(Data, out_dim, G, true);
         if (hp.eval_fraction > 0.0) {
-            // double eval_score = obj.f_partial_score(Data, out_dim, G, false);
-            double metric = obj.f_metric(Data, out_dim, G, false);
+            // float eval_score = obj.f_partial_score(Data, out_dim, G, false);
+            float metric = obj.f_metric(Data, out_dim, G, false);
             if (hp.verbose) showloss(train_score, metric, i);
-            early_stoper.push(std::make_pair(metric, i));
-            if (!early_stoper.is_continue) {
-                auto info = early_stoper.info;
+            early_stopper.push(std::make_pair(metric, i));
+            if (!early_stopper.is_continue) {
+                auto info = early_stopper.info;
                 int round = std::get<1>(info);
                 if (hp.verbose) showbest(std::get<0>(info), round);
                 trees.resize(shape.out_dim * round);
@@ -250,9 +250,9 @@ void BoosterSingle::train(int num_rounds) {
             if (hp.verbose) showloss(train_score, i);
         }
     }
-    if (early_stoper.is_continue && hp.eval_fraction > 0.0 && hp.verbose) {
+    if (early_stopper.is_continue && hp.eval_fraction > 0.0 && hp.verbose) {
         std::cout << "Warning. Terminated at bound\n";
-        showbest(early_stoper.info);
+        showbest(early_stopper.info);
     }
 
     free(G);
@@ -270,8 +270,8 @@ void BoosterSingle::train(int num_rounds) {
 //=====================================================================================
 
 void BoosterSingle::predict(
-    const double* const features,
-    double* const preds,
+    const float* const features,
+    float* const preds,
     const size_t n, 
     size_t num_trees = 0
 ) {

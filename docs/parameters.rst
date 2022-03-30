@@ -49,17 +49,17 @@ Tree
 Learning
 --------
   
-- ``learning_rate``: default = 0.2, type = double.
+- ``learning_rate``: default = 0.2, type = float.
     - Learning rate.
   
-- ``reg_l1``: default = 0.0, type = double.
+- ``reg_l1``: default = 0.0, type = float.
     - L1 regularization.
     - Not used for sparse split finding currently.
   
-- ``reg_l2``: default = 1.0, type = double.
+- ``reg_l2``: default = 1.0, type = float.
     - L2 regularization.
   
-- ``gamma``: default = 1e-3, type = double.
+- ``gamma``: default = 1e-3, type = float.
     - Minimum objective gain to split.
   
 - ``loss``:  default = 'mse', type = string.

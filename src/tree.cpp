@@ -1,8 +1,8 @@
 #include "tree.h"
 
 
-[[gnu::pure]]
-inline int Tree::traverse_tree(const double* const feature) const {
+[[gnu::pure]] // Mark as pure since doesn't mutate any part of the object and just returns value
+inline int Tree::traverse_tree(const float* const feature) const {
     int node_index = -1;
     do {
         auto node = nonleafs.at(node_index);
@@ -15,8 +15,8 @@ inline int Tree::traverse_tree(const double* const feature) const {
 // predict by original features
 // root node is set to -1
 void Tree::pred_value_single(
-    const double* const features,
-    double* const preds,
+    const float* const features,
+    float* const preds,
     const Shape& shape,
     const size_t n
 ) const {
@@ -24,18 +24,13 @@ void Tree::pred_value_single(
     for (size_t i = 0; i < n; ++i) {
         auto feature = features + (i * shape.inp_dim);
         int leaf_index = traverse_tree(feature);
-        // int node_index = -1;
-        // do {
-            // auto node = nonleafs.at(node_index);
-            // node_index = feature[node.column] > node.threshold ? node.right : node.left;
-        // } while (node_index < 0);
         if (leaf_index != 0) preds[i] += leafs.at(leaf_index).values[0];
     }
 }
 
 void Tree::pred_value_multi(
-    const double* const features,
-    double* const preds,
+    const float* const features,
+    float* const preds,
     const Shape& shape,
     const size_t n
 ) const {
@@ -43,27 +38,22 @@ void Tree::pred_value_multi(
     for (size_t i = 0; i < n; ++i) {
         auto feature = features + (i * shape.inp_dim);
         int leaf_index = traverse_tree(feature);
-        // int node_index = -1;
-        // do {
-        //     auto node = nonleafs.at(node_index);
-        //     node_index = feature[node.column] > node.threshold ? node.right : node.left;
-        // } while (node_index < 0);
         if (leaf_index != 0) {
             size_t t_out = i * shape.out_dim;
-            for (double p : leafs.at(leaf_index).values) { preds[t_out++] += p; }
+            for (float p : leafs.at(leaf_index).values) { preds[t_out++] += p; }
         }
     }
 }
 
-void Tree::_add_nonleaf(const int parent, const int column, const int bin, const double threshold) {
+void Tree::_add_nonleaf(const int parent, const int column, const int bin, const float threshold) {
     nonleafs.emplace(--nonleaf_num, NonLeafNode(parent, column, bin, threshold));
 };
 
-void Tree::add_root_nonleaf(const int column, const int bin, const double threshold) {
+void Tree::add_root_nonleaf(const int column, const int bin, const float threshold) {
     _add_nonleaf(0, column, bin, threshold); // Root node has null parent
 };
 
-void Tree::add_left_nonleaf(const int parent, const int column, const int bin, const double threshold) {
+void Tree::add_left_nonleaf(const int parent, const int column, const int bin, const float threshold) {
     _add_nonleaf(parent, column, bin, threshold);
     if (nonleafs.find(parent) == nonleafs.end()) {
         std::cout << "Tree::add_left_nonleaf " << parent << "\n";
@@ -77,7 +67,7 @@ void Tree::add_left_nonleaf(const int parent, const int column, const int bin, c
     nonleafs.at(parent).left = nonleaf_num;
 };
 
-void Tree::add_right_nonleaf(const int parent, const int column, const int bin, const double threshold) {
+void Tree::add_right_nonleaf(const int parent, const int column, const int bin, const float threshold) {
     _add_nonleaf(parent, column, bin, threshold);
     if (nonleafs.find(parent) == nonleafs.end()) {
         std::cout << "Tree::add_right_nonleaf " << parent << "\n";
@@ -90,7 +80,7 @@ void Tree::add_right_nonleaf(const int parent, const int column, const int bin, 
     nonleafs.at(parent).right = nonleaf_num;
 };
 
-void Tree::shrink(const double learning_rate) {
+void Tree::shrink(const float learning_rate) {
     for (auto& leaf : leafs) {
         for (auto& value : leaf.second.values) {
             value *= learning_rate;

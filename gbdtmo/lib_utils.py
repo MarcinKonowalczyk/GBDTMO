@@ -44,8 +44,8 @@ class Enumeration(c_uint, metaclass=EnumerationMeta):
 #
 #==================================================================================
 
-array_1d_double = npct.ndpointer(dtype=np.double, ndim=1, flags='C_CONTIGUOUS')
-array_2d_double = npct.ndpointer(dtype=np.double, ndim=2, flags='C_CONTIGUOUS')
+array_1d_float = npct.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS')
+array_2d_float = npct.ndpointer(dtype=np.float32, ndim=2, flags='C_CONTIGUOUS')
 array_1d_int = npct.ndpointer(dtype=np.int32, ndim=1, flags='C_CONTIGUOUS')
 array_2d_int = npct.ndpointer(dtype=np.int32, ndim=2, flags='C_CONTIGUOUS')
 array_1d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=1, flags='C_CONTIGUOUS')
@@ -70,18 +70,18 @@ class HyperParameters(Structure, IterStructureMixin):
         ("max_leaves", c_uint),
         ("seed", c_uint),
         ("min_samples", c_uint),
-        ("learning_rate", c_double),
-        ("reg_l1", c_double),
-        ("reg_l2", c_double),
-        ("gamma", c_double),
+        ("learning_rate", c_float),
+        ("reg_l1", c_float),
+        ("reg_l2", c_float),
+        ("gamma", c_float),
         ("early_stop", c_uint),
         ("verbose", c_bool),
         ("max_caches", c_uint),
         ("topk", c_uint),
         ("one_side", c_bool),
         ("max_bins", c_uint),
-        ("alpha", c_double),
-        ("eval_fraction", c_double),
+        ("alpha", c_float),
+        ("eval_fraction", c_float),
     ]
 
 
@@ -117,15 +117,15 @@ def load_lib(path: str) -> CDLL:
 
     _s(lib.Train, [c_BoosterBase_p, c_int])
     _s(lib.Reset, [c_BoosterBase_p])
-    _s(lib.SetDataRegression, [c_BoosterBase_p, array_2d_double, array_2d_double, array_2d_double, c_int])
-    _s(lib.SetDataClassification, [c_BoosterBase_p, array_2d_double, array_2d_double, array_2d_int, c_int])
+    _s(lib.SetDataRegression, [c_BoosterBase_p, array_2d_float, array_2d_float, array_2d_float, c_int])
+    _s(lib.SetDataClassification, [c_BoosterBase_p, array_2d_float, array_2d_float, array_2d_int, c_int])
 
     _s(lib.GetDefaultParameters, None, HyperParameters)
     _s(lib.GetCurrentParameters, [c_BoosterBase_p], HyperParameters)
     _s(lib.SetParameters, [c_BoosterBase_p, HyperParameters])
 
     _s(lib.Calc, [c_BoosterBase_p])
-    _s(lib.Predict, [c_BoosterBase_p, array_2d_double, array_2d_double, c_int, c_int])
+    _s(lib.Predict, [c_BoosterBase_p, array_2d_float, array_2d_float, c_int, c_int])
     _s(lib.SingleNew, [Shape, HyperParameters], c_BoosterBase_p)
     _s(lib.MultiNew, [Shape, HyperParameters], c_BoosterBase_p)
     _s(lib.Delete, [c_BoosterBase_p])
@@ -134,12 +134,12 @@ def load_lib(path: str) -> CDLL:
     _s(lib.GetNTrees, [c_BoosterBase_p], c_uint)
     _s(lib.GetNonleafSizes, [c_BoosterBase_p, array_1d_uint16])
     _s(lib.GetLeafSizes, [c_BoosterBase_p, array_1d_uint16])
-    _s(lib.GetNonleafNodes, [c_BoosterBase_p, array_2d_int, array_1d_double])
-    _s(lib.GetLeafNodes, [c_BoosterBase_p, array_2d_double])
+    _s(lib.GetNonleafNodes, [c_BoosterBase_p, array_2d_int, array_1d_float])
+    _s(lib.GetLeafNodes, [c_BoosterBase_p, array_2d_float])
 
     _s(lib.Dump, [c_BoosterBase_p, c_char_p])
     _s(lib.Load, [c_BoosterBase_p, c_char_p])
-    
+
     return lib
 
 
@@ -181,11 +181,14 @@ class BoosterLibWrapper:
     def _lib_Reset(self) -> None:
         self._lib.Reset(self._booster)
 
-    def _lib_SetDataRegression(self, X: array_2d_double, yp: array_2d_double, y: array_2d_double, n: int) -> None:
+    def _lib_SetDataRegression(self, X: array_2d_float, yp: array_2d_float, y: array_2d_float, n: int) -> None:
         self._lib.SetDataRegression(self._booster, X, yp, y, n)
 
-    def _lib_SetDataClassification(self, X: array_2d_double, yp: array_2d_double, y: array_2d_int, n: int) -> None:
+    def _lib_SetDataClassification(self, X: array_2d_float, yp: array_2d_float, y: array_2d_int, n: int) -> None:
         self._lib.SetDataClassification(self._booster, X, yp, y, n)
+
+    def _lib_GetDefaultParameters(self) -> HyperParameters:
+        return self._lib.GetDefaultParameters()
 
     def _lib_GetCurrentParameters(self) -> HyperParameters:
         return self._lib.GetCurrentParameters(self._booster)
@@ -196,7 +199,7 @@ class BoosterLibWrapper:
     def _lib_Calc(self) -> None:
         self._lib.Calc(self._booster)
 
-    def _lib_Predict(self, X: array_2d_double, yp: array_2d_double, n: int, num_trees: int) -> None:
+    def _lib_Predict(self, X: array_2d_float, yp: array_2d_float, n: int, num_trees: int) -> None:
         self._lib.Predict(self._booster, X, yp, n, num_trees)
 
     def _lib_GetNTrees(self) -> int:
@@ -208,10 +211,10 @@ class BoosterLibWrapper:
     def _lib_GetLeafSizes(self, leaf_sizes: array_1d_uint16) -> None:
         self._lib.GetLeafSizes(self._booster, leaf_sizes)
 
-    def _lib_GetNonleafNodes(self, trees: array_2d_int, leaves: array_1d_double) -> None:
-        self._lib.GetNonleafNodes(self._booster, trees, leaves)
+    def _lib_GetNonleafNodes(self, trees: array_2d_int, nonleaves: array_1d_float) -> None:
+        self._lib.GetNonleafNodes(self._booster, trees, nonleaves)
 
-    def _lib_GetLeafNodes(self, leaves: array_2d_double) -> None:
+    def _lib_GetLeafNodes(self, leaves: array_2d_float) -> None:
         self._lib.GetLeafNodes(self._booster, leaves)
 
     @staticmethod

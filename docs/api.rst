@@ -47,7 +47,7 @@ GBDTMulti
     Set training and eval datasets. eval_set can be missing. Histograms will be constructed and predictions will be initialized. 
       
     Parameters
-      - train_set(tuple): a tuple of numpy array (x_data, x_label). x_data must be `double` and 2D array. If you don't set label, x_label should be `None`. Otherwise, x_label must be `double` or `int32`.
+      - train_set(tuple): a tuple of numpy array (x_data, x_label). x_data must be `float` and 2D array. If you don't set label, x_label should be `None`. Otherwise, x_label must be `float` or `int32`.
       - eval_set(tuple, default=None): the same as train_set.
        
   :_set_gh(self, g, h):

@@ -5,7 +5,7 @@ import os, sys
 sys.path.append(os.path.realpath(os.path.join(os.path.dirname(__file__), ".")))
 
 # from gbdtmo import Loss
-from gbdtmo.sklearn import GBDTRecursiveForcaster, FFTTransformer
+from gbdtmo.sklearn import GBDTRegressor, FFTTransformer
 
 # Generate data
 from generate_timeseries import generate
@@ -47,12 +47,11 @@ common_params = dict(
 )
 
 search_params = dict(
-    future_increment=(1, 2, 4, 6, 8, 12, 24, 48),
-    learning_rate=Real(0.2, 1.0),
-    max_depth=Integer(1, 4),
-    gamma=Real(1e-4, 1e-1, prior="log-uniform"),
-    reg_l1=Real(0.0, 10.0),
-    topk=Integer(1, 48),
+    gbdt__learning_rate=Real(0.2, 1.0),
+    gbdt__max_depth=Integer(1, 4),
+    gbdt__gamma=Real(1e-4, 1e-1, prior="log-uniform"),
+    gbdt__reg_l1=Real(0.0, 10.0),
+    gbdt__topk=Integer(1, 48),
 )
 
 # OrderedDict([('future_increment', 47),
@@ -85,13 +84,25 @@ scoring = {
     "mse_2da": make_scorer(_2da(mean_squared_error)),
 }
 
-booster = GBDTRecursiveForcaster(**common_params)
-booster.fit(X_train, y_train)
-yp = booster.predict(X_test)
+# from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
 
+pipe = Pipeline([
+    # StandardScaler(),
+    ('fft', FFTTransformer(trim=0.8)),
+    ('gbdt', GBDTRegressor(**common_params)),
+])
+
+pipe.fit(X_train, y_train)
+yp = pipe.predict(X_test)
+
+exit(1)
 # hpo = GridSearchCV(booster, search_params, scoring=scoring, refit="R2", verbose=3)
-hpo = BayesSearchCV(booster, search_params, scoring=scoring, refit="score", verbose=2, n_jobs=5)
+hpo = BayesSearchCV(pipe, search_params, scoring=scoring, refit="score", verbose=3, n_jobs=5)
 hpo.fit(X_train, y_train)
-# yp = booster.predict(X_test)
+yp = hpo.predict(X_test)
 
-# print(f"score = {booster.score(X_test, y_test)}")
+# Plot
+from skopt.plots import plot_objective, plot_histogram
+
+plot_objective(hpo.optimizer_results_[0])

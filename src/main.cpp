@@ -2,19 +2,19 @@
 #include "booster.h"
 
 void test(int inp_dim, int out_dim, int N, const char* mode) {
-    double data[N * inp_dim];
-    double preds[N * out_dim];
+    float data[N * inp_dim];
+    float preds[N * out_dim];
     int32_t lables[N];
     uint16_t maps[N * inp_dim];
 
-    double data_eval[N * inp_dim];
-    double preds_eval[N * out_dim];
+    float data_eval[N * inp_dim];
+    float preds_eval[N * out_dim];
     int32_t lables_eval[N];
     uint16_t maps_eval[N * inp_dim];
 
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < inp_dim; ++j) {
-            double t = static_cast<double> (rand() % 1000) / 1000;
+            float t = static_cast<float> (rand() % 1000) / 1000;
             data[inp_dim * i + j] = t;
             data_eval[inp_dim * i + j] = t;
             maps[j * N + i] = static_cast<uint16_t> (t * 20);
@@ -40,7 +40,7 @@ void test(int inp_dim, int out_dim, int N, const char* mode) {
     }
 
     uint16_t bins[inp_dim];
-    double values[inp_dim * 19];
+    float values[inp_dim * 19];
     for (int i = 0; i < inp_dim; ++i) {
         bins[i] = 19;
         for (int j = 0; j < 19; ++j) {

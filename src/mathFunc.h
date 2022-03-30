@@ -20,7 +20,7 @@ template<typename T>
 GBDTMO_MATH_FUNC
 T Sqr(T x) { return x * x; }
 
-inline static double ThresholdL1(double w, double reg_l1) {
+inline static float ThresholdL1(float w, float reg_l1) {
     if (w > +reg_l1) return w - reg_l1;
     if (w < -reg_l1) return w + reg_l1;
     return 0.0;
@@ -37,21 +37,21 @@ inline static double ThresholdL1(double w, double reg_l1) {
 //===================================================================================
 
 GBDTMO_MATH_FUNC
-double CalWeightNoL1(
-    const double g_sum,
-    const double h_sum,
-    const double reg_l1,
-    const double reg_l2
+float CalWeightNoL1(
+    const float g_sum,
+    const float h_sum,
+    const float reg_l1,
+    const float reg_l2
 ) {
     return -g_sum / (h_sum + reg_l2);
 }
 
 GBDTMO_MATH_FUNC
-double CalWeightL1(
-    const double g_sum,
-    const double h_sum,
-    const double reg_l1,
-    const double reg_l2
+float CalWeightL1(
+    const float g_sum,
+    const float h_sum,
+    const float reg_l1,
+    const float reg_l2
 ) {
     return -ThresholdL1(g_sum, reg_l1) / (h_sum + reg_l2);
 }
@@ -67,21 +67,21 @@ double CalWeightL1(
 //=========================================================================
 
 GBDTMO_MATH_FUNC
-double CalScoreNoL1(
-    const double g_sum,
-    const double h_sum,
-    const double reg_l1, // unused
-    const double reg_l2
+float CalScoreNoL1(
+    const float g_sum,
+    const float h_sum,
+    const float reg_l1, // unused
+    const float reg_l2
 ) {
     return Sqr(g_sum) / (h_sum + reg_l2);
 };
 
 GBDTMO_MATH_FUNC
-double CalScoreL1(
-    const double g_sum, 
-    const double h_sum, 
-    const double reg_l1, 
-    const double reg_l2
+float CalScoreL1(
+    const float g_sum, 
+    const float h_sum, 
+    const float reg_l1, 
+    const float reg_l2
 ) {
     return Sqr(ThresholdL1(g_sum, reg_l1)) / (h_sum + reg_l2);
 };
@@ -97,30 +97,30 @@ double CalScoreL1(
 //================================================================================================
 
 GBDTMO_MATH_FUNC
-void Softmax(std::vector<double>& rec) {
-    double wmax = rec[0];
+void Softmax(std::vector<float>& rec) {
+    float wmax = rec[0];
     for (size_t i = 1; i < rec.size(); ++i) {
         wmax = std::max(rec[i], wmax);
     }
-    double wsum = 0.0;
+    float wsum = 0.0;
     for (size_t i = 0; i < rec.size(); ++i) {
-        double erec = exp(rec[i] - wmax);
+        float erec = exp(rec[i] - wmax);
         rec[i] = erec;
         wsum += erec;
     }
-    double wsumi = 1/wsum;
+    float wsumi = 1/wsum;
     for (size_t i = 0; i < rec.size(); ++i) {
         rec[i] *= wsumi;
     }
 }
 
 GBDTMO_MATH_FUNC
-double Log_sum_exp(const std::vector<double>& rec) {
-    double wmax = rec[0];
+float Log_sum_exp(const std::vector<float>& rec) {
+    float wmax = rec[0];
     for (size_t i = 1; i < rec.size(); ++i) {
         wmax = std::max(rec[i], wmax);
     }
-    double wsum = 0.0;
+    float wsum = 0.0;
     for (size_t i = 0; i < rec.size(); ++i) {
         wsum += exp(rec[i] - wmax);
     }

@@ -18,7 +18,7 @@ class GBDTBase(BoosterLibWrapper):
     def __init__(self, shape, params={}):
         super().__init__()
         self.inp_dim, self.out_dim = shape
-        _params = dict(self._lib.GetDefaultParameters())
+        _params = dict(self._lib_GetDefaultParameters())
         _params.update(params)
 
         lib_init = getattr(self._lib, self._lib_init_name)
@@ -79,7 +79,7 @@ class GBDTBase(BoosterLibWrapper):
         tree_sizes = self._get_nonleaf_sizes(n_trees)
         N_nonleaf = np.sum(tree_sizes)
         tree_array = np.full((N_nonleaf, 5), 0, dtype=np.int32)
-        threshold_array = np.full(N_nonleaf, 0, dtype=np.double)
+        threshold_array = np.full(N_nonleaf, 0, dtype=np.float32)
         self._lib_GetNonleafNodes(tree_array, threshold_array)
 
         if n_trees > 0:
@@ -100,7 +100,7 @@ class GBDTBase(BoosterLibWrapper):
         _out_dim = self.out_dim if not _out_dim else _out_dim
         leaf_sizes = self._get_leaf_sizes(n_trees)
         N_leaf = np.sum(leaf_sizes)
-        leaf_array = np.full((N_leaf, _out_dim), 0, dtype=np.double)
+        leaf_array = np.full((N_leaf, _out_dim), 0, dtype=np.float32)
         self._lib_GetLeafNodes(leaf_array)
         if n_trees > 0:
             leaf_array = self._splitter_combiner(leaf_array, leaf_sizes)
@@ -108,26 +108,24 @@ class GBDTBase(BoosterLibWrapper):
 
     def predict(self, X, num_trees=0):
         """ """
-        preds = np.full((len(X), self.out_dim), BASE_SCORE, dtype=np.float64)
+        preds = np.full((len(X), self.out_dim), BASE_SCORE, dtype=np.float32)
+        X = X.astype(np.float32, order='C', casting='same_kind', subok=False, copy=False)
         self._lib_Predict(X, preds, len(X), num_trees)
         return preds
 
     @staticmethod
     def _check_data(X: np.ndarray):
-        if not X.dtype == np.float64:
-            raise TypeError(f"X must be a float64 (not {X.dtype})")
-        return np.ascontiguousarray(X)
+        return X.astype(np.float32, order='C', casting='same_kind', subok=False, copy=False)
 
     @staticmethod
     def _check_label(y: np.ndarray):
-        if not (y.dtype == np.float64) or (y.dtype == np.int32):
-            raise TypeError(f"label must be float64 or int32 (not {y.dtype})")
-        return np.ascontiguousarray(y)
+        y = y.reshape(-1, 1) if len(y.shape) == 1 else y
+        return y.astype(np.float32, order='C', casting='same_kind')
 
     def set_data_regression(self, X, y):
         """ """
         self._X, self._y = self._check_data(X), self._check_label(y)
-        self._yp = np.full((len(self._X), self.out_dim), BASE_SCORE, dtype=np.float64)
+        self._yp = np.full((len(self._X), self.out_dim), BASE_SCORE, dtype=np.float32)
         self._lib_SetDataRegression(self._X, self._yp, self._y, len(self._X))
         self._lib_Calc()
 

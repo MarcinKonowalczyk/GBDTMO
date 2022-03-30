@@ -11,28 +11,30 @@
 //============================================================
 // mean square error
 
-void mse_grad(const Dataset& data, const size_t out_dim, double* const g, double* const h) { 
+void mse_grad(const Dataset& data, const size_t out_dim, float* const g, float* const h) { 
     const size_t N = data.n * out_dim;
-    for (size_t o = 0; o < N; ++o) { g[o] = data.preds[o] - data.Label_double[o]; }
+    for (size_t o = 0; o < N; ++o) {
+        g[o] = data.preds[o] - data.Label_float[o];
+    }
 }
 
-double mse_score(const Dataset& data, const size_t out_dim, const double* const g) {
+float mse_score(const Dataset& data, const size_t out_dim, const float* const g) {
     double s = 0.0;
     const size_t N = data.n * out_dim;
-    for (size_t o = 0; o < N; ++o) { s += Sqr(g[o]); }
-    return sqrt(s / N);
+    for (size_t o = 0; o < N; ++o) { s += Sqr( static_cast<double>(g[o]) ); }
+    return static_cast<float>(sqrt(s / N));
 }
 
-double mse_partial_score(const Dataset& data, const size_t out_dim, const double* const g, const bool score_train) {
+float mse_partial_score(const Dataset& data, const size_t out_dim, const float* const g, const bool score_train) {
     auto order = score_train ? data.train_order : data.eval_order;
     double s = 0.0;
     for (size_t o : order) {
         const size_t row_offset = o*out_dim;
         for (size_t i = 0; i < out_dim; ++i) {
-            s += Sqr(g[row_offset+i]);
+            s += Sqr(static_cast<double>(g[row_offset+i]));
         }
     }
-    return sqrt(s / (order.size() * out_dim));
+    return static_cast<float>(sqrt(s / (order.size() * out_dim)));
 }
 
 //========================================================
@@ -46,37 +48,37 @@ double mse_partial_score(const Dataset& data, const size_t out_dim, const double
 //========================================================
 // binary cross-entropy
 
-void bce_grad(const Dataset& data, const size_t out_dim, double* const g, double* const h) {
+void bce_grad(const Dataset& data, const size_t out_dim, float* const g, float* const h) {
     // TODO: Is there a perf difference betweek this and size_t k = 0;
     //       and k++ in the loop? Look into (using compiler explorer?)
     const size_t N = data.n * out_dim;
     for (size_t o = 0; o < N; ++o) {
-        const double t = 1.0 / (1.0 + exp(-data.preds[o]));
+        const float t = 1.0 / (1.0 + exp(-data.preds[o]));
         g[o] = t - data.Label_int32[o];
         h[o] = t * (1 - t);
     }
 }
 
-double bce_score(const Dataset& data, const size_t out_dim, const double* const g) {
+float bce_score(const Dataset& data, const size_t out_dim, const float* const g) {
     // TODO: Use gradient ??
-    double score = 0.0;
+    float score = 0.0;
     const size_t N = data.n * out_dim;
     for (size_t o = 0; o < N; ++o) {
-        const double p = data.preds[o];
-        const double t = log(1 + exp(-p));
+        const float p = data.preds[o];
+        const float t = log(1 + exp(-p));
         score += (data.Label_int32[o] == 1) ? t : t + p;
     }
     return score / N;
 }
 
-double bce_partial_score(const Dataset& data, const size_t out_dim, const double* const g, const bool score_train) {
+float bce_partial_score(const Dataset& data, const size_t out_dim, const float* const g, const bool score_train) {
     auto order = score_train ? data.train_order : data.eval_order;
-    double score = 0.0;
+    float score = 0.0;
     for (size_t o : order) {
         const size_t row_offset = o*out_dim;
         for (size_t i = 0; i < out_dim; ++i) {
-            const double p = data.preds[row_offset + i];
-            const double t = log(1 + exp(-p));
+            const float p = data.preds[row_offset + i];
+            const float t = log(1 + exp(-p));
             score += (data.Label_int32[row_offset + i] == 1) ? t : t + p;
         }
     }
@@ -95,8 +97,8 @@ double bce_partial_score(const Dataset& data, const size_t out_dim, const double
 
 // Cross-entropy
 // TODO: Precompute rec??
-void ce_grad(const Dataset& data, const size_t out_dim, double* const g, double* const h) {
-    std::vector<double> rec(out_dim);
+void ce_grad(const Dataset& data, const size_t out_dim, float* const g, float* const h) {
+    std::vector<float> rec(out_dim);
     size_t idx = 0;
     for (size_t i = 0; i < data.n; ++i) {
         for (size_t j = 0; j < out_dim; ++j) {
@@ -112,10 +114,10 @@ void ce_grad(const Dataset& data, const size_t out_dim, double* const g, double*
     }
 }
 
-double ce_score(const Dataset& data, const size_t out_dim, const double* const g) {
+float ce_score(const Dataset& data, const size_t out_dim, const float* const g) {
     size_t idx = 0;
-    double score = 0.0;
-    std::vector<double> rec(out_dim);
+    float score = 0.0;
+    std::vector<float> rec(out_dim);
     for (size_t i = 0; i < data.n; ++i) {
         for (size_t j = 0; j < out_dim; ++j) {
             rec[j] = data.preds[idx + j];
@@ -136,13 +138,13 @@ double ce_score(const Dataset& data, const size_t out_dim, const double* const g
 //                                                                                                              
 //==============================================================================================================
 
-void ce_column_grad(const Dataset& data, const size_t out_dim, double* const g, double* const h) {
+void ce_column_grad(const Dataset& data, const size_t out_dim, float* const g, float* const h) {
     const size_t n = data.n;
     const auto preds = data.preds;
     const auto labels = data.Label_int32;
     int i, j;
     std::vector<size_t> idx(out_dim);
-    std::vector<double> rec(out_dim);
+    std::vector<float> rec(out_dim);
     for (i = 0; i < n; i += 1) {
         idx[0] = i;
         rec[0] = preds[i];
@@ -160,14 +162,14 @@ void ce_column_grad(const Dataset& data, const size_t out_dim, double* const g, 
     }
 }
 
-double ce_column_score(const Dataset& data, const size_t out_dim, const double* const g) {
+float ce_column_score(const Dataset& data, const size_t out_dim, const float* const g) {
     const size_t n = data.n;
     const auto preds = data.preds;
     const auto labels = data.Label_int32;
     int i, j;
     std::vector<int> idx(out_dim);
-    std::vector<double> rec(out_dim);
-    double score_sum = 0.0;
+    std::vector<float> rec(out_dim);
+    float score_sum = 0.0;
     for (i = 0; i < n; i += 1) {
         idx[0] = i;
         rec[0] = preds[i];
@@ -191,14 +193,14 @@ double ce_column_score(const Dataset& data, const size_t out_dim, const double* 
 //                                                         
 //=========================================================
 
-double acc_multiclass(const Dataset& data, const size_t out_dim, const double* const g) {
+float acc_multiclass(const Dataset& data, const size_t out_dim, const float* const g) {
     const size_t n = data.n;
     const auto preds = data.preds;
     const auto labels = data.Label_int32;
     int acc = 0;
     for (size_t i = 0; i < n; ++i) {
         int idx = i * out_dim;
-        double score = preds[idx];
+        float score = preds[idx];
         int ind = 0;
         for (size_t j = 1; j < out_dim; ++j) {
             ++idx;
@@ -209,17 +211,17 @@ double acc_multiclass(const Dataset& data, const size_t out_dim, const double* c
         }
         if (ind == labels[i]) { ++acc; }
     }
-    return static_cast<double> (acc) / n;
+    return static_cast<float> (acc) / n;
 }
 
-double acc_multiclass_column(const Dataset& data, const size_t out_dim, const double* const g) {
+float acc_multiclass_column(const Dataset& data, const size_t out_dim, const float* const g) {
     const size_t n = data.n;
     const auto preds = data.preds;
     const auto labels = data.Label_int32;
     int acc = 0;
     for (size_t i = 0; i < n; ++i) {
         int idx = i;
-        double score = preds[idx];
+        float score = preds[idx];
         int ind = 0;
         for (size_t j = 1; j < out_dim; ++j) {
             idx += n;
@@ -230,10 +232,10 @@ double acc_multiclass_column(const Dataset& data, const size_t out_dim, const do
         }
         if (ind == labels[i]) { ++acc; }
     }
-    return static_cast<double> (acc) / n;
+    return static_cast<float> (acc) / n;
 }
 
-// nary(const Dataset& data, const size_t out_dim, const double* const g, const bool score_train) {
+// nary(const Dataset& data, const size_t out_dim, const float* const g, const bool score_train) {
 //     auto order = score_train ? data.train_order : data.eval_order;
 //     const size_t n = data.n;
 //     const auto preds = data.preds;
@@ -247,11 +249,11 @@ double acc_multiclass_column(const Dataset& data, const size_t out_dim, const do
 //             if (preds[i] < 0.0) { ++acc; }
 //         }
 //     }
-//     return static_cast<double> (acc) / N;
+//     return static_cast<float> (acc) / N;
 // }
 
 // Accuracy score for binary labels
-double acc_binary(const Dataset& data, const size_t out_dim, const double* const g, const bool score_train) {
+float acc_binary(const Dataset& data, const size_t out_dim, const float* const g, const bool score_train) {
     auto order = score_train ? data.train_order : data.eval_order;
     // const size_t N = data.n * out_dim;
     size_t acc = 0;
@@ -266,5 +268,5 @@ double acc_binary(const Dataset& data, const size_t out_dim, const double* const
             }
         }
     }
-    return static_cast<double> (acc) / (order.size() * out_dim);
+    return static_cast<float> (acc) / (order.size() * out_dim);
 }

@@ -26,7 +26,7 @@ def randc(beta, N):
 
 
 def generate(N):
-    x = np.zeros(N, dtype=np.double)
+    x = np.zeros(N, dtype=np.float32)
     t = np.arange(N)
     for _ in range(10):
         a = (0.8 * np.random.rand() + 0.2)

@@ -29,13 +29,13 @@ BoosterBase::BoosterBase(const Shape s, HyperParameters p) : shape(s), hp(p) {
 //                                                                                       
 //=======================================================================================
 
-void BoosterBase::set_data(double* features, double* preds, size_t n) {
+void BoosterBase::set_data(float* features, float* preds, size_t n) {
     Data.Features = features;
     Data.preds = preds;
     Data.n = n;
 }
 
-void BoosterBase::set_label(double* label) { Data.Label_double = label; }
+void BoosterBase::set_label(float* label) { Data.Label_float = label; }
 void BoosterBase::set_label(int32_t* label) { Data.Label_int32 = label; }
 
 //=================================================================
@@ -50,17 +50,17 @@ void BoosterBase::set_label(int32_t* label) { Data.Label_int32 = label; }
 
 void BoosterBase::calc_maps() {
     // Calculate Data.Maps and bins
-    std::vector<std::vector<double>> bins;
+    std::vector<std::vector<float>> bins;
 
     Data.train_maps.resize(shape.inp_dim);
     for (size_t i = 0; i < shape.inp_dim; ++i) {
         // Get features column
-        std::vector<double> features_column;
+        std::vector<float> features_column;
         features_column.reserve(Data.n);
         for (size_t j = 0; j < Data.n; ++j) { features_column.push_back(Data.Features[i + j*shape.inp_dim]); }
 
         // Construct bins for the column
-        std::vector<double> bins_column;
+        std::vector<float> bins_column;
         construct_bin_column(features_column, bins_column, hp.max_bins);
         bins.push_back(bins_column);
 
@@ -73,11 +73,11 @@ void BoosterBase::calc_maps() {
     // Number of bins in each column
     bin_nums.clear();
     bin_values.clear();
-    double double_max = std::numeric_limits<double>::max();
+    float float_max = std::numeric_limits<float>::max();
     for (auto& bin : bins) {
         bin_nums.push_back(bin.size() + 1);
         auto tmp = bin;
-        tmp.push_back(double_max);
+        tmp.push_back(float_max);
         bin_values.push_back(tmp);
     }
 }
@@ -126,14 +126,15 @@ void BoosterBase::rebuild_order(
     }
 }
 
-double* BoosterBase::malloc_G() const {
-    return (double*) malloc(Data.n * shape.out_dim * sizeof(double));
+
+float* BoosterBase::malloc_G() const {
+    return (float*) malloc(Data.n * shape.out_dim * sizeof(float));
 }
 
-double* BoosterBase::malloc_H(const bool constHessian = true, const double constValue = 0.0) const {
+float* BoosterBase::malloc_H(const bool constHessian = true, const float constValue = 0.0) const {
     const size_t n = Data.n * shape.out_dim;
-    double* H = (double*) malloc(n * sizeof(double));
-    if (constHessian) { std::fill_n(H, n, constValue); }
+    float* H = (float*) malloc(n * sizeof(float));
+    if (constHessian) std::fill_n(H, n, constValue);
     return H;
 }
 
@@ -169,7 +170,7 @@ void BoosterBase::dump_leaf_sizes(uint16_t* leaf_sizes) const {
     }
 }
 
-void BoosterBase::dump_nonleaf_nodes(int* trees, double* thresholds) const {
+void BoosterBase::dump_nonleaf_nodes(int* trees, float* thresholds) const {
     int i = 0, j = 0;
     for(auto& tree : this->trees) {
         for (auto& it : tree.nonleafs) {
@@ -184,7 +185,7 @@ void BoosterBase::dump_nonleaf_nodes(int* trees, double* thresholds) const {
     }
 }
 
-void BoosterBase::dump_leaf_nodes(double* leaves) const {
+void BoosterBase::dump_leaf_nodes(float* leaves) const {
     int k = 0;
     for(auto& tree : trees ) {
         for (auto& leaf : tree.leafs) {

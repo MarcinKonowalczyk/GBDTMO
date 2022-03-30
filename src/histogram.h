@@ -9,8 +9,8 @@ struct Histogram {
 
     size_t size;
     std::vector<int> count;
-    std::vector<double> g;
-    std::vector<double> h;
+    std::vector<float> g;
+    std::vector<float> h;
 
     inline void operator-(const Histogram& x) {
 
@@ -24,26 +24,26 @@ struct Histogram {
     }
 };
 
-// void histogram_single(std::vector<size_t>& order, Histogram& Hit, uint16_t*, double*, double*);
-// void histogram_multi(std::vector<size_t>& order, Histogram&, uint16_t*, double*, double*, int);
+// void histogram_single(std::vector<size_t>& order, Histogram& Hit, uint16_t*, float*, float*);
+// void histogram_multi(std::vector<size_t>& order, Histogram&, uint16_t*, float*, float*, int);
 
 void construct_bin_column(
-    std::vector<double> features_column, // Note: don't pass by reference. Copy. 'feature' is not modified outside of the function.
-    std::vector<double>& bins_column,
+    std::vector<float> features_column, // Note: don't pass by reference. Copy. 'feature' is not modified outside of the function.
+    std::vector<float>& bins_column,
     const uint16_t max_bins
 );
 
 // Calculate binning of a single column of the features matrix
 void map_bin_column(
-    const std::vector<double> features_column,
+    const std::vector<float> features_column,
     std::vector<uint16_t>& map_column,
-    std::vector<double>& bins
+    std::vector<float>& bins
 );
 
 // void calculate_histogram_maps(
-//     const double* features,
+//     const float* features,
 //     uint16_t* maps,
-//     std::vector<std::vector<double>>& bins,
+//     std::vector<std::vector<float>>& bins,
 //     const size_t n,
 //     const size_t inp_dim,
 //     const uint16_t max_bins

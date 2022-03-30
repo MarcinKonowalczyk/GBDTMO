@@ -8,10 +8,10 @@
 #include <iomanip>
 
 struct SplitInfo {
-    double gain = -1e16;
+    float gain = -1e16;
     size_t column = 0;
     size_t bin = 0;
-    double threshold = 0.0;
+    float threshold = 0.0;
     bool is_set = false;
 
     inline void reset() {
@@ -19,7 +19,7 @@ struct SplitInfo {
         is_set = false; 
     }
 
-    inline void update(double gain, int column, int bin, double threshold) {
+    inline void update(float gain, int column, int bin, float threshold) {
         this->gain = gain;
         this->column = column;
         this->bin = bin;
@@ -34,21 +34,21 @@ struct NonLeafNode {
     int parent = 0; // Index of parent
     int left = 0, right = 0; // Left and right node indices
     int column = -1, bin = 0; // Split column and bin index
-    double threshold = 0.0; // Split threshold
+    float threshold = 0.0; // Split threshold
 
-    NonLeafNode(int p, int c, int b, double t) :
+    NonLeafNode(int p, int c, int b, float t) :
             parent(p), column(c), bin(b), threshold(t) {};
 };
 
 struct LeafNode {
-    std::vector<double> values;
+    std::vector<float> values;
 
-    LeafNode(double v) : values(1, v) {};
+    LeafNode(float v) : values(1, v) {};
     
-    LeafNode(std::vector<double>& v) : values(v) {};
+    LeafNode(std::vector<float>& v) : values(v) {};
     
-    LeafNode(size_t capacity, std::vector<std::pair<double, int>>& v) {
-        this->values = std::vector<double>(capacity);
+    LeafNode(size_t capacity, std::vector<std::pair<float, int>>& v) {
+        this->values = std::vector<float>(capacity);
         for (auto& it : v) {
             this->values[it.second] = it.first;
         }
@@ -70,27 +70,27 @@ struct Tree {
         nonleafs.clear();
     }
 
-    void _add_nonleaf(const int parent, const int column, const int bin, const double threshold);
-    void add_root_nonleaf(const int column, const int bin, const double threshold);
-    void add_left_nonleaf(const int parent, const int column, const int bin, const double threshold);
-    void add_right_nonleaf(const int parent, const int column, const int bin, const double threshold);
-    void shrink(const double learning_rate);
+    void _add_nonleaf(const int parent, const int column, const int bin, const float threshold);
+    void add_root_nonleaf(const int column, const int bin, const float threshold);
+    void add_left_nonleaf(const int parent, const int column, const int bin, const float threshold);
+    void add_right_nonleaf(const int parent, const int column, const int bin, const float threshold);
+    void shrink(const float learning_rate);
     void _add_leaf(const LeafNode& node);
     void add_left_leaf(const int parent, const LeafNode& node);
     void add_right_leaf(const int parent, const LeafNode& node);
 
     // predict
-    inline int traverse_tree(const double* const feature) const;
+    inline int traverse_tree(const float* const feature) const;
 
     void pred_value_single(
-        const double* const features,
-        double* const preds,
+        const float* const features,
+        float* const preds,
         const Shape& shape,
         const size_t n
     ) const;
     void pred_value_multi(
-        const double* const features,
-        double* const preds,
+        const float* const features,
+        float* const preds,
         const Shape& shape,
         const size_t n
     ) const;

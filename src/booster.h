@@ -29,12 +29,12 @@ struct CacheInfo {
 };
 
 struct boost_column_result {
-    double gain = 0.0;
+    float gain = 0.0;
     size_t bin_index = 0;
 
     inline bool split_found() { return gain > 0.0; };
 
-    inline void update(double new_gain, size_t index) {
+    inline void update(float new_gain, size_t index) {
         if (new_gain > gain) {
             gain = new_gain;
             bin_index = index;
@@ -60,9 +60,9 @@ public:
     
     void sigint_handler(int signum);
 
-    void set_gh(double*, double*);
-    void set_data(double* features, double* preds, size_t n);
-    void set_label(double*);
+    void set_gh(float*, float*);
+    void set_data(float* features, float* preds, size_t n);
+    void set_label(float*);
     void set_label(int32_t*);
     void calc_maps();
     void calc_eval_fraction();
@@ -76,10 +76,10 @@ public:
     ) const;
 
     // Print helpers
-    inline void showloss(double score, double metric, int i) const { std::cout << "[" << i << "] train->" << std::setprecision(5) << std::fixed << score << "\teval->" << std::setprecision(5) << std::fixed << metric << std::endl; }
-    inline void showloss(double metric, int i) const { std::cout << "[" << i << "] score->" << std::setprecision(5) << std::fixed << metric << std::endl; }
-    inline void showbest(std::pair<double, int> info) const { showbest(std::get<0>(info), std::get<1>(info)); }
-    inline void showbest(double score, int round) const { std::cout << "Best score " << score << " at round " << round << std::endl; }
+    inline void showloss(float score, float metric, int i) const { std::cout << "[" << i << "] train->" << std::setprecision(5) << std::fixed << score << "\teval->" << std::setprecision(5) << std::fixed << metric << std::endl; }
+    inline void showloss(float metric, int i) const { std::cout << "[" << i << "] score->" << std::setprecision(5) << std::fixed << metric << std::endl; }
+    inline void showbest(std::pair<float, int> info) const { showbest(std::get<0>(info), std::get<1>(info)); }
+    inline void showbest(float score, int round) const { std::cout << "Best score " << score << " at round " << round << std::endl; }
 
     // IO
     void load(const char* path) { LoadTrees(trees, path); }
@@ -89,8 +89,8 @@ public:
     virtual void growth() = 0;
     virtual void train(int) = 0;
     virtual void predict(
-        const double* const features,
-        double* const preds,
+        const float* const features,
+        float* const preds,
         const size_t n,
         size_t num_trees // NOTE: num_trees can change inside of the function. If num_trees = 0, num_trees == max_trees
     ) = 0;
@@ -100,16 +100,16 @@ public:
     // Used to dump state to arrays
     void dump_nonleaf_sizes(uint16_t* nonleaf_sizes) const;
     void dump_leaf_sizes(uint16_t* leaf_sizes) const;
-    void dump_nonleaf_nodes(int* trees, double* thresholds) const;
-    void dump_leaf_nodes(double* leaves) const;
+    void dump_nonleaf_nodes(int* trees, float* thresholds) const;
+    void dump_leaf_nodes(float* leaves) const;
     
     const Shape shape;
     HyperParameters hp;
 
 protected:
 
-    double* malloc_G() const;
-    double* malloc_H(const bool constHessian, const double constValue) const;
+    float* malloc_G() const;
+    float* malloc_H(const bool constHessian, const float constValue) const;
 
     virtual void boost_all(const std::vector<Histogram>& Hist) = 0;
     virtual void hist_column(
@@ -124,13 +124,13 @@ protected:
 
     Tree tree;
     std::vector<uint16_t> bin_nums;
-    std::vector<std::vector<double>> bin_values;
+    std::vector<std::vector<float>> bin_values;
     SplitInfo meta;
     Dataset Data;
     std::vector<size_t> eval_indices;
     std::vector<size_t> train_indices;
-    double* G;
-    double* H;
+    float* G;
+    float* H;
     TopkDeque<CacheInfo> cache;
     Objective obj;
 };
@@ -151,8 +151,8 @@ public:
     void growth() override;
     void train(int) override;
     void predict(
-        const double* const features,
-        double* const preds,
+        const float* const features,
+        float* const preds,
         const size_t n,
         size_t num_trees // NOTE: num_trees can change inside of the function. If num_trees = 0, num_trees == max_trees
     ) override;
@@ -173,8 +173,8 @@ private:
         std::vector<Histogram>& Hist
     ) const override;
 
-    double Score_sum, Opt;
-    void get_score_opt(Histogram&, double& , double& );
+    float Score_sum, Opt;
+    void get_score_opt(Histogram&, float& , float& );
     void build_tree_best();
 };
 
@@ -194,8 +194,8 @@ public:
     void growth() override;
     void train(int) override;
     void predict(
-        const double* const features,
-        double* const preds,
+        const float* const features,
+        float* const preds,
         const size_t n,
         size_t num_trees // NOTE: num_trees can change inside of the function. If num_trees = 0, num_trees == max_trees
     ) override;
@@ -218,23 +218,23 @@ private:
         std::vector<Histogram>& Hist
     ) const override;
 
-    double Score_sum;
-    std::vector<double> Score;
-    std::vector<double> Opt;
-    std::vector<std::pair<double, int>> OptPair;
+    float Score_sum;
+    std::vector<float> Score;
+    std::vector<float> Opt;
+    std::vector<std::pair<float, int>> OptPair;
 
     void get_score_opt(
         const Histogram& Hist,
-        std::vector<double>& opt,
-        std::vector<double>& score,
-        double& score_sum
+        std::vector<float>& opt,
+        std::vector<float>& score,
+        float& score_sum
     ) const;
 
     void get_score_opt(
         const Histogram& Hist,
-        std::vector<std::pair<double, int>>& opt,
-        std::vector<double>& score,
-        double& score_sum
+        std::vector<std::pair<float, int>>& opt,
+        std::vector<float>& score,
+        float& score_sum
     ) const;
 
     void build_tree_best();

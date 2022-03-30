@@ -22,12 +22,12 @@ BoosterMulti::BoosterMulti(const Shape s, HyperParameters hp) : BoosterBase(s, h
 
 void BoosterMulti::get_score_opt(
     const Histogram& Hist,
-    std::vector<double>& opt,
-    std::vector<double>& score,
-    double& score_sum
+    std::vector<float>& opt,
+    std::vector<float>& score,
+    float& score_sum
 ) const {
-    const double* gr = &Hist.g[Hist.g.size() - shape.out_dim];
-    const double* hr = &Hist.h[Hist.h.size() - shape.out_dim];
+    const float* gr = &Hist.g[Hist.g.size() - shape.out_dim];
+    const float* hr = &Hist.h[Hist.h.size() - shape.out_dim];
     const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
     const auto CalWeight = (hp.reg_l1 == 0) ? CalWeightNoL1 : CalWeightL1;
     for (size_t i = 0; i < shape.out_dim; ++i) {
@@ -42,15 +42,15 @@ void BoosterMulti::get_score_opt(
 
 void BoosterMulti::get_score_opt(
     const Histogram& Hist,
-    std::vector<std::pair<double, int>>& opt,
-    std::vector<double>& score,
-    double& score_sum
+    std::vector<std::pair<float, int>>& opt,
+    std::vector<float>& score,
+    float& score_sum
 ) const {
-    const double* gr = &Hist.g[Hist.g.size() - shape.out_dim];
-    const double* hr = &Hist.h[Hist.h.size() - shape.out_dim];
+    const float* gr = &Hist.g[Hist.g.size() - shape.out_dim];
+    const float* hr = &Hist.h[Hist.h.size() - shape.out_dim];
     const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
     const auto CalWeight = (hp.reg_l1 == 0) ? CalWeightNoL1 : CalWeightL1;
-    TopkPriority<std::pair<double, int>> score_k(hp.topk);
+    TopkPriority<std::pair<float, int>> score_k(hp.topk);
     for (size_t i = 0; i < shape.out_dim; ++i) {
         score[i] = CalScore(gr[i], hr[i], hp.reg_l1, hp.reg_l2);
         score_k.push(std::make_pair(score[i], i));
@@ -125,8 +125,8 @@ void BoosterMulti::hist_all(
 
 boost_column_result
 BoosterMulti::boost_column_full(const Histogram& Hist, const size_t column) {
-    const double* gx = &Hist.g[Hist.g.size() - shape.out_dim];
-    const double* hx = &Hist.h[Hist.h.size() - shape.out_dim];
+    const float* gx = &Hist.g[Hist.g.size() - shape.out_dim];
+    const float* hx = &Hist.h[Hist.h.size() - shape.out_dim];
     const size_t max_bins = Hist.count.size() - 1; // TODO: Make sure Hist.count.size > 0 ?
 
     boost_column_result result;
@@ -135,11 +135,11 @@ BoosterMulti::boost_column_full(const Histogram& Hist, const size_t column) {
         size_t bo = i * shape.out_dim; // bin offset
         
         // Gain for all the output variables
-        double bin_gain = 0.0;
+        float bin_gain = 0.0;
         for (size_t j = 0; j < shape.out_dim; ++j) {
             size_t ho = bo + j; // histogram offset
-            double score_l = CalScore(Hist.g[ho], Hist.h[ho], hp.reg_l1, hp.reg_l2);
-            double score_r = CalScore(gx[j] - Hist.g[ho], hx[j] - Hist.h[ho], hp.reg_l1, hp.reg_l2);
+            float score_l = CalScore(Hist.g[ho], Hist.h[ho], hp.reg_l1, hp.reg_l2);
+            float score_r = CalScore(gx[j] - Hist.g[ho], hx[j] - Hist.h[ho], hp.reg_l1, hp.reg_l2);
             bin_gain += score_l + score_r;
         }
         result.update(bin_gain, i);
@@ -149,12 +149,12 @@ BoosterMulti::boost_column_full(const Histogram& Hist, const size_t column) {
 
 boost_column_result
 BoosterMulti::boost_column_topk_two_side(const Histogram& Hist, const size_t column) {
-    const double* gx = &Hist.g[Hist.g.size() - shape.out_dim];
-    const double* hx = &Hist.h[Hist.h.size() - shape.out_dim];
+    const float* gx = &Hist.g[Hist.g.size() - shape.out_dim];
+    const float* hx = &Hist.h[Hist.h.size() - shape.out_dim];
     const size_t max_bins = Hist.count.size() - 1;
 
-    auto pq_l = TopkPriority<double>(hp.topk);
-    auto pq_r = TopkPriority<double>(hp.topk);
+    auto pq_l = TopkPriority<float>(hp.topk);
+    auto pq_r = TopkPriority<float>(hp.topk);
 
     boost_column_result result;
     const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
@@ -164,13 +164,13 @@ BoosterMulti::boost_column_topk_two_side(const Histogram& Hist, const size_t col
         // Go through all the splits
         for (size_t j = 0; j < shape.out_dim; ++j) {
             size_t ho = bo + j; // histogram offset
-            double score_l = CalScore(Hist.g[ho], Hist.h[ho], hp.reg_l1, hp.reg_l2);
-            double score_r = CalScore(gx[j] - Hist.g[ho], hx[j] - Hist.h[ho], hp.reg_l1, hp.reg_l2);
+            float score_l = CalScore(Hist.g[ho], Hist.h[ho], hp.reg_l1, hp.reg_l2);
+            float score_r = CalScore(gx[j] - Hist.g[ho], hx[j] - Hist.h[ho], hp.reg_l1, hp.reg_l2);
             pq_l.push(score_l);
             pq_r.push(score_r);
         }
 
-        double bin_gain = 0.0;
+        float bin_gain = 0.0;
         for(; !pq_l.empty(); pq_l.pop()) { bin_gain += pq_l.top(); }
         for(; !pq_r.empty(); pq_r.pop()) { bin_gain += pq_r.top(); }
         result.update(bin_gain, i);
@@ -180,11 +180,11 @@ BoosterMulti::boost_column_topk_two_side(const Histogram& Hist, const size_t col
 
 boost_column_result
 BoosterMulti::boost_column_topk_one_side(const Histogram& Hist, const size_t column) {
-    const double* gx = &Hist.g[Hist.g.size() - shape.out_dim];
-    const double* hx = &Hist.h[Hist.h.size() - shape.out_dim];
+    const float* gx = &Hist.g[Hist.g.size() - shape.out_dim];
+    const float* hx = &Hist.h[Hist.h.size() - shape.out_dim];
     const size_t max_bins = Hist.count.size() - 1;
 
-    auto pq = TopkPriority<double>(hp.topk);
+    auto pq = TopkPriority<float>(hp.topk);
 
     boost_column_result result;
     const auto CalScore = (hp.reg_l1 == 0) ? CalScoreNoL1 : CalScoreL1;
@@ -193,12 +193,12 @@ BoosterMulti::boost_column_topk_one_side(const Histogram& Hist, const size_t col
         
         for (size_t j = 0; j < shape.out_dim; ++j) {
             size_t ho = bo + j; // histogram offset
-            double score_l = CalScore(Hist.g[ho], Hist.h[ho], hp.reg_l1, hp.reg_l2);
-            double score_r = CalScore(gx[j] - Hist.g[ho], hx[j] - Hist.h[ho], hp.reg_l1, hp.reg_l2);
+            float score_l = CalScore(Hist.g[ho], Hist.h[ho], hp.reg_l1, hp.reg_l2);
+            float score_r = CalScore(gx[j] - Hist.g[ho], hx[j] - Hist.h[ho], hp.reg_l1, hp.reg_l2);
             pq.push(score_l + score_r);
         }
 
-        double bin_gain = 0.0;
+        float bin_gain = 0.0;
         for (; !pq.empty(); pq.pop()) { bin_gain += pq.top(); }
         result.update(bin_gain, i);
     }
@@ -229,7 +229,7 @@ void BoosterMulti::boost_all(const std::vector<Histogram>& Hist) {
     for (size_t i  = 0; i < shape.inp_dim; ++i) {
         auto result = results[i];
         if (result.split_found()) {
-            double overall_gain =  (result.gain - Score_sum) / (2 * divisor);
+            float overall_gain =  (result.gain - Score_sum) / (2 * divisor);
             if (overall_gain > meta.gain) {
                 meta.update(overall_gain, i, result.bin_index, bin_values[i][result.bin_index]);
             }
@@ -352,7 +352,7 @@ void BoosterMulti::train(int num_rounds) {
     srand(hp.seed);
     G = malloc_G();
     H = malloc_H(obj.constHessian, obj.hessian);
-    auto early_stoper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
+    auto early_stopper = EarlyStopper(hp.early_stop == 0 ? num_rounds : hp.early_stop, obj.largerBetter);
 
     for (size_t i = 0; i < num_rounds; ++i) {
         obj.f_grad(Data, shape.out_dim, G, H);
@@ -361,13 +361,13 @@ void BoosterMulti::train(int num_rounds) {
         tree.pred_value_multi(Data.Features, Data.preds, shape, Data.n);
         trees.push_back(tree);
 
-        double train_score = obj.f_score(Data, shape.out_dim, G);
+        float train_score = obj.f_score(Data, shape.out_dim, G);
         if (hp.eval_fraction > 0.0) {
-            double metric = obj.f_metric(Data, shape.out_dim, G, false);
+            float metric = obj.f_metric(Data, shape.out_dim, G, false);
             if (hp.verbose) showloss(train_score, metric, i);
-            early_stoper.push(std::make_pair(metric, i));
-            if (!early_stoper.is_continue) {
-                auto info = early_stoper.info;
+            early_stopper.push(std::make_pair(metric, i));
+            if (!early_stopper.is_continue) {
+                auto info = early_stopper.info;
                 int round = std::get<1>(info);
                 if (hp.verbose) showbest(std::get<0>(info), round);
                 trees.resize(round);
@@ -377,9 +377,9 @@ void BoosterMulti::train(int num_rounds) {
             if (hp.verbose) showloss(train_score, i);
         }
     }
-    if (early_stoper.is_continue && hp.eval_fraction > 0.0 && hp.verbose) {
+    if (early_stopper.is_continue && hp.eval_fraction > 0.0 && hp.verbose) {
         std::cout << "Warning. Terminated at bound\n";
-        showbest(early_stoper.info);
+        showbest(early_stopper.info);
     }
 
     free(G);
@@ -397,8 +397,8 @@ void BoosterMulti::train(int num_rounds) {
 //=====================================================================================
 
 void BoosterMulti::predict(
-    const double* const features,
-    double* const preds,
+    const float* const features,
+    float* const preds,
     const size_t n,
     size_t num_trees = 0
 ) {

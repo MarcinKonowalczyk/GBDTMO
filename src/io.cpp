@@ -9,7 +9,7 @@
 #include <cstring>
 #include <sstream>
 
-#define PRECISION 16
+#define PRECISION 6
 
 //=======================================================================
 //                                                                       
@@ -83,15 +83,15 @@ void LoadTrees(std::vector<Tree>& trees, const char* path) {
             if (num < 0) { // nonleaf
                 int parent = std::stoi(contents[1]);
                 int column = std::stoi(contents[4]);
-                double threshold = std::stod(contents[5]);
+                float threshold = std::stod(contents[5]);
                 auto node = NonLeafNode(parent, column, -1, threshold);
                 node.left = std::stoi(contents[2]);
                 node.right = std::stoi(contents[3]);
                 _tree.nonleafs.emplace(num, node);
             } else { // leaf
-                auto values = std::vector<std::pair<double, int>>();
+                auto values = std::vector<std::pair<float, int>>();
                 for (size_t i = 1; i < contents.size(); ++i) {
-                    values.push_back(std::pair<double, int>(std::stod(contents[i]), i - 1));
+                    values.push_back(std::pair<float, int>(std::stod(contents[i]), i - 1));
                 }
                 auto node = LeafNode(contents.size() - 1, values);
                 _tree.leafs.emplace(num, node);

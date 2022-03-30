@@ -14,29 +14,29 @@
 // score function: dataset, rows, columns
 // function with "column": only used for multiple predictions one by one
 
-typedef void   (*func_grad)           (const Dataset& data, const size_t out_dim, double* const g, double* const h);
-typedef double (*func_score)          (const Dataset& data, const size_t out_dim, const double* const g);
-typedef double (*func_partial_score)  (const Dataset& data, const size_t out_dim, const double* const g, const bool score_train);
-typedef double (*func_metric)         (const Dataset& data, const size_t out_dim, const double* const g, const bool score_train);
+typedef void   (*func_grad)           (const Dataset& data, const size_t out_dim, float* const g, float* const h);
+typedef float (*func_score)          (const Dataset& data, const size_t out_dim, const float* const g);
+typedef float (*func_partial_score)  (const Dataset& data, const size_t out_dim, const float* const g, const bool score_train);
+typedef float (*func_metric)         (const Dataset& data, const size_t out_dim, const float* const g, const bool score_train);
 
-void   mse_grad              (const Dataset&, const size_t, double* const, double* const);
-double mse_score             (const Dataset&, const size_t, const double* const);
-double mse_partial_score     (const Dataset&, const size_t, const double* const, const bool);
-void   bce_grad              (const Dataset&, const size_t, double* const, double* const);
-double bce_score             (const Dataset&, const size_t, const double* const);
-double bce_partial_score     (const Dataset&, const size_t, const double* const, const bool);
-void   ce_grad               (const Dataset&, const size_t, double* const, double* const);
-double ce_score              (const Dataset&, const size_t, const double* const);
-void   ce_grad_column        (const Dataset&, const size_t, double* const, double* const);
-double ce_score_column       (const Dataset&, const size_t, const double* const);
-double acc_binary            (const Dataset&, const size_t, const double* const, const bool);
-double acc_multiclass        (const Dataset&, const size_t, const double* const);
-double acc_multiclass_column (const Dataset&, const size_t, const double* const);
+void   mse_grad              (const Dataset&, const size_t, float* const, float* const);
+float mse_score             (const Dataset&, const size_t, const float* const);
+float mse_partial_score     (const Dataset&, const size_t, const float* const, const bool);
+void   bce_grad              (const Dataset&, const size_t, float* const, float* const);
+float bce_score             (const Dataset&, const size_t, const float* const);
+float bce_partial_score     (const Dataset&, const size_t, const float* const, const bool);
+void   ce_grad               (const Dataset&, const size_t, float* const, float* const);
+float ce_score              (const Dataset&, const size_t, const float* const);
+void   ce_grad_column        (const Dataset&, const size_t, float* const, float* const);
+float ce_score_column       (const Dataset&, const size_t, const float* const);
+float acc_binary            (const Dataset&, const size_t, const float* const, const bool);
+float acc_multiclass        (const Dataset&, const size_t, const float* const);
+float acc_multiclass_column (const Dataset&, const size_t, const float* const);
 
 struct Objective {
     bool constHessian = true;
-    double hessian = 1.0;
-    double largerBetter = false;
+    float hessian = 1.0;
+    float largerBetter = false;
     func_grad f_grad;
     func_score f_score;
     func_partial_score f_partial_score;

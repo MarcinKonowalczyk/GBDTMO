@@ -35,9 +35,9 @@ struct Shape {
 
 struct Dataset {
     size_t n = 0;
-    double* Features; // N x inp_dim
-    double* preds; // N x out_dim
-    double* Label_double; // N
+    float* Features; // N x inp_dim
+    float* preds; // N x out_dim
+    float* Label_float; // N
     int32_t* Label_int32; // N
     std::vector<size_t> train_order; // N_train
     std::vector<size_t> eval_order; // N_eval
@@ -66,18 +66,18 @@ struct HyperParameters {
     unsigned int max_leaves;
     int seed;
     unsigned int min_samples;
-    double learning_rate;
-    double reg_l1;
-    double reg_l2;
-    double gamma;
+    float learning_rate;
+    float reg_l1;
+    float reg_l2;
+    float gamma;
     unsigned int early_stop;
     bool verbose;
     unsigned int max_caches;
     unsigned int topk;
     bool one_side;
     unsigned int max_bins;
-    double alpha;
-    double eval_fraction;
+    float alpha;
+    float eval_fraction;
 
 
     void init_default() {
@@ -227,7 +227,7 @@ private:
 
 public:
     bool is_continue = true;
-    std::pair<double, int> info;
+    std::pair<float, int> info;
 
     EarlyStopper() {};
 
@@ -237,7 +237,7 @@ public:
 
     inline void stop() { is_continue = false; }
 
-    inline void push(const std::pair<double, int>& x) {
+    inline void push(const std::pair<float, int>& x) {
         if (larger_better == x > info) { info = x; } // xnor(larger_better, x > info)
         is_continue = is_continue && (std::get<1>(x) < std::get<1>(info) + k);
     }
