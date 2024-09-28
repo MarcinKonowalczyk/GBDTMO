@@ -1,11 +1,12 @@
-import numpy as np
+import os
+import sys
 
-import os, sys
+import numpy as np
 
 sys.path.append(os.path.realpath(os.path.join(os.path.dirname(__file__), ".")))
 
 # from gbdtmo import Loss
-from gbdtmo.sklearn import GBDTRecursiveForcaster, FFTTransformer
+from gbdtmo.sklearn import GBDTRecursiveForcaster
 
 # Generate data
 from generate_timeseries import generate
@@ -13,6 +14,7 @@ from generate_timeseries import generate
 data = generate(30 * 48)
 
 from sklearn.model_selection import train_test_split
+
 # Prepare timeseries data for the booster
 history = 48  # Data points to use as explanatory variables
 future = 2 * 48
@@ -20,10 +22,10 @@ from more_itertools import windowed
 
 temp = np.array(list(windowed(data, history + future)))
 X = temp[:, :history]  # past
-y = temp[:, history:(history + future)]
+y = temp[:, history : (history + future)]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
 
-#============================================================
+# ============================================================
 #
 #  ##   ##  #####    #####
 #  ##   ##  ##  ##  ##   ##
@@ -31,11 +33,11 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
 #  ##   ##  ##      ##   ##
 #  ##   ##  ##       #####
 #
-#============================================================
+# ============================================================
 
 # from sklearn.model_selection import GridSearchCV
 from skopt import BayesSearchCV
-from skopt.space import Integer, Real, Categorical
+from skopt.space import Integer, Real
 
 common_params = dict(
     verbose=False,
@@ -62,8 +64,9 @@ search_params = dict(
 #              ('reg_l2', 1.0),
 #              ('topk', 39)])
 
-from sklearn.metrics import make_scorer, r2_score, mean_squared_error
 from functools import partial
+
+from sklearn.metrics import make_scorer, mean_squared_error, r2_score
 
 
 def make_slice_score(f, *, slice):

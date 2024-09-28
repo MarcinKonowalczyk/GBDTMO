@@ -1,12 +1,14 @@
-import os, sys
+import os
+import sys
 from contextlib import contextmanager
 
 sys.path.append(os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
 
-import numpy as np
-from gbdtmo import GBDTMulti, GBDTSingle, Loss
-
 import time
+
+import numpy as np
+
+from gbdtmo import GBDTMulti, GBDTSingle, Loss
 
 
 @contextmanager
@@ -17,7 +19,7 @@ def Timer(message=None):
     finally:
         t2 = time.monotonic()
         if message:
-            print(f"{message} : ", end='')
+            print(f"{message} : ", end="")
         print(f"dt = {t2-t1} s")
 
 
@@ -38,7 +40,10 @@ def seed_rng(random_state):
 from random import sample
 from string import ascii_letters
 
-uid = lambda: ''.join(sample(ascii_letters, 10))
+
+def uid():
+    return "".join(sample(ascii_letters, 10))
+
 
 # TODO: test classification too
 
@@ -54,7 +59,7 @@ uid = lambda: ''.join(sample(ascii_letters, 10))
 #     booster.train(20)
 #     booster.dump(b"classification.txt")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     booster_shape = (10, 2)
     seed = 42
     booster_params = dict(
@@ -67,14 +72,19 @@ if __name__ == '__main__':
         #   eval_fraction=0.2
     )
     with seed_rng(seed):
-        X_train, X_test = np.random.rand(10000, booster_shape[0]), np.random.rand(100, booster_shape[0])
+        X_train, X_test = (
+            np.random.rand(10000, booster_shape[0]),
+            np.random.rand(100, booster_shape[0]),
+        )
         M = np.random.randn(5 * booster_shape[0], booster_shape[1])
 
     # Round to two decimal places
     X_train, X_test = np.round(X_train, 2), np.round(X_test, 2)
 
     # Function to approximate with the gradient booster
-    f = lambda X: np.apply_along_axis(lambda a: a - np.mean(a), 0, np.c_[X, X**2, X**(1 / 2), X**3, X**(1 / 3)] @ M)
+    def f(X):
+        return np.apply_along_axis(lambda a: a - np.mean(a), 0, np.c_[X, X**2, X ** (1 / 2), X**3, X ** (1 / 3)] @ M)
+
     y_train, y_test = f(X_train), f(X_test)
 
     # Convert to
@@ -92,10 +102,10 @@ if __name__ == '__main__':
     with Timer("booster_multi.train"):
         booster_multi.train(10)
 
-    booster_single.dump('state_single.txt')
+    booster_single.dump("state_single.txt")
     state_single = booster_single.get_state()
 
-    booster_multi.dump('state_multi.txt')
+    booster_multi.dump("state_multi.txt")
     state_multi = booster_multi.get_state()
 
     yp_single = booster_single.predict(X_test)
@@ -106,11 +116,11 @@ if __name__ == '__main__':
     import matplotlib
     import matplotlib.pyplot as plt
 
-    cm = [p['color'] for p in matplotlib.rcParams['axes.prop_cycle']]
+    cm = [p["color"] for p in matplotlib.rcParams["axes.prop_cycle"]]
 
-    y_params = dict(color='k', alpha=0.3, label='y')
-    yp_single_params = dict(marker='o', linewidth=0, markersize=2, color=cm[0], label='yp_single')
-    yp_multi_params = dict(marker='x', linewidth=0, markersize=2, color=cm[1], label='yp_multi')
+    y_params = dict(color="k", alpha=0.3, label="y")
+    yp_single_params = dict(marker="o", linewidth=0, markersize=2, color=cm[0], label="yp_single")
+    yp_multi_params = dict(marker="x", linewidth=0, markersize=2, color=cm[1], label="yp_multi")
 
     fig = plt.figure()
     ax1 = fig.add_subplot(2, 1, 1)
@@ -132,7 +142,7 @@ if __name__ == '__main__':
 
     plt.setp(ax1.get_xticklabels(), visible=False)
 
-    text_params = dict(ha='right', va='bottom', transform=fig.transFigure, size=8, alpha=0.3)
+    text_params = dict(ha="right", va="bottom", transform=fig.transFigure, size=8, alpha=0.3)
     plt.text(0.99, 0.01, f"{uid()}", **text_params)
 
     # plt.show()

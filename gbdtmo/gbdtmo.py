@@ -1,7 +1,8 @@
 import numpy as np
+
 from .lib_utils import *
 
-#=================================================================
+# =================================================================
 #
 #  #####     ###     ####  #####
 #  ##  ##   ## ##   ##     ##
@@ -9,7 +10,7 @@ from .lib_utils import *
 #  ##  ##  #######     ##  ##
 #  #####   ##   ##  ####   #####
 #
-#=================================================================
+# =================================================================
 
 BASE_SCORE = 0.0
 
@@ -57,7 +58,7 @@ class GBDTBase(BoosterLibWrapper):
         return tree_array, threshold_array, leaf_array
 
     def _get_nonleaf_sizes(self, n_trees=None):
-        """ Get the array describing the sizes of each of the trees in the nonleaf array """
+        """Get the array describing the sizes of each of the trees in the nonleaf array"""
         n_trees = self._lib_GetNTrees() if not n_trees else n_trees
         nonleaf_sizes = np.zeros(n_trees, dtype=np.uint16)
         self._lib_GetNonleafSizes(nonleaf_sizes)
@@ -65,17 +66,21 @@ class GBDTBase(BoosterLibWrapper):
 
     @staticmethod
     def _splitter_combiner(X, sizes, pad_value=np.nan):
-        """ Split array according to sizes, pad with value and recombine into a 3d array """
-        if len(X.shape) == 1: X = X.reshape(-1, 1)  # If array is 1d, add a dimension
+        """Split array according to sizes, pad with value and recombine into a 3d array"""
+        if len(X.shape) == 1:
+            X = X.reshape(-1, 1)  # If array is 1d, add a dimension
         splits = np.cumsum(sizes)
         assert splits[-1] == X.shape[0]
         X = np.split(X, splits[:-1])
         max_size = np.max(sizes)
-        padder = lambda x: np.pad(x, ((0, max_size - len(x)), (0, 0)), mode="constant", constant_values=pad_value)
+
+        def padder(x):
+            return np.pad(x, ((0, max_size - len(x)), (0, 0)), mode="constant", constant_values=pad_value)
+
         return np.ascontiguousarray(np.moveaxis(np.stack([padder(x) for x in X], axis=0), 1, 2))
 
     def _get_nonleaf_nodes(self, n_trees=None):
-        """ Get the tree array and the corresponding threshold array """
+        """Get the tree array and the corresponding threshold array"""
         tree_sizes = self._get_nonleaf_sizes(n_trees)
         N_nonleaf = np.sum(tree_sizes)
         tree_array = np.full((N_nonleaf, 5), 0, dtype=np.int32)
@@ -109,18 +114,18 @@ class GBDTBase(BoosterLibWrapper):
     def predict(self, X, num_trees=0):
         """ """
         preds = np.full((len(X), self.out_dim), BASE_SCORE, dtype=np.float32)
-        X = X.astype(np.float32, order='C', casting='same_kind', subok=False, copy=False)
+        X = X.astype(np.float32, order="C", casting="same_kind", subok=False, copy=False)
         self._lib_Predict(X, preds, len(X), num_trees)
         return preds
 
     @staticmethod
     def _check_data(X: np.ndarray):
-        return X.astype(np.float32, order='C', casting='same_kind', subok=False, copy=False)
+        return X.astype(np.float32, order="C", casting="same_kind", subok=False, copy=False)
 
     @staticmethod
     def _check_label(y: np.ndarray):
         y = y.reshape(-1, 1) if len(y.shape) == 1 else y
-        return y.astype(np.float32, order='C', casting='same_kind')
+        return y.astype(np.float32, order="C", casting="same_kind")
 
     def set_data_regression(self, X, y):
         """ """
@@ -142,7 +147,7 @@ class GBDTBase(BoosterLibWrapper):
     #     self._lib_Train(num)
 
 
-#================================================================================
+# ================================================================================
 #
 #   ####  ##  ##     ##   ####    ##      #####
 #  ##     ##  ####   ##  ##       ##      ##
@@ -150,11 +155,10 @@ class GBDTBase(BoosterLibWrapper):
 #     ##  ##  ##    ###  ##   ##  ##      ##
 #  ####   ##  ##     ##   ####    ######  #####
 #
-#================================================================================
+# ================================================================================
 
 
 class GBDTSingle(GBDTBase):
-
     _lib_init_name = "SingleNew"
 
     # TODO: think about the array ordering
@@ -189,7 +193,7 @@ class GBDTSingle(GBDTBase):
         return leaf_array
 
 
-#===========================================================================
+# ===========================================================================
 #
 #  ###    ###  ##   ##  ##      ######  ##
 #  ## #  # ##  ##   ##  ##        ##    ##
@@ -197,11 +201,10 @@ class GBDTSingle(GBDTBase):
 #  ##      ##  ##   ##  ##        ##    ##
 #  ##      ##   #####   ######    ##    ##
 #
-#===========================================================================
+# ===========================================================================
 
 
 class GBDTMulti(GBDTBase):
-
     _lib_init_name = "MultiNew"
 
     def _get_leaf_nodes(self, n_trees=None):

@@ -1,5 +1,5 @@
+from .gbdtmo import GBDTMulti, GBDTSingle
 from .lib_utils import HyperParameters, Loss
-from .gbdtmo import GBDTSingle, GBDTMulti
 
 __all__ = [
     "GBDTSingle",

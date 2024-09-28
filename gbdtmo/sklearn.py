@@ -1,10 +1,10 @@
+import numpy as np
+from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
+
 from . import *
 
-from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.utils.validation import check_is_fitted, check_X_y, check_array
-import numpy as np
-
-#=============================================================================================
+# =============================================================================================
 #
 #   ####  ##  ##  ##      #####    ###    #####    ##     ##
 #  ##     ## ##   ##      ##      ## ##   ##  ##   ####   ##
@@ -12,7 +12,7 @@ import numpy as np
 #     ##  ## ##   ##      ##     #######  ##  ##   ##    ###
 #  ####   ##  ##  ######  #####  ##   ##  ##   ##  ##     ##
 #
-#=============================================================================================
+# =============================================================================================
 
 # sklearn-friendly wrapper for the booster
 
@@ -62,13 +62,13 @@ class GBDTRegressor(BaseEstimator, RegressorMixin):
 
     def __getstate__(self):
         state = super().__getstate__()
-        if hasattr(self, 'booster_'):
+        if hasattr(self, "booster_"):
             _state = self.booster_.get_state()
-            state['tree_array'], state['threshold_array'], state['leaf_array'] = _state
+            state["tree_array"], state["threshold_array"], state["leaf_array"] = _state
         return state
 
     def __setattr__(self, name, value):
-        if hasattr(self, 'booster_') and (name in self.get_params() or name == "booster_"):
+        if hasattr(self, "booster_") and (name in self.get_params() or name == "booster_"):
             raise TypeError(
                 f"Cannot change attribute '{name}' of a fitted estimator. Use `base.clone()`, change the attributes and refit."
             )
@@ -94,7 +94,7 @@ class GBDTRegressor(BaseEstimator, RegressorMixin):
         return self.booster_.predict(X)
 
 
-#=======================================================================================================================================
+# =======================================================================================================================================
 #
 #  #####    #####   ####        #####   #####   #####     ####    ###     ####  ######  #####  #####
 #  ##  ##   ##     ##           ##     ##   ##  ##  ##   ##      ## ##   ##       ##    ##     ##  ##
@@ -102,7 +102,7 @@ class GBDTRegressor(BaseEstimator, RegressorMixin):
 #  ##  ##   ##     ##           ##     ##   ##  ##  ##   ##     #######     ##    ##    ##     ##  ##
 #  ##   ##  #####   ####        ##      #####   ##   ##   ####  ##   ##  ####     ##    #####  ##   ##
 #
-#=======================================================================================================================================
+# =======================================================================================================================================
 
 
 class GBDTRecursiveForcaster(GBDTRegressor):
@@ -159,9 +159,9 @@ class GBDTRecursiveForcaster(GBDTRegressor):
             self.shape = (X.shape[1], y.shape[1])
         elif self.future_increment <= y.shape[1]:
             self.shape = (X.shape[1], self.future_increment)
-            y = y[:, :self.future_increment]
+            y = y[:, : self.future_increment]
         elif self.future_increment > y.shape[1]:
-            raise TypeError(f"Future increment larger than the size of the training data.")
+            raise TypeError("Future increment larger than the size of the training data.")
 
         booster_object = GBDTMulti if self.correlated else GBDTSingle
         params = self.__dict__ | dict(loss=Loss.mse)
@@ -187,7 +187,10 @@ class GBDTRecursiveForcaster(GBDTRegressor):
         X_incr = X.copy()
         while yp.shape[1] < future_length:
             i = max(inp_dim - yp.shape[1], 0)
-            X_slice, yp_slice = range(inp_dim - i, inp_dim), range(yp.shape[1] - (inp_dim - i), yp.shape[1])
+            X_slice, yp_slice = (
+                range(inp_dim - i, inp_dim),
+                range(yp.shape[1] - (inp_dim - i), yp.shape[1]),
+            )
             X_incr = np.c_[X[:, X_slice], yp[:, yp_slice]]
             assert X_incr.shape[1] == inp_dim
             yp_incr = self.booster_.predict(X_incr)
@@ -197,7 +200,7 @@ class GBDTRecursiveForcaster(GBDTRegressor):
         return yp
 
 
-#===============================================================================================================================================================
+# ===============================================================================================================================================================
 #
 #  #####  #####  ######        ######  #####      ###    ##     ##   ####  #####   #####   #####    ###    ###  #####  #####
 #  ##     ##       ##            ##    ##  ##    ## ##   ####   ##  ##     ##     ##   ##  ##  ##   ## #  # ##  ##     ##  ##
@@ -205,7 +208,7 @@ class GBDTRecursiveForcaster(GBDTRegressor):
 #  ##     ##       ##            ##    ##  ##   #######  ##    ###     ##  ##     ##   ##  ##  ##   ##      ##  ##     ##  ##
 #  ##     ##       ##            ##    ##   ##  ##   ##  ##     ##  ####   ##      #####   ##   ##  ##      ##  #####  ##   ##
 #
-#===============================================================================================================================================================
+# ===============================================================================================================================================================
 
 from sklearn.base import BaseEstimator, TransformerMixin
 

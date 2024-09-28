@@ -1,14 +1,14 @@
-import numpy as np
-import numpy.ctypeslib as npct
-from ctypes import *
-from typing import Union, Optional
-
 # Default Library path
 import os
+from ctypes import *
+from typing import Optional, Union
+
+import numpy as np
+import numpy.ctypeslib as npct
 
 DEFAULT_LIB_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "lib.so"))
 
-#=========================================================================
+# =========================================================================
 #
 #  #####  ##     ##  ##   ##  ###    ###
 #  ##     ####   ##  ##   ##  ## #  # ##
@@ -16,7 +16,7 @@ DEFAULT_LIB_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "lib
 #  ##     ##    ###  ##   ##  ##      ##
 #  #####  ##     ##   #####   ##      ##
 #
-#=========================================================================
+# =========================================================================
 
 
 class EnumerationMeta(type(c_uint)):
@@ -34,7 +34,7 @@ class Enumeration(c_uint, metaclass=EnumerationMeta):
         return f"<{self.__class__.__name__}.{_vk_map[self.value]}: {self.value}>"
 
 
-#==================================================================================
+# ==================================================================================
 #
 #  ####    ######  ##    ##  #####   #####   ####
 #  ##  ##    ##     ##  ##   ##  ##  ##     ##
@@ -42,14 +42,14 @@ class Enumeration(c_uint, metaclass=EnumerationMeta):
 #  ##  ##    ##       ##     ##      ##        ##
 #  ####      ##       ##     ##      #####  ####
 #
-#==================================================================================
+# ==================================================================================
 
-array_1d_float = npct.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS')
-array_2d_float = npct.ndpointer(dtype=np.float32, ndim=2, flags='C_CONTIGUOUS')
-array_1d_int = npct.ndpointer(dtype=np.int32, ndim=1, flags='C_CONTIGUOUS')
-array_2d_int = npct.ndpointer(dtype=np.int32, ndim=2, flags='C_CONTIGUOUS')
-array_1d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=1, flags='C_CONTIGUOUS')
-array_2d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=2, flags='C_CONTIGUOUS')
+array_1d_float = npct.ndpointer(dtype=np.float32, ndim=1, flags="C_CONTIGUOUS")
+array_2d_float = npct.ndpointer(dtype=np.float32, ndim=2, flags="C_CONTIGUOUS")
+array_1d_int = npct.ndpointer(dtype=np.int32, ndim=1, flags="C_CONTIGUOUS")
+array_2d_int = npct.ndpointer(dtype=np.int32, ndim=2, flags="C_CONTIGUOUS")
+array_1d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=1, flags="C_CONTIGUOUS")
+array_2d_uint16 = npct.ndpointer(dtype=np.uint16, ndim=2, flags="C_CONTIGUOUS")
 
 
 class Loss(Enumeration):
@@ -96,7 +96,7 @@ class c_BoosterBase_p(c_void_p):
     pass
 
 
-#==============================================================================================
+# ==============================================================================================
 #
 #  ##       #####     ###    ####          ##      ##  #####
 #  ##      ##   ##   ## ##   ##  ##        ##      ##  ##  ##
@@ -104,12 +104,12 @@ class c_BoosterBase_p(c_void_p):
 #  ##      ##   ##  #######  ##  ##        ##      ##  ##  ##
 #  ######   #####   ##   ##  ####          ######  ##  #####
 #
-#==============================================================================================
+# ==============================================================================================
 
 
 def load_lib(path: str) -> CDLL:
-    """ Load GBDTMO library from path, and set the API types """
-    lib = npct.load_library(path, '.')
+    """Load GBDTMO library from path, and set the API types"""
+    lib = npct.load_library(path, ".")
 
     def _s(fun, argtypes, restype=None):
         fun.argtypes = argtypes
@@ -117,8 +117,14 @@ def load_lib(path: str) -> CDLL:
 
     _s(lib.Train, [c_BoosterBase_p, c_int])
     _s(lib.Reset, [c_BoosterBase_p])
-    _s(lib.SetDataRegression, [c_BoosterBase_p, array_2d_float, array_2d_float, array_2d_float, c_int])
-    _s(lib.SetDataClassification, [c_BoosterBase_p, array_2d_float, array_2d_float, array_2d_int, c_int])
+    _s(
+        lib.SetDataRegression,
+        [c_BoosterBase_p, array_2d_float, array_2d_float, array_2d_float, c_int],
+    )
+    _s(
+        lib.SetDataClassification,
+        [c_BoosterBase_p, array_2d_float, array_2d_float, array_2d_int, c_int],
+    )
 
     _s(lib.GetDefaultParameters, None, HyperParameters)
     _s(lib.GetCurrentParameters, [c_BoosterBase_p], HyperParameters)
@@ -143,7 +149,7 @@ def load_lib(path: str) -> CDLL:
     return lib
 
 
-#================================================================================================
+# ================================================================================================
 #
 #  ##      ##  #####      ###    #####   #####   #####  #####
 #  ##      ##  ##  ##    ## ##   ##  ##  ##  ##  ##     ##  ##
@@ -151,17 +157,17 @@ def load_lib(path: str) -> CDLL:
 #  ##  ##  ##  ##  ##   #######  ##      ##      ##     ##  ##
 #   ###  ###   ##   ##  ##   ##  ##      ##      #####  ##   ##
 #
-#================================================================================================
+# ================================================================================================
 
 
 class BoosterLibWrapper:
-    """ Wrapper for the GBDTMO shared library"""
+    """Wrapper for the GBDTMO shared library"""
 
     _lib_init_name = None
 
     def __new__(cls, *args, **kwargs):
         # Make sure the required parameters are set in the children classes
-        for required_attr in ('_lib_init_name', ):
+        for required_attr in ("_lib_init_name",):
             if getattr(cls, required_attr) is None:
                 raise NotImplementedError(f"Attribute '{required_attr}' not set in the child class")
         return super().__new__(cls)
